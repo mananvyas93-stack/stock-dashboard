@@ -12,88 +12,152 @@ st.set_page_config(layout="wide", page_title="Family Wealth Cockpit", initial_si
 st.markdown("""
 <style>
     /* 1. GLOBAL RESET & FONT */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Roboto+Mono:wght@400;500;600&display=swap');
-    
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Manrope:wght@400;600;700&family=Roboto+Mono:wght@400;500;600&display=swap');
+
     html, body, [class*="css"] {
         font-family: 'Inter', sans-serif;
-        background-color: #f5f7fb; /* Light Neutral Bg */
-        color: #1f2937;
+        background: radial-gradient(circle at 20% 20%, #11203d 0, #0b1224 35%, #070c18 70%);
+        color: #e5e7eb;
     }
-    
+
     /* 2. REMOVE STREAMLIT CHROME */
     header {visibility: hidden;}
     .block-container {
         padding-top: 2rem;
-        padding-bottom: 5rem;
+        padding-bottom: 4rem;
         padding-left: 2rem;
         padding-right: 2rem;
         max-width: 1600px;
     }
-    
-    /* 3. CARD SYSTEM */
-    div.css-1r6slb0, div.stVerticalBlock > div.stVerticalBlock {
-        /* This targets Streamlit containers generally - refined below */
+
+    /* 3. LAYOUT & GLASS CARDS */
+    .glass-card {
+        background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+        border-radius: 18px;
+        padding: 18px 18px 14px 18px;
+        backdrop-filter: blur(8px);
     }
-    
-    .stMetric {
-        background-color: #ffffff;
-        padding: 16px;
-        border-radius: 12px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-        border: 1px solid #e5e7eb;
+
+    .neon-divider {
+        height: 1px;
+        background: linear-gradient(90deg, rgba(37, 99, 235, 0), rgba(59,130,246,0.8), rgba(37,99,235,0));
+        margin: 6px 0 14px 0;
     }
-    
-    /* 4. TYPOGRAPHY & DATA */
-    [data-testid="stMetricLabel"] {
-        font-size: 0.8rem !important;
-        text-transform: uppercase;
-        color: #6b7280;
-        letter-spacing: 0.05em;
-        font-weight: 500;
+
+    .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.08);
+        color: #e5e7eb;
+        font-size: 0.85rem;
+        border: 1px solid rgba(255,255,255,0.08);
     }
-    [data-testid="stMetricValue"] {
-        font-family: 'Roboto Mono', monospace !important;
-        font-size: 1.6rem !important;
-        font-weight: 600;
-        color: #111827;
-    }
-    [data-testid="stMetricDelta"] {
-        font-family: 'Roboto Mono', monospace !important;
-        font-size: 0.9rem !important;
-    }
-    
-    /* 5. TABS Styling */
+
+    /* 4. TABS Styling */
     .stTabs [data-baseweb="tab-list"] {
         gap: 24px;
-        border-bottom: 1px solid #e5e7eb;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
     }
     .stTabs [data-baseweb="tab"] {
         height: 50px;
         white-space: pre-wrap;
-        background-color: transparent;
-        border-radius: 0px;
-        color: #6b7280;
-        font-weight: 500;
-        border-bottom: 2px solid transparent;
+        background: rgba(255,255,255,0.03);
+        border-radius: 14px;
+        color: #cbd5e1;
+        font-weight: 600;
+        border: 1px solid rgba(255,255,255,0.08);
+        padding: 8px 20px;
     }
     .stTabs [data-baseweb="tab"]:hover {
-        color: #1f6feb;
+        color: #93c5fd;
+        border-color: rgba(147,197,253,0.35);
     }
     .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        color: #1f6feb;
-        border-bottom: 2px solid #1f6feb;
+        color: #e5e7eb;
+        border: 1px solid rgba(147,197,253,0.55);
+        box-shadow: 0 12px 40px rgba(59,130,246,0.12);
     }
 
-    /* 6. UTILITIES */
+    /* 5. HERO & TITLES */
+    .hero-title {
+        font-family: 'Manrope', sans-serif;
+        font-size: 2.4rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: #f9fafb;
+        margin-bottom: 6px;
+    }
+    .hero-subtitle {
+        color: #94a3b8;
+        font-size: 1rem;
+    }
+
+    /* 6. METRIC GRID */
+    .kpi-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 18px;
+        padding: 18px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(59,130,246,0.05));
+        box-shadow: 0 16px 50px rgba(15,23,42,0.45);
+    }
+    .kpi-card:before {
+        content: "";
+        position: absolute;
+        top: -40%; right: -20%;
+        width: 220px; height: 220px;
+        background: radial-gradient(circle, rgba(59,130,246,0.35), rgba(59,130,246,0));
+        filter: blur(8px);
+    }
+    .kpi-label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: #cbd5e1;
+        font-weight: 700;
+    }
+    .kpi-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #f8fafc;
+        font-family: 'Roboto Mono', monospace;
+    }
+    .kpi-delta {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        background: rgba(255,255,255,0.08);
+    }
+
+    /* 7. UTILITIES */
     .card-container {
-        background-color: #ffffff;
+        background: linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
         padding: 20px;
-        border-radius: 12px;
-        border: 1px solid #e5e7eb;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        border-radius: 14px;
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: 0 16px 35px rgba(0,0,0,0.25);
         margin-bottom: 16px;
     }
-    
+
+    .dataframe tbody tr:nth-child(odd) {
+        background: rgba(255,255,255,0.02) !important;
+    }
+    .dataframe tbody tr:hover {
+        background: rgba(59,130,246,0.08) !important;
+    }
+    .dataframe th {
+        color: #cbd5e1 !important;
+    }
+
     /* Hide dataframe index */
     thead tr th:first-child {display:none}
     tbody th {display:none}
@@ -104,13 +168,22 @@ st.markdown("""
 USD_TO_AED = 3.6725
 AED_TO_INR = 23.0
 
-# Design Tokens
-COLOR_PRIMARY = "#1f6feb"
-COLOR_PROFIT = "#1a7f37"
-COLOR_LOSS = "#d1242f"
-COLOR_NEUTRAL = "#6b7280"
-COLOR_BG = "#f5f7fb"
-COLOR_CARD = "#ffffff"
+# Design Tokens tuned for dark neon aesthetic
+COLOR_PRIMARY = "#60a5fa"
+COLOR_PROFIT = "#22c55e"
+COLOR_LOSS = "#f87171"
+COLOR_NEUTRAL = "#cbd5e1"
+COLOR_BG = "#0b1224"
+COLOR_CARD = "rgba(255,255,255,0.05)"
+
+
+def fmt_aed(val: float) -> str:
+    return f"Dh {val:,.0f}"
+
+
+def fmt_delta(val: float) -> str:
+    prefix = "+" if val >= 0 else ""
+    return f"{prefix}{val:.2f}%"
 
 portfolio_config = [
     {"Name": "Alphabet", "Ticker": "GOOGL", "Units": 51, "PurchaseValAED": 34128, "Owner": "MV", "Sector": "Tech"},
@@ -198,15 +271,16 @@ else:
 # --- HELPER: PLOTLY CONFIG ---
 def minimalist_chart(fig, height=250):
     fig.update_layout(
-        template="plotly_white",
+        template="plotly_dark",
         margin=dict(t=10, l=0, r=0, b=0),
         height=height,
         font=dict(family="Inter", size=11, color=COLOR_NEUTRAL),
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
-        xaxis=dict(showgrid=False, showline=True, linecolor="#e5e7eb"),
-        yaxis=dict(showgrid=True, gridcolor="#f3f4f6", zeroline=False),
-        hovermode="x unified"
+        xaxis=dict(showgrid=False, showline=True, linecolor="rgba(255,255,255,0.12)", tickfont=dict(color=COLOR_NEUTRAL)),
+        yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.06)", zeroline=False, tickfont=dict(color=COLOR_NEUTRAL)),
+        hovermode="x unified",
+        legend=dict(font=dict(color=COLOR_NEUTRAL))
     )
     return fig
 
@@ -217,19 +291,70 @@ tab_overview, tab_positions, tab_analytics = st.tabs(["Overview", "Positions", "
 
 # === TAB 1: OVERVIEW ===
 with tab_overview:
-    
-    # --- ROW 1: KPI BAND ---
+
+    # --- ROW 0: HERO BANNER ---
     total_pl_val = df["Total P&L"].sum()
     total_pl_pct = (total_pl_val / df["PurchaseCost"].sum()) * 100
     day_pl_val = df["Day P&L"].sum()
     day_pl_pct = (day_pl_val / (total_val - day_pl_val)) * 100
     inr_val = (total_val * AED_TO_INR) / 100000
+    last_updated = hist_val.index[-1].strftime("%d %b %Y, %H:%M")
+    top_sector = df.groupby("Sector")["Value"].sum().idxmax()
+
+    with st.container():
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        h1, h2 = st.columns([2.2, 1])
+        with h1:
+            st.markdown("<div class='hero-title'>Family Wealth Cockpit</div>", unsafe_allow_html=True)
+            st.markdown("<div class='hero-subtitle'>A cinematic view of capital, momentum, and concentration — refreshed live.</div>", unsafe_allow_html=True)
+            st.markdown(
+                f"<div style='margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;'>"
+                f"<span class='tag'>🟢 Live sync</span>"
+                f"<span class='tag'>Last update: {last_updated}</span>"
+                f"<span class='tag'>Top Sector: {top_sector}</span>"
+                f"</div>",
+                unsafe_allow_html=True,
+            )
+        with h2:
+            gauge_val = min(max(total_pl_pct, -50), 50)
+            st.markdown(
+                f"""
+                <div style='text-align:right'>
+                    <div style='font-size:0.9rem; color:{COLOR_NEUTRAL}; text-transform:uppercase; letter-spacing:0.08em;'>Health</div>
+                    <div style='font-size:2.2rem; font-weight:800; color:#f8fafc; font-family:Manrope;'>{total_pl_pct:+.1f}%</div>
+                    <div style='height:8px; border-radius:999px; background:rgba(255,255,255,0.06); overflow:hidden;'>
+                        <div style='width:{gauge_val + 50}%; height:100%; background:linear-gradient(90deg, #22c55e, #60a5fa);'></div>
+                    </div>
+                    <div style='margin-top:6px; color:#94a3b8; font-size:0.9rem;'>Return since inception</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown('<div class="neon-divider"></div>', unsafe_allow_html=True)
+
+    # --- ROW 1: KPI GRID ---
+    kpis = [
+        {"label": "Net Liquidation", "value": fmt_aed(total_val), "delta": None, "accent": "#60a5fa"},
+        {"label": "Daily P&L", "value": fmt_aed(day_pl_val), "delta": fmt_delta(day_pl_pct), "accent": COLOR_PROFIT if day_pl_val >= 0 else COLOR_LOSS},
+        {"label": "Total P&L", "value": fmt_aed(total_pl_val), "delta": fmt_delta(total_pl_pct), "accent": COLOR_PROFIT if total_pl_val >= 0 else COLOR_LOSS},
+        {"label": "Net Worth (INR)", "value": f"₹ {inr_val:,.2f} L", "delta": None, "accent": "#a78bfa"},
+    ]
 
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Net Liquidation", f"Dh {total_val:,.0f}", delta=None)
-    c2.metric("Daily P&L", f"Dh {day_pl_val:+,.0f}", delta=f"{day_pl_pct:+.2f}%")
-    c3.metric("Total P&L", f"Dh {total_pl_val:+,.0f}", delta=f"{total_pl_pct:+.2f}%")
-    c4.metric("Net Worth (INR)", f"₹ {inr_val:,.2f} L", delta=None)
+    for col, card in zip([c1, c2, c3, c4], kpis):
+        with col:
+            st.markdown(
+                f"""
+                <div class='kpi-card' style='border-color:rgba(255,255,255,0.12);'>
+                    <div class='kpi-label'>{card['label']}</div>
+                    <div class='kpi-value'>{card['value']}</div>
+                    {'' if not card['delta'] else f"<div class='kpi-delta' style='color:{card['accent']}; border:1px solid {card['accent']}40;'>Δ {card['delta']}</div>"}
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
     # Status Summary
     top_gain = df.nlargest(1, "Day P&L")
@@ -237,14 +362,17 @@ with tab_overview:
     gainer_name = top_gain.iloc[0]['Ticker'] if not top_gain.empty else "None"
     loser_name = top_loss.iloc[0]['Ticker'] if not top_loss.empty else "None"
     direction = "up" if day_pl_pct >= 0 else "down"
-    
-    st.markdown(f"""
-    <div style='background-color: #ffffff; padding: 12px 20px; border-radius: 8px; border: 1px solid #e5e7eb; color: #4b5563; font-size: 0.9rem; margin-top: -10px; margin-bottom: 20px;'>
-        <strong>Daily Brief:</strong> Portfolio is {direction} <strong>{abs(day_pl_pct):.2f}%</strong> today. 
-        Top driver: <span style='color:{COLOR_PROFIT}; font-weight:600'>{gainer_name}</span>. 
-        Main detractor: <span style='color:{COLOR_LOSS}; font-weight:600'>{loser_name}</span>.
-    </div>
-    """, unsafe_allow_html=True)
+
+    st.markdown(
+        f"""
+        <div class='card-container' style='margin-top:4px; background:linear-gradient(120deg, rgba(34,197,94,0.14), rgba(96,165,250,0.10)); color:#e2e8f0;'>
+            <strong style='letter-spacing:0.08em; text-transform:uppercase; color:#cbd5e1;'>Daily Brief</strong><br>
+            Portfolio is {direction} <strong style='color:{COLOR_PRIMARY};'>{abs(day_pl_pct):.2f}%</strong> today.<br>
+            Top driver: <span style='color:{COLOR_PROFIT}; font-weight:700'>{gainer_name}</span> · Main detractor: <span style='color:{COLOR_LOSS}; font-weight:700'>{loser_name}</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     # --- ROW 2: TREND & ALLOCATION ---
     c_trend, c_alloc = st.columns([2.5, 1.5])
