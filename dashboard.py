@@ -10,10 +10,9 @@ st.set_page_config(layout="wide", page_title="Wealth Command Center")
 # --- CSS: REMOVE THE WEBSITE FEEL ---
 st.markdown("""
 <style>
-    .block-container { padding-top: 1rem; padding-bottom: 2rem; }
-    h1, h2, h3 { font-family: 'Roboto', sans-serif; font-weight: 300; }
+    .block-container { padding-top: 1rem; padding-bottom: 5rem; }
     [data-testid="stMetricValue"] { font-family: 'Roboto Mono', monospace; font-size: 1.6rem; }
-    [data-testid="stMetricLabel"] { font-size: 0.8rem; color: #888; }
+    [data-testid="stMetricLabel"] { font-size: 0.8rem; color: #888; text-transform: uppercase; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -46,8 +45,12 @@ with st.spinner('Syncing Market Data...'):
     tickers = [item["Ticker"] for item in portfolio_data]
     try:
         data = yf.download(tickers, period="5d")['Close']
-        latest = data.iloc[-1]
-        prev = data.iloc[-2]
+        if not data.empty:
+            latest = data.iloc[-1]
+            prev = data.iloc[-2]
+        else:
+            st.error("Market data unavailable.")
+            st.stop()
     except:
         st.stop()
 
@@ -68,88 +71,86 @@ for item in portfolio_data:
     })
 df = pd.DataFrame(rows)
 
-# --- 2. LAYOUT: THE "HEADS UP" DISPLAY ---
+# --- 2. LAYOUT ---
 
-# Global Stats
+# Header Metrics
 total_val = df["Value"].sum()
 day_pl = df["Day"].sum()
 inr_lac = (total_val * AED_TO_INR) / 100000
 
-# Metric Row
 c1, c2, c3, c4 = st.columns(4)
 c1.metric("Net Liquidation", f"Dh {total_val:,.0f}")
 c2.metric("Today's P&L", f"{day_pl:+,.0f}", delta=f"{(day_pl/total_val):.2%}")
 c3.metric("INR Wealth", f"₹ {inr_lac:,.2f} L")
-# Allocation Bar
 mv_pct = (df[df["Owner"]=="MV"]["Value"].sum() / total_val) * 100
 c4.caption(f"**Allocation:** MV {mv_pct:.0f}% | SV {100-mv_pct:.0f}%")
 c4.progress(int(mv_pct))
 
 st.divider()
 
-# --- 3. THE VISUAL CORE (TREEMAP + MOVERS) ---
-# This is where we separate "Dashboard" from "Table"
-
+# --- 3. THE VISUAL CORE ---
 col_map, col_movers = st.columns([2, 1])
 
 with col_map:
-    st.subheader("Market Map (Size = Value)")
-    # TREEMAP: The institutional way to see risk
+    st.subheader("Market Map")
+    # Improved Treemap with clean labels
     fig = px.treemap(
         df, 
         path=[px.Constant("Portfolio"), 'Owner', 'Ticker'], 
         values='Value',
         color='Day %',
-        color_continuous_scale=['#d73027', '#fee08b', '#1a9850'], # Red to Green
+        color_continuous_scale=['#d73027', '#f0f0f0', '#1a9850'], # Red -> Gray -> Green
         color_continuous_midpoint=0,
-        custom_data=['Day %', 'Value']
     )
+    # This formats the text inside the boxes to be readable
     fig.update_traces(
+        texttemplate="<b>%{label}</b><br>Dh %{value:,.0f}", 
         textposition="middle center",
-        textinfo="label+text+value",
-        hovertemplate='<b>%{label}</b><br>Value: Dh %{value:,.0f}<br>Change: %{customdata[0]:.2f}%'
     )
-    fig.update_layout(margin=dict(t=0, l=0, r=0, b=0), height=400)
+    fig.update_layout(margin=dict(t=0, l=0, r=0, b=0), height=450)
     st.plotly_chart(fig, use_container_width=True)
 
 with col_movers:
     st.subheader("Today's Movers")
     
-    # Sort for bar chart
     movers = df.sort_values("Day %", ascending=False)
     top_3 = movers.head(3)
-    bot_3 = movers.tail(3).sort_values("Day %", ascending=True) # Sort for visual bar logic
+    bot_3 = movers.tail(3).sort_values("Day %", ascending=True)
     
-    # Combined Bar Chart
     fig_movers = go.Figure()
     
     # Winners
     fig_movers.add_trace(go.Bar(
         y=top_3["Ticker"], x=top_3["Day %"], orientation='h',
-        name="Winners", marker_color='#1a9850', texttemplate="%{x:.1f}%", textposition="inside"
+        name="Winners", marker_color='#1a9850', texttemplate="%{x:+.1f}%", textposition="inside"
     ))
-    
     # Losers
     fig_movers.add_trace(go.Bar(
         y=bot_3["Ticker"], x=bot_3["Day %"], orientation='h',
-        name="Losers", marker_color='#d73027', texttemplate="%{x:.1f}%", textposition="inside"
+        name="Losers", marker_color='#d73027', texttemplate="%{x:+.1f}%", textposition="inside"
     ))
     
     fig_movers.update_layout(
         barmode='relative', 
-        height=400,
+        height=450,
         margin=dict(t=0, b=0),
         xaxis_title="Daily Change %",
-        yaxis=dict(autorange="reversed"), # Top movers at top
-        showlegend=False
+        yaxis=dict(autorange="reversed"),
+        showlegend=False,
     )
     st.plotly_chart(fig_movers, use_container_width=True)
 
-# --- 4. THE DATA GRID (RELEGATED TO BOTTOM) ---
-with st.expander("View Detailed Ledger", expanded=False):
+# --- 4. DATA TABLE ---
+with st.expander("View Detailed Ledger"):
+    # Simple formatting to avoid Jinja/CSS errors if dependency missing
     st.dataframe(
-        df.style.format({
-            "Value": "{:,.0f}", "Profit": "{:+,.0f}", "Day": "{:+,.0f}", "Day %": "{:+.2f}%"
-        }).background_gradient(subset=["Day %"], cmap="RdYlGn", vmin=-3, vmax=3),
-        use_container_width=True, hide_index=True
+        df[["Ticker", "Owner", "Value", "Profit", "Day", "Day %"]],
+        use_container_width=True, 
+        hide_index=True,
+        column_config={
+            "Value": st.column_config.NumberColumn(format="Dh %.0f"),
+            "Profit": st.column_config.NumberColumn(format="Dh %.0f"),
+            "Day": st.column_config.NumberColumn(format="Dh %.0f"),
+            "Day %": st.column_config.NumberColumn(format="%.2f%%"),
+        }
     )
