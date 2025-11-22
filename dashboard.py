@@ -1,31 +1,40 @@
 import streamlit as st
 import yfinance as yf
 import pandas as pd
-import plotly.express as px
+import plotly.graph_objects as go
 
-# --- PAGE CONFIG ---
+# --- PAGE CONFIGURATION ---
 st.set_page_config(layout="wide", page_title="Wealth Dashboard")
 
-# --- CONFIGURATION ---
-# We still need this to convert the LIVE price to AED.
-# But we will NOT use it for your purchase history anymore.
-USD_TO_AED = 3.6725
-AED_TO_INR = 23.0
-
-# --- CUSTOM CSS ---
+# --- CUSTOM CSS (INSTITUTIONAL THEME) ---
+# This forces the UI to look cleaner and more compact
 st.markdown("""
 <style>
+    /* Remove top padding */
+    .block-container { padding-top: 2rem; }
+    
+    /* Metrics styling */
     [data-testid="stMetricValue"] {
-        font-size: 2rem;
-        color: #4CAF50; 
+        font-family: 'Roboto Mono', monospace;
+        font-size: 1.8rem;
     }
+    [data-testid="stMetricLabel"] {
+        font-size: 0.9rem;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    /* Table font */
+    .dataframe { font-family: 'Roboto Mono', monospace !important; font-size: 0.9rem !important; }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("Family Wealth Dashboard 🇦🇪")
+# --- CONFIGURATION ---
+USD_TO_AED = 3.6725
+AED_TO_INR = 23.0
 
-# --- 1. PORTFOLIO DATA (EXACTLY FROM YOUR XLS) ---
-# I have updated 'PurchaseValAED' and 'AvgCost' to match your sheet exactly.
+# --- 1. HARDCODED PORTFOLIO DATA (SOURCE OF TRUTH) ---
 portfolio_data = [
     # MV STOCKS
     {"Name": "Alphabet",      "Ticker": "GOOGL", "Units": 51,  "AvgCost": 182.34, "PurchaseValAED": 34128,  "Owner": "MV"},
@@ -51,15 +60,21 @@ portfolio_data = [
 ]
 
 # --- 2. FETCH LIVE DATA ---
-with st.spinner('Refreshing Portfolio...'):
+with st.spinner('Syncing market data...'):
     tickers = [item["Ticker"] for item in portfolio_data]
-    data = yf.download(tickers, period="5d")['Close']
-
-    if not data.empty:
-        latest_prices = data.iloc[-1]
-        prev_prices = data.iloc[-2]
-    else:
-        st.error("Data Error.")
+    try:
+        # Fetch 5 days to ensure we get a valid 'Yesterday Close' even on Mondays/Holidays
+        data = yf.download(tickers, period="5d")['Close']
+        
+        if not data.empty:
+            latest_prices = data.iloc[-1]
+            prev_prices = data.iloc[-2]
+        else:
+            st.error("No data received from Yahoo Finance.")
+            st.stop()
+            
+    except Exception as e:
+        st.error(f"API Connection Error: {e}")
         st.stop()
 
 # --- 3. CALCULATE METRICS ---
@@ -75,78 +90,119 @@ for item in portfolio_data:
         prev_price = 0
         
     units = item["Units"]
-    # WE USE YOUR HARDCODED VALUES NOW
     invested_val_aed = item["PurchaseValAED"] 
-    cost_price_usd = item["AvgCost"]
     
-    # Live Calculations
+    # Live Value in AED
     current_val_aed = live_price * units * USD_TO_AED
     
-    # Profit is now: (Live Value) - (YOUR HARDCODED COST)
+    # Profit = Live Value - Hardcoded Cost
     profit_aed = current_val_aed - invested_val_aed
+    profit_pct = (profit_aed / invested_val_aed) if invested_val_aed > 0 else 0
     
-    # Profit % based on your Avg Cost
-    profit_pct = ((live_price - cost_price_usd) / cost_price_usd) if cost_price_usd > 0 else 0
-    
-    # Day's Gain
+    # Day's Gain = (Live - Prev) * Units * AED Rate
     day_gain_usd = live_price - prev_price
     day_gain_aed = day_gain_usd * units * USD_TO_AED
     day_gain_pct = (day_gain_usd / prev_price) if prev_price > 0 else 0
 
     processed_rows.append({
-        "Stock": item["Name"],
+        "Symbol": item["Name"],
         "Owner": item["Owner"],
         "Units": units,
-        "Price ($)": live_price,
+        "Price": live_price,
         "Value (AED)": current_val_aed,
         "Profit (AED)": profit_aed,
-        "Profit %": profit_pct,
-        "Day Gain (AED)": day_gain_aed,
-        "Day Gain %": day_gain_pct
+        "Profit %": profit_pct, 
+        "Day (AED)": day_gain_aed,
+        "Day %": day_gain_pct
     })
 
 df = pd.DataFrame(processed_rows)
 
-# --- 4. VISUALS ---
+# --- 4. DASHBOARD LAYOUT ---
 
-# Totals
+# A. HEADER METRICS (The "Bento Box")
 total_val = df["Value (AED)"].sum()
 total_profit = df["Profit (AED)"].sum()
-total_day_gain = df["Day Gain (AED)"].sum()
+total_day_gain = df["Day (AED)"].sum()
 total_inr = (total_val * AED_TO_INR) / 100000
 
-# Metrics
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("Total Value", f"Dh {total_val:,.0f}")
-col2.metric("Total Profit", f"Dh {total_profit:,.0f}", delta=f"{(total_profit/total_val)*100:.1f}%")
-col3.metric("Day's Gain", f"Dh {total_day_gain:,.0f}", delta=f"{(total_day_gain/(total_val-total_day_gain))*100:.1f}%")
-col4.metric("INR Value", f"₹ {total_inr:,.2f} L")
+st.markdown("### Family Wealth Dashboard")
+
+m1, m2, m3, m4 = st.columns(4)
+m1.metric("Net Liquidation (AED)", f"{total_val:,.0f}")
+m2.metric("Daily P&L (AED)", f"{total_day_gain:,.0f}", delta=f"{(total_day_gain/(total_val-total_day_gain)):.2%}")
+m3.metric("Total P&L (AED)", f"{total_profit:,.0f}", delta=f"{(total_profit/(total_val-total_profit)):.2%}")
+m4.metric("Net Worth (INR Lacs)", f"₹ {total_inr:,.2f} L")
+
+# B. ALLOCATION STRIP (The "Balance of Power")
+mv_total = df[df["Owner"]=="MV"]["Value (AED)"].sum()
+sv_total = df[df["Owner"]=="SV"]["Value (AED)"].sum()
+mv_pct = (mv_total / total_val) * 100
+sv_pct = (sv_total / total_val) * 100
+
+# Create a slim horizontal bar chart using Plotly Graph Objects
+fig = go.Figure()
+fig.add_trace(go.Bar(
+    y=[''], x=[mv_total], name=f'MV ({mv_pct:.0f}%)', orientation='h',
+    marker=dict(color='#4b7bec', line=dict(width=0)) # Muted Blue
+))
+fig.add_trace(go.Bar(
+    y=[''], x=[sv_total], name=f'SV ({sv_pct:.0f}%)', orientation='h',
+    marker=dict(color='#a55eea', line=dict(width=0)) # Muted Purple
+))
+fig.update_layout(
+    barmode='stack', 
+    height=60, 
+    margin=dict(l=0, r=0, t=0, b=0),
+    xaxis=dict(visible=False),
+    yaxis=dict(visible=False),
+    paper_bgcolor='rgba(0,0,0,0)',
+    plot_bgcolor='rgba(0,0,0,0)',
+    showlegend=False,
+    hovermode="x unified"
+)
+st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+st.caption(f"Allocation: **MV** {mv_pct:.1f}% (Blue) • **SV** {sv_pct:.1f}% (Purple)")
 
 st.divider()
 
-# Layout: Chart left, Table right
-c1, c2 = st.columns([1, 2])
+# C. THE TACTICAL GRID (Clean Design)
 
-with c1:
-    st.subheader("Allocation")
-    fig = px.pie(df, values='Value (AED)', names='Stock', hole=0.4, color_discrete_sequence=px.colors.qualitative.Prism)
-    st.plotly_chart(fig, use_container_width=True)
+# Visual Formatting Function
+def highlight_vals(val):
+    if val > 0:
+        return 'color: #0F9D58; font-weight: bold' # Google Green
+    elif val < 0:
+        return 'color: #D93025; font-weight: bold' # Google Red
+    return 'color: #5f6368'
 
-with c2:
-    st.subheader("Holdings")
-    
-    def color_profit(val):
-        color = '#d4edda' if val > 0 else '#f8d7da'
-        text_color = '#155724' if val > 0 else '#721c24'
-        return f'background-color: {color}; color: {text_color}'
+# Badge Logic
+def color_owner(val):
+    color = '#e8f0fe' if val == 'MV' else '#f3e8fd' # Very light blue vs purple background
+    text = '#1967d2' if val == 'MV' else '#8430ce'
+    return f'background-color: {color}; color: {text}; border-radius: 4px; padding: 2px 6px; font-weight: bold'
 
-    styler = df.style.format({
-        "Price ($)": "${:,.2f}",
-        "Value (AED)": "Dh {:,.0f}",
-        "Profit (AED)": "Dh {:,.0f}",
-        "Profit %": "{:.1%}",
-        "Day Gain (AED)": "Dh {:,.0f}",
-        "Day Gain %": "{:.1%}"
-    }).map(color_profit, subset=["Profit (AED)", "Profit %", "Day Gain (AED)", "Day Gain %"])
+# Apply Styles
+styler = df.style.format({
+    "Price": "${:,.2f}",
+    "Value (AED)": "{:,.0f}",
+    "Profit (AED)": "{:+,.0f}", # + sign for positives
+    "Profit %": "{:+.1%}",
+    "Day (AED)": "{:+,.0f}",
+    "Day %": "{:+.1%}"
+})
 
-    st.dataframe(styler, use_container_width=True, height=700)
+# Apply conditional formatting to specific columns
+styler = styler.map(highlight_vals, subset=["Profit (AED)", "Profit %", "Day (AED)", "Day %"])
+styler = styler.map(color_owner, subset=["Owner"])
+
+# Render
+st.dataframe(
+    styler,
+    use_container_width=True,
+    height=800,
+    column_config={
+        "Symbol": st.column_config.TextColumn("Ticker", width="medium"),
+        "Value (AED)": st.column_config.NumberColumn("Value (AED)", help="Current Market Value"),
+    }
+)
