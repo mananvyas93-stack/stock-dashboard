@@ -7,26 +7,33 @@ import plotly.graph_objects as go
 st.set_page_config(layout="wide", page_title="Wealth Dashboard")
 
 # --- CUSTOM CSS (INSTITUTIONAL THEME) ---
-# This forces the UI to look cleaner and more compact
 st.markdown("""
 <style>
-    /* Remove top padding */
-    .block-container { padding-top: 2rem; }
+    /* 1. TIGHTEN VERTICAL RHYTHM */
+    .block-container { 
+        padding-top: 2rem; 
+        padding-bottom: 2rem;
+    }
     
-    /* Metrics styling */
+    /* 2. INSTITUTIONAL METRICS */
     [data-testid="stMetricValue"] {
         font-family: 'Roboto Mono', monospace;
         font-size: 1.8rem;
+        font-weight: 600;
     }
     [data-testid="stMetricLabel"] {
-        font-size: 0.9rem;
+        font-size: 0.8rem;
         color: #6b7280;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 1.2px;
+        font-weight: 500;
     }
     
-    /* Table font */
-    .dataframe { font-family: 'Roboto Mono', monospace !important; font-size: 0.9rem !important; }
+    /* 3. TABLE TYPOGRAPHY */
+    .dataframe { 
+        font-family: 'Roboto Mono', monospace !important; 
+        font-size: 0.85rem !important; 
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -34,7 +41,7 @@ st.markdown("""
 USD_TO_AED = 3.6725
 AED_TO_INR = 23.0
 
-# --- 1. HARDCODED PORTFOLIO DATA (SOURCE OF TRUTH) ---
+# --- 1. HARDCODED DATA (Source of Truth) ---
 portfolio_data = [
     # MV STOCKS
     {"Name": "Alphabet",      "Ticker": "GOOGL", "Units": 51,  "AvgCost": 182.34, "PurchaseValAED": 34128,  "Owner": "MV"},
@@ -59,150 +66,119 @@ portfolio_data = [
     {"Name": "MSFT [SV]",     "Ticker": "MSFT",  "Units": 4,   "AvgCost": 509.25, "PurchaseValAED": 7476,   "Owner": "SV"},
 ]
 
-# --- 2. FETCH LIVE DATA ---
-with st.spinner('Syncing market data...'):
+# --- 2. DATA ENGINE ---
+with st.spinner('Syncing...'):
     tickers = [item["Ticker"] for item in portfolio_data]
     try:
-        # Fetch 5 days to ensure we get a valid 'Yesterday Close' even on Mondays/Holidays
         data = yf.download(tickers, period="5d")['Close']
-        
         if not data.empty:
-            latest_prices = data.iloc[-1]
-            prev_prices = data.iloc[-2]
+            latest = data.iloc[-1]
+            prev = data.iloc[-2]
         else:
-            st.error("No data received from Yahoo Finance.")
             st.stop()
-            
-    except Exception as e:
-        st.error(f"API Connection Error: {e}")
+    except:
         st.stop()
 
-# --- 3. CALCULATE METRICS ---
 processed_rows = []
-
 for item in portfolio_data:
-    ticker = item["Ticker"]
+    t = item["Ticker"]
     try:
-        live_price = latest_prices[ticker] if ticker in latest_prices else 0
-        prev_price = prev_prices[ticker] if ticker in prev_prices else 0
+        # Safe Get
+        live = latest[t] if t in latest else 0
+        close = prev[t] if t in prev else 0
     except:
-        live_price = 0
-        prev_price = 0
+        live = 0; close = 0
         
-    units = item["Units"]
-    invested_val_aed = item["PurchaseValAED"] 
-    
-    # Live Value in AED
-    current_val_aed = live_price * units * USD_TO_AED
-    
-    # Profit = Live Value - Hardcoded Cost
-    profit_aed = current_val_aed - invested_val_aed
-    profit_pct = (profit_aed / invested_val_aed) if invested_val_aed > 0 else 0
-    
-    # Day's Gain = (Live - Prev) * Units * AED Rate
-    day_gain_usd = live_price - prev_price
-    day_gain_aed = day_gain_usd * units * USD_TO_AED
-    day_gain_pct = (day_gain_usd / prev_price) if prev_price > 0 else 0
+    # CALCS
+    val_aed = live * item["Units"] * USD_TO_AED
+    profit_aed = val_aed - item["PurchaseValAED"]
+    profit_pct = (profit_aed / item["PurchaseValAED"]) if item["PurchaseValAED"] > 0 else 0
+    day_aed = (live - close) * item["Units"] * USD_TO_AED
+    day_pct = (live - close) / close if close > 0 else 0
 
     processed_rows.append({
-        "Symbol": item["Name"],
+        "Ticker": item["Name"],
         "Owner": item["Owner"],
-        "Units": units,
-        "Price": live_price,
-        "Value (AED)": current_val_aed,
-        "Profit (AED)": profit_aed,
-        "Profit %": profit_pct, 
-        "Day (AED)": day_gain_aed,
-        "Day %": day_gain_pct
+        "Units": item["Units"],
+        "Price": live,
+        "Value": val_aed,
+        "Total P&L": profit_aed,
+        "Total %": profit_pct,
+        "1D P&L": day_aed,
+        "1D %": day_pct
     })
 
 df = pd.DataFrame(processed_rows)
 
-# --- 4. DASHBOARD LAYOUT ---
+# --- 3. LAYOUT & VISUALS ---
 
-# A. HEADER METRICS (The "Bento Box")
-total_val = df["Value (AED)"].sum()
-total_profit = df["Profit (AED)"].sum()
-total_day_gain = df["Day (AED)"].sum()
-total_inr = (total_val * AED_TO_INR) / 100000
-
-st.markdown("### Family Wealth Dashboard")
+# METRICS DECK
+total_val = df["Value"].sum()
+total_pl = df["Total P&L"].sum()
+day_pl = df["1D P&L"].sum()
+inr_val = (total_val * AED_TO_INR) / 100000
 
 m1, m2, m3, m4 = st.columns(4)
 m1.metric("Net Liquidation (AED)", f"{total_val:,.0f}")
-m2.metric("Daily P&L (AED)", f"{total_day_gain:,.0f}", delta=f"{(total_day_gain/(total_val-total_day_gain)):.2%}")
-m3.metric("Total P&L (AED)", f"{total_profit:,.0f}", delta=f"{(total_profit/(total_val-total_profit)):.2%}")
-m4.metric("Net Worth (INR Lacs)", f"₹ {total_inr:,.2f} L")
+m2.metric("Daily P&L (AED)", f"{day_pl:+,.0f}", delta=f"{(day_pl/(total_val-day_pl)):.2%}")
+m3.metric("Total P&L (AED)", f"{total_pl:+,.0f}", delta=f"{(total_pl/(total_val-total_pl)):.2%}")
+m4.metric("Net Worth (INR Lacs)", f"₹ {inr_val:,.2f} L")
 
-# B. ALLOCATION STRIP (The "Balance of Power")
-mv_total = df[df["Owner"]=="MV"]["Value (AED)"].sum()
-sv_total = df[df["Owner"]=="SV"]["Value (AED)"].sum()
+# ALLOCATION STRIP (Slim Version)
+mv_total = df[df["Owner"]=="MV"]["Value"].sum()
+sv_total = df[df["Owner"]=="SV"]["Value"].sum()
 mv_pct = (mv_total / total_val) * 100
 sv_pct = (sv_total / total_val) * 100
 
-# Create a slim horizontal bar chart using Plotly Graph Objects
 fig = go.Figure()
 fig.add_trace(go.Bar(
-    y=[''], x=[mv_total], name=f'MV ({mv_pct:.0f}%)', orientation='h',
-    marker=dict(color='#4b7bec', line=dict(width=0)) # Muted Blue
+    y=[''], x=[mv_total], name='MV', orientation='h',
+    marker=dict(color='#3b82f6', line=dict(width=0)), # Muted Blue
+    hoverinfo='text', hovertext=f'MV: {mv_pct:.1f}%'
 ))
 fig.add_trace(go.Bar(
-    y=[''], x=[sv_total], name=f'SV ({sv_pct:.0f}%)', orientation='h',
-    marker=dict(color='#a55eea', line=dict(width=0)) # Muted Purple
+    y=[''], x=[sv_total], name='SV', orientation='h',
+    marker=dict(color='#8b5cf6', line=dict(width=0)), # Muted Purple
+    hoverinfo='text', hovertext=f'SV: {sv_pct:.1f}%'
 ))
 fig.update_layout(
-    barmode='stack', 
-    height=60, 
-    margin=dict(l=0, r=0, t=0, b=0),
-    xaxis=dict(visible=False),
-    yaxis=dict(visible=False),
-    paper_bgcolor='rgba(0,0,0,0)',
-    plot_bgcolor='rgba(0,0,0,0)',
-    showlegend=False,
-    hovermode="x unified"
+    barmode='stack', height=20, margin=dict(l=0, r=0, t=10, b=10),
+    xaxis=dict(visible=False), yaxis=dict(visible=False),
+    paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+    showlegend=False
 )
 st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
-st.caption(f"Allocation: **MV** {mv_pct:.1f}% (Blue) • **SV** {sv_pct:.1f}% (Purple)")
 
-st.divider()
+# TACTICAL GRID
+def color_numbers(val):
+    if val > 0: return 'color: #16a34a; font-weight: 500' # Emerald 600
+    if val < 0: return 'color: #dc2626; font-weight: 500' # Red 600
+    return 'color: #6b7280'
 
-# C. THE TACTICAL GRID (Clean Design)
+def badge_owner(val):
+    bg = '#eff6ff' if val == 'MV' else '#f3e8fd'
+    txt = '#1d4ed8' if val == 'MV' else '#7e22ce'
+    return f'background-color: {bg}; color: {txt}; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 0.8em'
 
-# Visual Formatting Function
-def highlight_vals(val):
-    if val > 0:
-        return 'color: #0F9D58; font-weight: bold' # Google Green
-    elif val < 0:
-        return 'color: #D93025; font-weight: bold' # Google Red
-    return 'color: #5f6368'
-
-# Badge Logic
-def color_owner(val):
-    color = '#e8f0fe' if val == 'MV' else '#f3e8fd' # Very light blue vs purple background
-    text = '#1967d2' if val == 'MV' else '#8430ce'
-    return f'background-color: {color}; color: {text}; border-radius: 4px; padding: 2px 6px; font-weight: bold'
-
-# Apply Styles
 styler = df.style.format({
     "Price": "${:,.2f}",
-    "Value (AED)": "{:,.0f}",
-    "Profit (AED)": "{:+,.0f}", # + sign for positives
-    "Profit %": "{:+.1%}",
-    "Day (AED)": "{:+,.0f}",
-    "Day %": "{:+.1%}"
+    "Value": "{:,.0f}",
+    "Total P&L": "{:+,.0f}",
+    "Total %": "{:+.1%}",
+    "1D P&L": "{:+,.0f}",
+    "1D %": "{:+.1%}"
 })
+styler = styler.map(color_numbers, subset=["Total P&L", "Total %", "1D P&L", "1D %"])
+styler = styler.map(badge_owner, subset=["Owner"])
 
-# Apply conditional formatting to specific columns
-styler = styler.map(highlight_vals, subset=["Profit (AED)", "Profit %", "Day (AED)", "Day %"])
-styler = styler.map(color_owner, subset=["Owner"])
-
-# Render
 st.dataframe(
     styler,
     use_container_width=True,
     height=800,
+    hide_index=True, # THIS REMOVES THE 0,1,2...
     column_config={
-        "Symbol": st.column_config.TextColumn("Ticker", width="medium"),
-        "Value (AED)": st.column_config.NumberColumn("Value (AED)", help="Current Market Value"),
+        "Ticker": st.column_config.TextColumn("Ticker", width="medium"),
+        "Units": st.column_config.NumberColumn("Units", format="%.0f"),
+        "Value": st.column_config.NumberColumn("Value (AED)"),
     }
 )
