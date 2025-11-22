@@ -11,90 +11,155 @@ st.set_page_config(layout="wide", page_title="Family Wealth Cockpit", initial_si
 # --- CUSTOM CSS SYSTEM ---
 st.markdown("""
 <style>
-    /* 1. GLOBAL RESET & FONT */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Roboto+Mono:wght@400;500;600&display=swap');
-    
-    html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
-        background-color: #f5f7fb; /* Light Neutral Bg */
-        color: #1f2937;
-    }
-    
-    /* 2. REMOVE STREAMLIT CHROME */
-    header {visibility: hidden;}
-    .block-container {
-        padding-top: 2rem;
-        padding-bottom: 5rem;
-        padding-left: 2rem;
-        padding-right: 2rem;
-        max-width: 1600px;
-    }
-    
-    /* 3. CARD SYSTEM */
-    div.css-1r6slb0, div.stVerticalBlock > div.stVerticalBlock {
-        /* This targets Streamlit containers generally - refined below */
-    }
-    
-    .stMetric {
-        background-color: #ffffff;
-        padding: 16px;
-        border-radius: 12px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-        border: 1px solid #e5e7eb;
-    }
-    
-    /* 4. TYPOGRAPHY & DATA */
-    [data-testid="stMetricLabel"] {
-        font-size: 0.8rem !important;
-        text-transform: uppercase;
-        color: #6b7280;
-        letter-spacing: 0.05em;
-        font-weight: 500;
-    }
-    [data-testid="stMetricValue"] {
-        font-family: 'Roboto Mono', monospace !important;
-        font-size: 1.6rem !important;
-        font-weight: 600;
-        color: #111827;
-    }
-    [data-testid="stMetricDelta"] {
-        font-family: 'Roboto Mono', monospace !important;
-        font-size: 0.9rem !important;
-    }
-    
-    /* 5. TABS Styling */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 24px;
-        border-bottom: 1px solid #e5e7eb;
-    }
-    .stTabs [data-baseweb="tab"] {
-        height: 50px;
-        white-space: pre-wrap;
-        background-color: transparent;
-        border-radius: 0px;
-        color: #6b7280;
-        font-weight: 500;
-        border-bottom: 2px solid transparent;
-    }
-    .stTabs [data-baseweb="tab"]:hover {
-        color: #1f6feb;
-    }
-    .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        color: #1f6feb;
-        border-bottom: 2px solid #1f6feb;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+    :root {
+        --bg: #0f1a2b;
+        --card: #16233a;
+        --border: #1f2d44;
+        --text: #e6eaf0;
+        --muted: #9ba7b8;
+        --accent: #4aa3ff;
+        --accent-soft: #7fc3ff;
     }
 
-    /* 6. UTILITIES */
-    .card-container {
-        background-color: #ffffff;
-        padding: 20px;
-        border-radius: 12px;
-        border: 1px solid #e5e7eb;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-        margin-bottom: 16px;
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif;
+        background: var(--bg);
+        color: var(--text);
     }
-    
-    /* Hide dataframe index */
+
+    header {visibility: hidden;}
+
+    .block-container {
+        padding: 1.2rem 1.6rem 2rem;
+        max-width: 1450px;
+    }
+
+    .panel, .card-container, .kpi-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 14px 16px;
+        box-shadow: none;
+    }
+
+    .page-title {
+        font-size: 1.6rem;
+        font-weight: 700;
+        margin: 0 0 4px 0;
+        color: var(--text);
+    }
+
+    .page-subtitle {
+        margin: 0 0 10px 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+    }
+
+    .meta-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        color: var(--muted);
+        font-size: 0.85rem;
+    }
+
+    .meta-pill {
+        padding: 6px 10px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: #111b2c;
+    }
+
+    .kpi-card {
+        padding: 14px;
+    }
+
+    .kpi-label {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        margin-bottom: 6px;
+    }
+
+    .kpi-value {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 6px;
+    }
+
+    .kpi-delta {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: 1px solid var(--border);
+        background: #13243c;
+        font-size: 0.85rem;
+    }
+
+    .section-title {
+        margin: 0 0 8px 0;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .muted {
+        color: var(--muted);
+    }
+
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 10px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .stTabs [data-baseweb="tab"] {
+        height: 42px;
+        background: transparent;
+        color: var(--muted);
+        font-weight: 600;
+        border-radius: 0;
+        border: none;
+        padding: 8px 6px;
+    }
+
+    .stTabs [data-baseweb="tab"]:hover {
+        color: var(--text);
+    }
+
+    .stTabs [data-baseweb="tab"][aria-selected="true"] {
+        color: var(--text);
+        box-shadow: inset 0 -2px 0 var(--accent);
+    }
+
+    .card-container {
+        margin-bottom: 14px;
+    }
+
+    .stButton > button {
+        background: #1c2f4a;
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 0.45rem 0.9rem;
+    }
+
+    .dataframe tbody tr:nth-child(odd) {
+        background: rgba(255,255,255,0.02) !important;
+    }
+
+    .dataframe tbody tr:hover {
+        background: rgba(74,163,255,0.08) !important;
+    }
+
+    .dataframe th {
+        color: var(--text) !important;
+    }
+
     thead tr th:first-child {display:none}
     tbody th {display:none}
 </style>
@@ -104,13 +169,23 @@ st.markdown("""
 USD_TO_AED = 3.6725
 AED_TO_INR = 23.0
 
-# Design Tokens
-COLOR_PRIMARY = "#1f6feb"
-COLOR_PROFIT = "#1a7f37"
-COLOR_LOSS = "#d1242f"
-COLOR_NEUTRAL = "#6b7280"
-COLOR_BG = "#f5f7fb"
-COLOR_CARD = "#ffffff"
+# Design tokens for Midnight Blue Pro theme
+COLOR_PRIMARY = "#4aa3ff"
+COLOR_ACCENT_SOFT = "#7fc3ff"
+COLOR_PROFIT = "#6bcf8f"
+COLOR_LOSS = "#f27d72"
+COLOR_NEUTRAL = "#9ba7b8"
+COLOR_BG = "#0f1a2b"
+COLOR_CARD = "#16233a"
+
+
+def fmt_aed(val: float) -> str:
+    return f"Dh {val:,.0f}"
+
+
+def fmt_delta(val: float) -> str:
+    prefix = "+" if val >= 0 else ""
+    return f"{prefix}{val:.2f}%"
 
 portfolio_config = [
     {"Name": "Alphabet", "Ticker": "GOOGL", "Units": 51, "PurchaseValAED": 34128, "Owner": "MV", "Sector": "Tech"},
@@ -198,15 +273,30 @@ else:
 # --- HELPER: PLOTLY CONFIG ---
 def minimalist_chart(fig, height=250):
     fig.update_layout(
-        template="plotly_white",
+        template=None,
         margin=dict(t=10, l=0, r=0, b=0),
         height=height,
         font=dict(family="Inter", size=11, color=COLOR_NEUTRAL),
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        xaxis=dict(showgrid=False, showline=True, linecolor="#e5e7eb"),
-        yaxis=dict(showgrid=True, gridcolor="#f3f4f6", zeroline=False),
-        hovermode="x unified"
+        paper_bgcolor=COLOR_BG,
+        plot_bgcolor=COLOR_BG,
+        xaxis=dict(
+            showgrid=True,
+            gridcolor="#1f2d44",
+            zeroline=False,
+            showline=True,
+            linecolor="#1f2d44",
+            tickfont=dict(color=COLOR_NEUTRAL),
+        ),
+        yaxis=dict(
+            showgrid=True,
+            gridcolor="#1f2d44",
+            zeroline=False,
+            showline=True,
+            linecolor="#1f2d44",
+            tickfont=dict(color=COLOR_NEUTRAL),
+        ),
+        hovermode="x unified",
+        legend=dict(font=dict(color=COLOR_NEUTRAL))
     )
     return fig
 
@@ -217,19 +307,68 @@ tab_overview, tab_positions, tab_analytics = st.tabs(["Overview", "Positions", "
 
 # === TAB 1: OVERVIEW ===
 with tab_overview:
-    
-    # --- ROW 1: KPI BAND ---
+
+    # --- ROW 0: HERO BANNER ---
     total_pl_val = df["Total P&L"].sum()
     total_pl_pct = (total_pl_val / df["PurchaseCost"].sum()) * 100
     day_pl_val = df["Day P&L"].sum()
     day_pl_pct = (day_pl_val / (total_val - day_pl_val)) * 100
     inr_val = (total_val * AED_TO_INR) / 100000
+    last_updated = hist_val.index[-1].strftime("%d %b %Y, %H:%M")
+    top_sector = df.groupby("Sector")["Value"].sum().idxmax()
+
+    with st.container():
+        st.markdown('<div class="panel">', unsafe_allow_html=True)
+        h1, h2 = st.columns([2.2, 1])
+        with h1:
+            st.markdown("<div class='page-title'>Family Wealth Cockpit</div>", unsafe_allow_html=True)
+            st.markdown("<div class='page-subtitle'>Performance, allocation, and risk in a clean midnight palette.</div>", unsafe_allow_html=True)
+            st.markdown(
+                f"<div class='meta-row'>"
+                f"<span class='meta-pill'>Last update: {last_updated}</span>"
+                f"<span class='meta-pill'>Top sector: {top_sector}</span>"
+                f"<span class='meta-pill'>Tickers tracked: {len(tickers)}</span>"
+                f"</div>",
+                unsafe_allow_html=True,
+            )
+        with h2:
+            gauge_val = min(max(total_pl_pct, -50), 50)
+            st.markdown(
+                f"""
+                <div style='text-align:right'>
+                    <div style='font-size:0.9rem; color:{COLOR_NEUTRAL}; text-transform:uppercase; letter-spacing:0.08em;'>Health</div>
+                    <div style='font-size:1.6rem; font-weight:700; color:{COLOR_PRIMARY};'>{total_pl_pct:+.1f}%</div>
+                    <div style='height:6px; border-radius:4px; background:#111b2c; overflow:hidden; border:1px solid #1f2d44;'>
+                        <div style='width:{gauge_val + 50}%; height:100%; background:{COLOR_PRIMARY};'></div>
+                    </div>
+                    <div style='margin-top:6px; color:{COLOR_NEUTRAL}; font-size:0.9rem;'>Return since inception</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # --- ROW 1: KPI GRID ---
+    kpis = [
+        {"label": "Net Liquidation", "value": fmt_aed(total_val), "delta": None, "accent": COLOR_PRIMARY},
+        {"label": "Daily P&L", "value": fmt_aed(day_pl_val), "delta": fmt_delta(day_pl_pct), "accent": COLOR_PROFIT if day_pl_val >= 0 else COLOR_LOSS},
+        {"label": "Total P&L", "value": fmt_aed(total_pl_val), "delta": fmt_delta(total_pl_pct), "accent": COLOR_PROFIT if total_pl_val >= 0 else COLOR_LOSS},
+        {"label": "Net Worth (INR)", "value": f"₹ {inr_val:,.2f} L", "delta": None, "accent": COLOR_ACCENT_SOFT},
+    ]
 
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Net Liquidation", f"Dh {total_val:,.0f}", delta=None)
-    c2.metric("Daily P&L", f"Dh {day_pl_val:+,.0f}", delta=f"{day_pl_pct:+.2f}%")
-    c3.metric("Total P&L", f"Dh {total_pl_val:+,.0f}", delta=f"{total_pl_pct:+.2f}%")
-    c4.metric("Net Worth (INR)", f"₹ {inr_val:,.2f} L", delta=None)
+    for col, card in zip([c1, c2, c3, c4], kpis):
+        with col:
+            st.markdown(
+                f"""
+                <div class='kpi-card' style='border-top: 3px solid {card['accent']};'>
+                    <div class='kpi-label'>{card['label']}</div>
+                    <div class='kpi-value'>{card['value']}</div>
+                    {'' if not card['delta'] else f"<div class='kpi-delta' style='color:{card['accent']}; border-color:{card['accent']}; background:#0f1a2b;'>Δ {card['delta']}</div>"}
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
     # Status Summary
     top_gain = df.nlargest(1, "Day P&L")
@@ -237,14 +376,17 @@ with tab_overview:
     gainer_name = top_gain.iloc[0]['Ticker'] if not top_gain.empty else "None"
     loser_name = top_loss.iloc[0]['Ticker'] if not top_loss.empty else "None"
     direction = "up" if day_pl_pct >= 0 else "down"
-    
-    st.markdown(f"""
-    <div style='background-color: #ffffff; padding: 12px 20px; border-radius: 8px; border: 1px solid #e5e7eb; color: #4b5563; font-size: 0.9rem; margin-top: -10px; margin-bottom: 20px;'>
-        <strong>Daily Brief:</strong> Portfolio is {direction} <strong>{abs(day_pl_pct):.2f}%</strong> today. 
-        Top driver: <span style='color:{COLOR_PROFIT}; font-weight:600'>{gainer_name}</span>. 
-        Main detractor: <span style='color:{COLOR_LOSS}; font-weight:600'>{loser_name}</span>.
-    </div>
-    """, unsafe_allow_html=True)
+
+    st.markdown(
+        f"""
+        <div class='card-container' style='margin-top:6px;'>
+            <div class='section-title' style='font-size:0.9rem; letter-spacing:0.08em; text-transform:uppercase;'>Daily Brief</div>
+            <div class='muted'>Portfolio is {direction} <span style='color:{COLOR_PRIMARY}; font-weight:700'>{abs(day_pl_pct):.2f}%</span> today.</div>
+            <div class='muted'>Top driver: <span style='color:{COLOR_PROFIT}; font-weight:700'>{gainer_name}</span> · Main detractor: <span style='color:{COLOR_LOSS}; font-weight:700'>{loser_name}</span></div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     # --- ROW 2: TREND & ALLOCATION ---
     c_trend, c_alloc = st.columns([2.5, 1.5])
@@ -253,13 +395,13 @@ with tab_overview:
         with st.container():
             st.markdown('<div class="card-container">', unsafe_allow_html=True)
             st.markdown("#### Portfolio Value")
-            
+
             # Time Range Toggle (Simulated logic for display)
             t_range = st.radio("Range", ["1M", "3M", "YTD"], horizontal=True, label_visibility="collapsed")
-            
+
             # Chart
             fig_trend = px.area(hist_val, x=hist_val.index, y='Total')
-            fig_trend.update_traces(line_color=COLOR_PRIMARY, fillcolor="rgba(31, 111, 235, 0.1)")
+            fig_trend.update_traces(line_color=COLOR_PRIMARY, fillcolor="rgba(74, 163, 255, 0.18)")
             fig_trend = minimalist_chart(fig_trend, height=280)
             fig_trend.update_xaxes(title=None)
             fig_trend.update_yaxes(title=None, tickprefix="Dh ", showgrid=True)
@@ -274,7 +416,7 @@ with tab_overview:
             # 1. By Owner
             owner_agg = df.groupby("Owner")["Value"].sum().reset_index()
             fig_own = px.bar(owner_agg, x="Value", y="Owner", orientation='h', text_auto='.2s')
-            fig_own.update_traces(marker_color=[COLOR_PRIMARY if x == "MV" else "#a5b4fc" for x in owner_agg["Owner"]])
+            fig_own.update_traces(marker_color=[COLOR_PRIMARY if x == "MV" else COLOR_ACCENT_SOFT for x in owner_agg["Owner"]])
             fig_own = minimalist_chart(fig_own, height=100)
             fig_own.update_yaxes(title=None)
             fig_own.update_xaxes(showgrid=False, showticklabels=False, title=None)
@@ -285,9 +427,9 @@ with tab_overview:
             # 2. Top Holdings
             top_h = df.nlargest(5, "Value").sort_values("Value", ascending=True)
             fig_top = px.bar(top_h, x="Value", y="Ticker", orientation='h')
-            fig_top.update_traces(marker_color="#cbd5e1")
+            fig_top.update_traces(marker_color=COLOR_ACCENT_SOFT)
             # Highlight top 1
-            fig_top.data[0].marker.color = [COLOR_PRIMARY if i == len(top_h)-1 else "#cbd5e1" for i in range(len(top_h))]
+            fig_top.data[0].marker.color = [COLOR_PRIMARY if i == len(top_h)-1 else COLOR_ACCENT_SOFT for i in range(len(top_h))]
             fig_top = minimalist_chart(fig_top, height=140)
             fig_top.update_yaxes(title=None)
             fig_top.update_xaxes(showgrid=False, showticklabels=False, title=None)
@@ -331,12 +473,12 @@ with tab_overview:
                 alerts.append(f"📉 **{r['Ticker']}** dropped > 5% today")
             if r['Total %'] < -20:
                 alerts.append(f"❄️ **{r['Ticker']}** deep loss (>20%)")
-        
+
         if not alerts:
-            st.markdown(f"<div style='text-align:center; color:{COLOR_PROFIT}; padding:20px'>✅ All Clear. No Risk triggers.</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='text-align:center; color:{COLOR_PROFIT}; padding:14px; border:1px solid #1f2d44; border-radius:4px; background:#111b2c;'>✅ All Clear. No risk triggers.</div>", unsafe_allow_html=True)
         else:
             for a in alerts:
-                st.markdown(f"<div style='background:#fef2f2; color:#991b1b; padding:8px; border-radius:6px; margin-bottom:8px; font-size:0.9rem'>{a}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='border:1px solid #1f2d44; color:{COLOR_NEUTRAL}; padding:8px; border-radius:4px; margin-bottom:8px; background:#111b2c; font-size:0.9rem'>{a}</div>", unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
     # --- ROW 4: KEY POSITIONS ---
@@ -414,10 +556,10 @@ with tab_positions:
         
         if inspect_ticker:
             row = df[df["Ticker"] == inspect_ticker].iloc[0]
-            
+
             # Header
-            st.markdown(f"## {row['Ticker']} <span style='font-size:1rem; color:#6b7280; font-weight:400'>({row['Owner']})</span>", unsafe_allow_html=True)
-            st.markdown(f"**{row['Sector']}**")
+            st.markdown(f"### {row['Ticker']} <span style='font-size:0.9rem; color:{COLOR_NEUTRAL}; font-weight:500'>({row['Owner']})</span>", unsafe_allow_html=True)
+            st.markdown(f"<span class='muted'>{row['Sector']}</span>", unsafe_allow_html=True)
             
             st.divider()
             
@@ -456,8 +598,8 @@ with tab_analytics:
         fig_bench.add_trace(go.Scatter(x=hist_val.index, y=hist_val['Total'], name='Portfolio', line=dict(color=COLOR_PRIMARY, width=3)))
         # Simulated Benchmark (Nasdaq) - simplified for demo
         bench_sim = hist_val['Total'] * 0.95 # Just a dummy line for visual
-        fig_bench.add_trace(go.Scatter(x=hist_val.index, y=bench_sim, name='Nasdaq 100 (Est)', line=dict(color="#cbd5e1", dash='dot')))
-        
+        fig_bench.add_trace(go.Scatter(x=hist_val.index, y=bench_sim, name='Nasdaq 100 (Est)', line=dict(color=COLOR_ACCENT_SOFT, dash='dot')))
+
         fig_bench = minimalist_chart(fig_bench, height=350)
         fig_bench.update_layout(legend=dict(orientation="h", y=1.1))
         st.plotly_chart(fig_bench, use_container_width=True)
@@ -481,10 +623,23 @@ with tab_analytics:
     with c_conc:
         st.markdown('<div class="card-container">', unsafe_allow_html=True)
         st.markdown("#### Sector Concentration")
-        
+
         sec_agg = df.groupby("Sector")["Value"].sum().reset_index()
-        fig_sec = px.pie(sec_agg, values="Value", names="Sector", hole=0.6, color_discrete_sequence=px.colors.qualitative.Prism)
-        fig_sec.update_layout(height=300, margin=dict(t=0,b=0,l=0,r=0), showlegend=True)
+        fig_sec = px.pie(
+            sec_agg,
+            values="Value",
+            names="Sector",
+            hole=0.6,
+            color_discrete_sequence=[COLOR_PRIMARY, COLOR_ACCENT_SOFT, "#3d7fc4", "#2d5f92", "#234a74"],
+        )
+        fig_sec.update_layout(
+            height=300,
+            margin=dict(t=0, b=0, l=0, r=0),
+            showlegend=True,
+            paper_bgcolor=COLOR_BG,
+            plot_bgcolor=COLOR_BG,
+            font=dict(color=COLOR_NEUTRAL),
+        )
         st.plotly_chart(fig_sec, use_container_width=True)
         
         # Stats
