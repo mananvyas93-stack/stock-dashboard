@@ -145,14 +145,6 @@ st.markdown(
         margin-bottom: 14px;
     }
 
-    .stButton > button {
-        background: #1c2f4a;
-        color: var(--text);
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        padding: 0.45rem 0.9rem;
-    }
-
     .dataframe tbody tr:nth-child(odd) {
         background: rgba(255,255,255,0.02) !important;
     }
@@ -177,14 +169,12 @@ st.markdown(
 USD_TO_AED = 3.6725
 AED_TO_INR = 23.0
 
-# Design tokens for Midnight Blue Pro theme
 COLOR_PRIMARY = "#4aa3ff"
 COLOR_ACCENT_SOFT = "#7fc3ff"
 COLOR_PROFIT = "#6bcf8f"
 COLOR_LOSS = "#f27d72"
 COLOR_NEUTRAL = "#9ba7b8"
 COLOR_BG = "#0f1a2b"
-COLOR_CARD = "#16233a"
 
 
 def fmt_aed(val: float) -> str:
@@ -219,25 +209,45 @@ portfolio_config = [
 
 
 @st.cache_data(ttl=300)
-def load_history(days: int = 365):
+def load_history(days: int = 10) -> pd.DataFrame:
+    """Lightweight loader: last ~10 days of prices, per ticker."""
     tickers = sorted({item["Ticker"] for item in portfolio_config})
     end = datetime.utcnow()
     start = end - timedelta(days=days)
 
-    data = yf.download(
-        tickers=tickers,
-        start=start,
-        end=end,
-        auto_adjust=True,
-        progress=False,
-    )
+    data_dict = {}
 
-    if isinstance(data.columns, pd.MultiIndex):
-        prices = data["Adj Close"].copy()
-    else:
-        prices = data.copy()
+    for t in tickers:
+        try:
+            d = yf.download(
+                t,
+                start=start,
+                end=end,
+                auto_adjust=True,
+                progress=False,
+                threads=False,
+            )
+            if d is None or d.empty:
+                continue
 
-    prices = prices.dropna(how="all")
+            if isinstance(d, pd.DataFrame):
+                if "Adj Close" in d.columns:
+                    s = d["Adj Close"]
+                elif "Close" in d.columns:
+                    s = d["Close"]
+                else:
+                    continue
+            else:
+                s = d
+
+            data_dict[t] = s
+        except Exception:
+            continue
+
+    if not data_dict:
+        return pd.DataFrame()
+
+    prices = pd.DataFrame(data_dict).dropna(how="all")
     return prices
 
 
@@ -312,7 +322,6 @@ def compute_portfolio_history(prices: pd.DataFrame) -> pd.DataFrame:
     return hist_val
 
 
-# --- HELPER: PLOTLY CONFIG ---
 def minimalist_chart(fig, height: int = 250):
     fig.update_layout(
         template=None,
@@ -344,8 +353,9 @@ def minimalist_chart(fig, height: int = 250):
 
 
 # --- 2. LOAD DATA ---
+
 try:
-    hist_data = load_history(365)
+    hist_data = load_history()
 except Exception:
     hist_data = pd.DataFrame()
 
@@ -361,23 +371,23 @@ if df is None or df.empty:
 total_val = df["Value"].sum()
 hist_val = compute_portfolio_history(hist_data)
 
-# --- KPI CALCS ---
+# KPIs
 total_pl_val = df["Total P&L"].sum()
-total_pl_pct = (total_pl_val / df["PurchaseCost"].sum()) * 100.0 if df["PurchaseCost"].sum() != 0 else 0.0
+total_purchase = df["PurchaseCost"].sum()
+total_pl_pct = (total_pl_val / total_purchase) * 100.0 if total_purchase != 0 else 0.0
 day_pl_val = df["Day P&L"].sum()
 day_pl_pct = (day_pl_val / (total_val - day_pl_val)) * 100.0 if (total_val - day_pl_val) != 0 else 0.0
 inr_val = (total_val * AED_TO_INR) / 100000.0
 
 last_updated_ts = hist_val.index[-1]
-if isinstance(last_updated_ts, pd.Timestamp):
-    last_updated_str = last_updated_ts.strftime("%d %b %Y, %H:%M")
-else:
-    last_updated_str = str(last_updated_ts)
+last_updated_str = last_updated_ts.strftime("%d %b %Y, %H:%M") if isinstance(
+    last_updated_ts, pd.Timestamp
+) else str(last_updated_ts)
 
 top_sector = df.groupby("Sector")["Value"].sum().idxmax()
 
+# --- 3. LAYOUT ---
 
-# --- 3. TABS ---
 tab_overview, tab_positions, tab_analytics = st.tabs(
     ["Overview", "Positions", "Analytics & Risk"]
 )
@@ -424,7 +434,7 @@ with tab_overview:
             )
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # KPI GRID
+    # KPI cards
     kpis = [
         {"label": "Net Liquidation", "value": fmt_aed(total_val), "delta": None, "accent": COLOR_PRIMARY},
         {
@@ -479,7 +489,7 @@ with tab_overview:
         unsafe_allow_html=True,
     )
 
-    # Trend + allocation
+    # Trend & allocation
     c_trend, c_alloc = st.columns([2.5, 1.5])
 
     with c_trend:
@@ -487,17 +497,15 @@ with tab_overview:
             st.markdown("<div class='card-container'>", unsafe_allow_html=True)
             st.markdown("#### Portfolio Value", unsafe_allow_html=True)
 
-            t_range = st.radio("Range", ["1M", "3M", "YTD", "1Y"], horizontal=True, label_visibility="collapsed")
-
+            t_range = st.radio("Range", ["3D", "1W", "2W"], horizontal=True, label_visibility="collapsed")
             hist_plot = hist_val.copy()
             if not hist_plot.empty:
-                if t_range == "1M":
-                    hist_plot = hist_plot.iloc[-22:]
-                elif t_range == "3M":
-                    hist_plot = hist_plot.iloc[-66:]
-                elif t_range == "YTD":
-                    this_year = datetime.utcnow().year
-                    hist_plot = hist_plot[hist_plot.index.year == this_year]
+                if t_range == "3D":
+                    hist_plot = hist_plot.iloc[-3:]
+                elif t_range == "1W":
+                    hist_plot = hist_plot.iloc[-7:]
+                elif t_range == "2W":
+                    hist_plot = hist_plot.iloc[-14:]
 
             fig_trend = px.area(hist_plot, x=hist_plot.index, y="Total")
             fig_trend.update_traces(line_color=COLOR_PRIMARY, fillcolor="rgba(74, 163, 255, 0.18)")
@@ -512,7 +520,6 @@ with tab_overview:
             st.markdown("<div class='card-container'>", unsafe_allow_html=True)
             st.markdown("#### Allocation", unsafe_allow_html=True)
 
-            # By owner
             owner_agg = df.groupby("Owner")["Value"].sum().reset_index()
             fig_own = px.bar(owner_agg, x="Value", y="Owner", orientation="h", text_auto=".2s")
             fig_own.update_traces(
@@ -525,7 +532,6 @@ with tab_overview:
 
             st.markdown("---")
 
-            # Top holdings
             top_h = df.nlargest(5, "Value").sort_values("Value", ascending=True)
             fig_top = px.bar(top_h, x="Value", y="Ticker", orientation="h")
             fig_top.update_traces(marker_color=COLOR_ACCENT_SOFT)
@@ -609,13 +615,8 @@ with tab_overview:
         },
     )
 
-    if st.button("Open full ledger", type="secondary"):
-        st.toast("Switching to Positions Tab...")
-
-
 # === TAB 2: POSITIONS ===
 with tab_positions:
-    # Filters
     with st.container():
         st.markdown("<div class='card-container'>", unsafe_allow_html=True)
         st.markdown("#### Filter positions", unsafe_allow_html=True)
@@ -660,8 +661,7 @@ with tab_positions:
 
         st.markdown("</div>", unsafe_allow_html=True)
 
-    col_insp = st.columns(1)[0]
-    with col_insp:
+    with st.container():
         st.markdown("<div class='card-container'>", unsafe_allow_html=True)
 
         inspect_ticker = st.selectbox("Inspect Position", options=filtered_df["Ticker"].unique())
@@ -685,7 +685,7 @@ with tab_positions:
             i4.metric("Value", f"Dh {row['Value']/1000:.1f}k")
 
             st.divider()
-            st.caption("Performance Trend")
+            st.caption("Performance Trend (last few days)")
 
             if inspect_ticker in hist_data.columns:
                 fig_mini = px.line(hist_data[inspect_ticker])
@@ -696,7 +696,6 @@ with tab_positions:
                 st.plotly_chart(fig_mini, use_container_width=True)
 
         st.markdown("</div>", unsafe_allow_html=True)
-
 
 # === TAB 3: ANALYTICS ===
 with tab_analytics:
