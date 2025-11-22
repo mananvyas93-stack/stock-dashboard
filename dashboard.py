@@ -4,32 +4,18 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
-# --- 0. PAGE SETUP (INSTITUTIONAL MODE) ---
-st.set_page_config(layout="wide", page_title="Family Wealth Cockpit")
+# --- 0. PAGE SETUP ---
+st.set_page_config(layout="wide", page_title="Wealth Cockpit v2.1")
 
-# --- 1. DESIGN SYSTEM INJECTION ---
+# --- 1. STYLES ---
 st.markdown("""
 <style>
-    /* GLOBAL RESET */
     .block-container { padding-top: 1rem; padding-bottom: 2rem; }
-    
-    /* TYPOGRAPHY */
-    h1, h2, h3, p, div { font-family: 'Inter', sans-serif; }
-    .metric-value, [data-testid="stMetricValue"] { 
-        font-family: 'Roboto Mono', monospace !important; 
-        font-weight: 600;
-    }
-    
-    /* CARDS (CONTAINERS) */
+    [data-testid="stMetricValue"] { font-family: 'Roboto Mono', monospace; font-size: 1.6rem; }
     div[data-testid="stVerticalBlock"] > div[data-testid="stVerticalBlock"] {
-        background-color: #0d1117; /* Darker background for contrast */
-        border: 1px solid #30363d;
-        border-radius: 8px;
-        padding: 1.2rem;
+        background-color: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 1rem;
     }
-    
-    /* REMOVE CHART PADDING */
-    .js-plotly-plot .plotly .modebar { display: none; }
+    .modebar { display: none; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -37,7 +23,6 @@ st.markdown("""
 USD_TO_AED = 3.6725
 AED_TO_INR = 23.0
 
-# Hardcoded Source of Truth
 portfolio_data = [
     {"Name": "Alphabet", "Ticker": "GOOGL", "Units": 51, "PurchaseValAED": 34128, "Owner": "MV"},
     {"Name": "Apple", "Ticker": "AAPL", "Units": 50, "PurchaseValAED": 37183, "Owner": "MV"},
@@ -59,151 +44,107 @@ portfolio_data = [
     {"Name": "MSFT [SV]", "Ticker": "MSFT", "Units": 4, "PurchaseValAED": 7476, "Owner": "SV"},
 ]
 
-# Fetch Data
-with st.spinner('Syncing Market Data...'):
+with st.spinner('Fetching Data...'):
     tickers = [item["Ticker"] for item in portfolio_data]
     try:
-        # Fetch 5 days to handle weekends/holidays safely
         data = yf.download(tickers, period="5d")['Close']
-        if not data.empty:
-            latest = data.iloc[-1]
-            prev = data.iloc[-2]
-        else:
-            st.error("Market Data Error")
-            st.stop()
+        latest = data.iloc[-1]; prev = data.iloc[-2]
     except:
         st.stop()
 
-# Process Data
 rows = []
 for item in portfolio_data:
     t = item["Ticker"]
     try: live = latest[t]; close = prev[t]
     except: live = 0; close = 0
     
-    val_aed = live * item["Units"] * USD_TO_AED
-    profit = val_aed - item["PurchaseValAED"]
-    day_change = (live - close) * item["Units"] * USD_TO_AED
-    day_pct = ((live - close) / close) * 100 if close > 0 else 0
+    val = live * item["Units"] * USD_TO_AED
+    prof = val - item["PurchaseValAED"]
+    day = (live - close) * item["Units"] * USD_TO_AED
+    pct = ((live - close) / close) * 100 if close > 0 else 0
+    
+    # PRE-FORMAT STRINGS FOR CHARTS (The "Bulletproof" Fix)
+    # We create a string column that combines Ticker + Value + %
+    # e.g. "GOOGL<br>+1.2%<br>Dh 50k"
+    val_str = f"Dh {val/1000:.1f}k"
+    pct_str = f"{pct:+.1f}%"
+    label_html = f"<span style='font-weight:bold; font-size:14px'>{t}</span><br><span style='color:#ccc'>{pct_str}</span><br>{val_str}"
 
     rows.append({
-        "Ticker": t, "Name": item["Name"], "Owner": item["Owner"],
-        "Value": val_aed, "Profit": profit, "Day": day_change, "Day %": day_pct
+        "Ticker": t, "Owner": item["Owner"], "Value": val, 
+        "Profit": prof, "Day": day, "Day %": pct,
+        "Label": label_html # New Column
     })
 df = pd.DataFrame(rows)
 
-# Aggregates
+# --- 3. DASHBOARD LAYOUT ---
+
+# Title with Version Badge
+st.caption("FAMILY WEALTH COCKPIT • v2.1")
+
+# METRICS
 total_val = df["Value"].sum()
 day_pl = df["Day"].sum()
 total_pl = df["Profit"].sum()
 inr_lac = (total_val * AED_TO_INR) / 100000
 
-# --- 3. UI LAYER: COCKPIT ---
+k1, k2, k3, k4 = st.columns(4)
+k1.metric("Net Liquidation", f"{total_val:,.0f}", delta=None)
+k2.metric("Daily P&L", f"{day_pl:+,.0f}", delta=f"{(day_pl/total_val):.2%}")
+k3.metric("Total P&L", f"{total_pl:+,.0f}", delta=f"{(total_pl/(total_val-total_pl)):.2%}")
+k4.metric("INR Wealth", f"₹ {inr_lac:,.2f} L")
 
-st.caption(f"FAMILY WEALTH COCKPIT • {pd.Timestamp.now().strftime('%d %b %Y')}")
+st.markdown("---")
 
-# SECTION A: KPI STRIP
-kpi1, kpi2, kpi3, kpi4 = st.columns(4)
-kpi1.metric("Net Liquidation (AED)", f"{total_val:,.0f}", delta=None)
-kpi2.metric("Daily P&L (AED)", f"{day_pl:+,.0f}", delta=f"{(day_pl/total_val):.2%}")
-kpi3.metric("Total P&L (AED)", f"{total_pl:+,.0f}", delta=f"{(total_pl/(total_val-total_pl)):.2%}")
-kpi4.metric("Net Worth (INR Lacs)", f"₹ {inr_lac:,.2f}", delta=None)
+# MAIN CHARTS
+c_map, c_rail = st.columns([2, 1])
 
-st.markdown("---") 
-
-# SECTION B: THE MAIN GRID (2:1 Ratio)
-col_main, col_rail = st.columns([2, 1])
-
-with col_main:
+with c_map:
     st.subheader("Risk Map")
-    # TREEMAP
     fig_map = px.treemap(
-        df, 
-        path=[px.Constant("Portfolio"), 'Owner', 'Ticker'], 
-        values='Value',
-        color='Day %',
-        color_continuous_scale=['#da3633', '#21262d', '#238636'], # Red -> Dark Grey -> Green
-        color_continuous_midpoint=0,
-        range_color=[-3, 3] 
+        df, path=[px.Constant("Portfolio"), 'Owner', 'Ticker'], values='Value',
+        color='Day %', color_continuous_scale=['#da3633', '#21262d', '#238636'],
+        color_continuous_midpoint=0, range_color=[-3, 3]
     )
-    # FIX: Format numbers to 2 decimals and use 'k' for thousands
-    fig_map.update_traces(
-        texttemplate="<span style='font-size:15px; font-weight:700'>%{label}</span><br>%{customdata[0]:+.2f}%<br>Dh %{value:.2s}", 
-        textposition="middle center",
-        customdata=df[['Day %']]
-    )
-    fig_map.update_layout(
-        margin=dict(t=0, l=0, r=0, b=0), 
-        height=500,
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)'
-    )
+    # USE THE PRE-FORMATTED LABEL COLUMN
+    fig_map.update_traces(text=df['Label'], textinfo='text') 
+    fig_map.update_layout(margin=dict(t=0,l=0,r=0,b=0), height=500, paper_bgcolor='rgba(0,0,0,0)')
     st.plotly_chart(fig_map, use_container_width=True)
 
-with col_rail:
+with c_rail:
     st.subheader("Top Movers")
-    
-    # Sort Data
     movers = df.sort_values("Day %", ascending=False)
-    top_3 = movers.head(3)
-    bot_3 = movers.tail(3).sort_values("Day %", ascending=True)
+    top = movers.head(3); bot = movers.tail(3).sort_values("Day %", ascending=True)
     
-    # BAR CHART
-    fig_movers = go.Figure()
-    
-    # Winners (Green)
-    fig_movers.add_trace(go.Bar(
-        y=top_3["Ticker"], x=top_3["Day %"], orientation='h',
-        name="Winners", marker_color='#238636', 
-        # FIX: Explicitly format to 2 decimals
-        texttemplate="%{x:+.2f}%", textposition="inside",
-        hovertemplate="%{y}: %{x:.2f}%"
+    fig_mov = go.Figure()
+    fig_mov.add_trace(go.Bar(
+        y=top["Ticker"], x=top["Day %"], orientation='h',
+        marker_color='#238636', texttemplate="%{x:+.1f}%", textposition="inside"
     ))
-    
-    # Losers (Red)
-    fig_movers.add_trace(go.Bar(
-        y=bot_3["Ticker"], x=bot_3["Day %"], orientation='h',
-        name="Losers", marker_color='#da3633', 
-        # FIX: Explicitly format to 2 decimals
-        texttemplate="%{x:+.2f}%", textposition="inside",
-        hovertemplate="%{y}: %{x:.2f}%"
+    fig_mov.add_trace(go.Bar(
+        y=bot["Ticker"], x=bot["Day %"], orientation='h',
+        marker_color='#da3633', texttemplate="%{x:+.1f}%", textposition="inside"
     ))
-    
-    fig_movers.update_layout(
-        barmode='relative', 
-        height=250,
-        margin=dict(t=0, b=0, l=0, r=0),
-        xaxis=dict(showgrid=False, zeroline=True, zerolinecolor='#30363d', showticklabels=False),
-        yaxis=dict(autorange="reversed", showgrid=False, tickfont=dict(color='#8b949e', size=12)),
-        showlegend=False,
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)'
+    fig_mov.update_layout(
+        barmode='relative', height=250, margin=dict(t=0,b=0,l=0,r=0),
+        xaxis=dict(showgrid=False, showticklabels=False),
+        yaxis=dict(showgrid=False, showticklabels=True, tickfont=dict(color='#999')),
+        showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)'
     )
-    st.plotly_chart(fig_movers, use_container_width=True)
-    
-    # ALLOCATION MINI-CHART
-    st.subheader("Allocation")
-    mv_val = df[df["Owner"]=="MV"]["Value"].sum()
-    sv_val = df[df["Owner"]=="SV"]["Value"].sum()
-    
-    fig_donut = go.Figure(data=[go.Pie(
-        labels=['MV', 'SV'], 
-        values=[mv_val, sv_val], 
-        hole=.7,
-        marker=dict(colors=['#1f6feb', '#8957e5']),
-        textinfo='none' # Clean look, no messy labels on the ring
-    )])
-    fig_donut.update_layout(
-        height=180, 
-        margin=dict(t=0, b=0, l=0, r=0),
-        showlegend=False,
-        # Center Text
-        annotations=[dict(text=f"MV<br>{(mv_val/total_val):.0%}", x=0.5, y=0.5, font_size=20, showarrow=False, font_color="#f0f6fc")]
-    )
-    st.plotly_chart(fig_donut, use_container_width=True)
+    st.plotly_chart(fig_mov, use_container_width=True)
 
-# --- 4. NAVIGATION TO DETAILS ---
+    st.subheader("Allocation")
+    mv = df[df["Owner"]=="MV"]["Value"].sum()
+    fig_don = go.Figure(go.Pie(
+        labels=['MV', 'SV'], values=[mv, total_val-mv], hole=.7,
+        marker=dict(colors=['#1f6feb', '#8957e5']), textinfo='none'
+    ))
+    fig_don.update_layout(
+        height=180, margin=dict(t=0,b=0,l=0,r=0), showlegend=False,
+        annotations=[dict(text=f"MV<br>{mv/total_val:.0%}", showarrow=False, font_size=20, font_color="#fff")]
+    )
+    st.plotly_chart(fig_don, use_container_width=True)
+
 st.markdown("---")
-col_btn1, col_btn2 = st.columns([6, 1])
-with col_btn2:
-    st.button("View Ledger →", type="primary")
+with st.expander("Ledger Details"):
+    st.dataframe(df, hide_index=True, use_container_width=True)
