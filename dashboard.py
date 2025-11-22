@@ -210,7 +210,8 @@ portfolio_config = [
 
 @st.cache_data(ttl=300)
 def load_history(days: int = 10) -> pd.DataFrame:
-    """Lightweight loader: last ~10 days of prices, per ticker."""
+    """Try to get last ~10 days of prices from Yahoo.
+    If Yahoo misbehaves, this will return an empty DataFrame."""
     tickers = sorted({item["Ticker"] for item in portfolio_config})
     end = datetime.utcnow()
     start = end - timedelta(days=days)
@@ -251,10 +252,8 @@ def load_history(days: int = 10) -> pd.DataFrame:
     return prices
 
 
-def build_positions(prices: pd.DataFrame) -> pd.DataFrame:
-    if prices is None or prices.empty:
-        return pd.DataFrame()
-
+def build_positions_live(prices: pd.DataFrame) -> pd.DataFrame:
+    """Build positions when we have live price history."""
     last = prices.iloc[-1]
     prev = prices.iloc[-2] if len(prices) > 1 else prices.iloc[-1]
 
@@ -306,10 +305,38 @@ def build_positions(prices: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def compute_portfolio_history(prices: pd.DataFrame) -> pd.DataFrame:
-    if prices is None or prices.empty:
-        return pd.DataFrame()
+def build_positions_static() -> pd.DataFrame:
+    """Fallback when Yahoo gives us nothing:
+    treat purchase value as current value, zero P&L."""
+    rows = []
+    for item in portfolio_config:
+        units = float(item["Units"])
+        purchase_aed = float(item["PurchaseValAED"])
+        rows.append(
+            {
+                "Name": item["Name"],
+                "Ticker": item["Ticker"],
+                "Owner": item["Owner"],
+                "Sector": item["Sector"],
+                "Units": units,
+                "Price": 0.0,
+                "Price (AED)": 0.0,
+                "Value": purchase_aed,
+                "PurchaseCost": purchase_aed,
+                "Day %": 0.0,
+                "Day P&L": 0.0,
+                "Total %": 0.0,
+                "Total P&L": 0.0,
+            }
+        )
 
+    df = pd.DataFrame(rows)
+    total_val = df["Value"].sum()
+    df["Weight"] = df["Value"] / total_val * 100.0
+    return df
+
+
+def compute_portfolio_history(prices: pd.DataFrame) -> pd.DataFrame:
     hist_val = pd.DataFrame(index=prices.index)
     hist_val["Total"] = 0.0
 
@@ -319,6 +346,15 @@ def compute_portfolio_history(prices: pd.DataFrame) -> pd.DataFrame:
         if t in prices.columns:
             hist_val["Total"] += prices[t] * units * USD_TO_AED
 
+    return hist_val
+
+
+def compute_static_history(df: pd.DataFrame) -> pd.DataFrame:
+    """Flat line history when we only have static data."""
+    total_val = df["Value"].sum()
+    idx = pd.date_range(end=datetime.utcnow(), periods=7, freq="D")
+    hist_val = pd.DataFrame(index=idx)
+    hist_val["Total"] = total_val
     return hist_val
 
 
@@ -352,26 +388,28 @@ def minimalist_chart(fig, height: int = 250):
     return fig
 
 
-# --- 2. LOAD DATA ---
+# --- 2. LOAD DATA WITH FALLBACK ---
 
 try:
-    hist_data = load_history()
+    live_prices = load_history()
 except Exception:
-    hist_data = pd.DataFrame()
+    live_prices = pd.DataFrame()
 
-if hist_data is None or hist_data.empty:
-    st.error("Data service unavailable – could not load price history.")
-    st.stop()
+if live_prices is not None and not live_prices.empty:
+    data_mode = "live"
+    df = build_positions_live(live_prices)
+    hist_val = compute_portfolio_history(live_prices)
+else:
+    data_mode = "static"
+    df = build_positions_static()
+    hist_val = compute_static_history(df)
 
-df = build_positions(hist_data)
 if df is None or df.empty:
-    st.error("No holdings could be built from portfolio_config.")
+    st.error("Could not build positions from configuration.")
     st.stop()
 
 total_val = df["Value"].sum()
-hist_val = compute_portfolio_history(hist_data)
 
-# KPIs
 total_pl_val = df["Total P&L"].sum()
 total_purchase = df["PurchaseCost"].sum()
 total_pl_pct = (total_pl_val / total_purchase) * 100.0 if total_purchase != 0 else 0.0
@@ -403,8 +441,9 @@ with tab_overview:
                 "<div class='page-title'>Family Wealth Cockpit</div>",
                 unsafe_allow_html=True,
             )
+            mode_label = "Live Yahoo prices" if data_mode == "live" else "Static purchase values (Yahoo unavailable)"
             st.markdown(
-                "<div class='page-subtitle'>Performance, allocation, and risk in a clean midnight palette.</div>",
+                f"<div class='page-subtitle'>{mode_label}.</div>",
                 unsafe_allow_html=True,
             )
             st.markdown(
@@ -687,8 +726,8 @@ with tab_positions:
             st.divider()
             st.caption("Performance Trend (last few days)")
 
-            if inspect_ticker in hist_data.columns:
-                fig_mini = px.line(hist_data[inspect_ticker])
+            if inspect_ticker in (live_prices.columns if data_mode == "live" else []):
+                fig_mini = px.line(live_prices[inspect_ticker])
                 fig_mini.update_traces(line_color=COLOR_PRIMARY, line_width=2)
                 fig_mini = minimalist_chart(fig_mini, height=150)
                 fig_mini.update_xaxes(visible=False)
