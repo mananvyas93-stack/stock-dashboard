@@ -442,7 +442,6 @@ else:
         color_continuous_scale=[COLOR_DANGER, "#16233a", COLOR_SUCCESS],
         color_continuous_midpoint=0,
         custom_data=["DayPLINR", "Ticker", "DayPLKLabel"],
-        root_color="rgba(0,0,0,0)",
     )
 
     fig.update_traces(
