@@ -2,6 +2,8 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 import plotly.express as px
+from datetime import datetime, time
+from zoneinfo import ZoneInfo
 
 # ---------- PAGE CONFIG ----------
 st.set_page_config(
@@ -67,6 +69,12 @@ st.markdown(
         color: var(--text);
     }
 
+    .page-subtitle {
+        font-size: 0.78rem;
+        color: var(--muted);
+        margin-top: 2px;
+    }
+
     .kpi-label {
         font-size: 0.75rem;
         text-transform: uppercase;
@@ -78,19 +86,6 @@ st.markdown(
     .kpi-value-main {
         font-size: 1.2rem;
         font-weight: 700;
-        color: var(--text);
-    }
-
-    .kpi-sub {
-        font-size: 0.8rem;
-        color: var(--muted);
-        margin-top: 2px;
-    }
-
-    .section-title {
-        margin: 18px 0 6px 0;
-        font-weight: 600;
-        font-size: 0.95rem;
         color: var(--text);
     }
 </style>
@@ -108,24 +103,24 @@ COLOR_BG = "#0f1a2b"
 
 # ---------- PORTFOLIO CONFIG ----------
 portfolio_config = [
-    {"Name": "Alphabet",          "Ticker": "GOOGL", "Units": 51, "PurchaseValAED": 34128, "Owner": "MV", "Sector": "Tech"},
-    {"Name": "Apple",             "Ticker": "AAPL",  "Units": 50, "PurchaseValAED": 37183, "Owner": "MV", "Sector": "Tech"},
-    {"Name": "Tesla",             "Ticker": "TSLA",  "Units": 30, "PurchaseValAED": 33116, "Owner": "MV", "Sector": "Auto"},
-    {"Name": "Nasdaq 100",        "Ticker": "QQQM",  "Units": 180,"PurchaseValAED": 150894,"Owner": "MV", "Sector": "ETF"},
-    {"Name": "AMD",               "Ticker": "AMD",   "Units": 27, "PurchaseValAED": 16075, "Owner": "MV", "Sector": "Semi"},
-    {"Name": "Broadcom",          "Ticker": "AVGO",  "Units": 13, "PurchaseValAED": 13578, "Owner": "MV", "Sector": "Semi"},
-    {"Name": "Nvidia",            "Ticker": "NVDA",  "Units": 78, "PurchaseValAED": 49707, "Owner": "MV", "Sector": "Semi"},
-    {"Name": "Amazon",            "Ticker": "AMZN",  "Units": 59, "PurchaseValAED": 47720, "Owner": "MV", "Sector": "Retail"},
-    {"Name": "MSFT",              "Ticker": "MSFT",  "Units": 26, "PurchaseValAED": 49949, "Owner": "MV", "Sector": "Tech"},
-    {"Name": "Meta",              "Ticker": "META",  "Units": 18, "PurchaseValAED": 48744, "Owner": "MV", "Sector": "Tech"},
-    {"Name": "Broadcom [SV]",     "Ticker": "AVGO",  "Units": 2,  "PurchaseValAED": 2122,  "Owner": "SV", "Sector": "Semi"},
-    {"Name": "Apple [SV]",        "Ticker": "AAPL",  "Units": 2,  "PurchaseValAED": 1486,  "Owner": "SV", "Sector": "Tech"},
-    {"Name": "Nasdaq [SV]",       "Ticker": "QQQ",   "Units": 1,  "PurchaseValAED": 2095,  "Owner": "SV", "Sector": "ETF"},
-    {"Name": "Nvidia [SV]",       "Ticker": "NVDA",  "Units": 2,  "PurchaseValAED": 1286,  "Owner": "SV", "Sector": "Semi"},
-    {"Name": "Amazon [SV]",       "Ticker": "AMZN",  "Units": 4,  "PurchaseValAED": 3179,  "Owner": "SV", "Sector": "Retail"},
-    {"Name": "Novo [SV]",         "Ticker": "NVO",   "Units": 4,  "PurchaseValAED": 714,   "Owner": "SV", "Sector": "Health"},
-    {"Name": "Nasdaq 100 [SV]",   "Ticker": "QQQM",  "Units": 10, "PurchaseValAED": 8989,  "Owner": "SV", "Sector": "ETF"},
-    {"Name": "MSFT [SV]",         "Ticker": "MSFT",  "Units": 4,  "PurchaseValAED": 7476,  "Owner": "SV", "Sector": "Tech"},
+    {"Name": "Alphabet",          "Ticker": "GOOGL", "Units": 51, "PurchaseValAED": 34128,  "Owner": "MV", "Sector": "Tech"},
+    {"Name": "Apple",             "Ticker": "AAPL",  "Units": 50, "PurchaseValAED": 37183,  "Owner": "MV", "Sector": "Tech"},
+    {"Name": "Tesla",             "Ticker": "TSLA",  "Units": 30, "PurchaseValAED": 33116,  "Owner": "MV", "Sector": "Auto"},
+    {"Name": "Nasdaq 100",        "Ticker": "QQQM",  "Units": 180,"PurchaseValAED": 150894, "Owner": "MV", "Sector": "ETF"},
+    {"Name": "AMD",               "Ticker": "AMD",   "Units": 27, "PurchaseValAED": 16075,  "Owner": "MV", "Sector": "Semi"},
+    {"Name": "Broadcom",          "Ticker": "AVGO",  "Units": 13, "PurchaseValAED": 13578,  "Owner": "MV", "Sector": "Semi"},
+    {"Name": "Nvidia",            "Ticker": "NVDA",  "Units": 78, "PurchaseValAED": 49707,  "Owner": "MV", "Sector": "Semi"},
+    {"Name": "Amazon",            "Ticker": "AMZN",  "Units": 59, "PurchaseValAED": 47720,  "Owner": "MV", "Sector": "Retail"},
+    {"Name": "MSFT",              "Ticker": "MSFT",  "Units": 26, "PurchaseValAED": 49949,  "Owner": "MV", "Sector": "Tech"},
+    {"Name": "Meta",              "Ticker": "META",  "Units": 18, "PurchaseValAED": 48744,  "Owner": "MV", "Sector": "Tech"},
+    {"Name": "Broadcom [SV]",     "Ticker": "AVGO",  "Units": 2,  "PurchaseValAED": 2122,   "Owner": "SV", "Sector": "Semi"},
+    {"Name": "Apple [SV]",        "Ticker": "AAPL",  "Units": 2,  "PurchaseValAED": 1486,   "Owner": "SV", "Sector": "Tech"},
+    {"Name": "Nasdaq [SV]",       "Ticker": "QQQ",   "Units": 1,  "PurchaseValAED": 2095,   "Owner": "SV", "Sector": "ETF"},
+    {"Name": "Nvidia [SV]",       "Ticker": "NVDA",  "Units": 2,  "PurchaseValAED": 1286,   "Owner": "SV", "Sector": "Semi"},
+    {"Name": "Amazon [SV]",       "Ticker": "AMZN",  "Units": 4,  "PurchaseValAED": 3179,   "Owner": "SV", "Sector": "Retail"},
+    {"Name": "Novo [SV]",         "Ticker": "NVO",   "Units": 4,  "PurchaseValAED": 714,    "Owner": "SV", "Sector": "Health"},
+    {"Name": "Nasdaq 100 [SV]",   "Ticker": "QQQM",  "Units": 10, "PurchaseValAED": 8989,   "Owner": "SV", "Sector": "ETF"},
+    {"Name": "MSFT [SV]",         "Ticker": "MSFT",  "Units": 4,  "PurchaseValAED": 7476,   "Owner": "SV", "Sector": "Tech"},
 ]
 
 # ---------- FX HELPERS ----------
@@ -333,21 +328,37 @@ def aggregate_for_heatmap(df: pd.DataFrame) -> pd.DataFrame:
 
 # ---------- UI HELPERS ----------
 
-def render_kpi(label: str, value: str, sub: str):
+def render_kpi(label: str, value: str):
+    """KPI card without sub-text."""
     st.markdown(
         f"""
         <div class="kpi-card">
             <div class="kpi-label">{label}</div>
             <div class="kpi-value-main">{value}</div>
-            <div class="kpi-sub">{sub}</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-# ---------- UI / MAIN ----------
 
-# Sidebar: FX settings
+def get_market_status_text() -> str:
+    """Return simple label for pre-market / live / post-market / weekend."""
+    us_tz = ZoneInfo("America/New_York")
+    now_us = datetime.now(us_tz)
+    weekday = now_us.weekday()  # 0=Mon, 6=Sun
+    t = now_us.time()
+    open_time = time(9, 30)
+    close_time = time(16, 0)
+
+    if weekday >= 5:
+        return "US market closed (weekend) – showing last available close"
+    if t < open_time:
+        return "Pre-market – showing last official close"
+    if t >= close_time:
+        return "Post-market – showing today’s close (once available)"
+    return "Market live – numbers based on latest Yahoo prices (may lag slightly)"
+
+# ---------- SIDEBAR FX ----------
 st.sidebar.markdown("### Settings")
 base_fx = get_aed_inr_rate_from_yahoo()
 AED_TO_INR = st.sidebar.number_input(
@@ -357,12 +368,12 @@ AED_TO_INR = st.sidebar.number_input(
     format="%.2f",
 )
 
-# Load prices & build portfolio
+# ---------- DATA PIPELINE ----------
 prices = load_prices()
 positions = build_positions_from_prices(prices)
 agg_for_heatmap = aggregate_for_heatmap(positions) if not positions.empty else positions
 
-# Top metrics
+# Top-level aggregates
 total_val_aed = positions["ValueAED"].sum()
 total_purchase_aed = positions["PurchaseAED"].sum()
 total_pl_aed = positions["TotalPLAED"].sum()
@@ -377,10 +388,13 @@ day_pl_inr_lacs = fmt_inr_lacs_from_aed(day_pl_aed, AED_TO_INR)
 overall_pct_str = f"{total_pl_pct:+.2f}%"
 
 # ---------- HEADER ----------
+market_status = get_market_status_text()
+
 st.markdown(
-    """
+    f"""
 <div class="card">
   <div class="page-title">Stocks Dashboard</div>
+  <div class="page-subtitle">{market_status}</div>
 </div>
 """,
     unsafe_allow_html=True,
@@ -390,37 +404,43 @@ st.markdown(
 c1, c2, c3, c4 = st.columns(4)
 
 with c1:
-    render_kpi("Total Profit (INR)", total_pl_inr_lacs, "Absolute profit / loss")
+    render_kpi("Total Profit (INR)", total_pl_inr_lacs)
 
 with c2:
-    render_kpi("Today's P&L (INR)", day_pl_inr_lacs, "")
+    render_kpi("Today's P&L (INR)", day_pl_inr_lacs)
 
 with c3:
-    render_kpi("Portfolio Size (INR)", total_val_inr_lacs, "Live mark-to-market")
+    render_kpi("Portfolio Size (INR)", total_val_inr_lacs)
 
 with c4:
-    render_kpi("Overall Return (%)", overall_pct_str, "Since inception")
+    render_kpi("Overall Return (%)", overall_pct_str)
 
 # ---------- HEATMAP ----------
-st.markdown('<div class="section-title">Heat Map – Today</div>', unsafe_allow_html=True)
-
 if agg_for_heatmap is None or agg_for_heatmap.empty:
     st.info("No live price data. Showing static valuation only; heat map disabled.")
 else:
+    hm = agg_for_heatmap.copy()
+    # Day P&L in INR
+    hm["DayPLINR"] = hm["DayPLAED"] * AED_TO_INR
+    # Size for treemap driven purely by magnitude of today's P&L (INR)
+    hm["SizeForHeatmap"] = hm["DayPLINR"].abs() + 1e-6  # avoid zero-area tiles
+
     fig = px.treemap(
-        agg_for_heatmap,
+        hm,
         path=["Owner", "Name"],
-        values="ValueAED",
-        color="DayPct",
+        values="SizeForHeatmap",
+        color="DayPLINR",
         color_continuous_scale=[COLOR_DANGER, "#16233a", COLOR_SUCCESS],
         color_continuous_midpoint=0,
-        hover_data={
-            "Ticker": True,
-            "DayPct": ":.2f",
-            "TotalPct": ":.2f",
-            "ValueAED": ":.0f",
-        },
+        custom_data=["DayPLINR", "Ticker"],
     )
+
+    # Show INR day P&L on tile and in hover
+    fig.update_traces(
+        hovertemplate="<b>%{label}</b><br>Ticker: %{customdata[1]}<br>Day P&L: ₹ %{customdata[0]:,.0f}<extra></extra>",
+        texttemplate="%{label}<br>₹ %{customdata[0]:,.0f}",
+    )
+
     fig.update_layout(
         margin=dict(t=0, l=0, r=0, b=0),
         paper_bgcolor=COLOR_BG,
