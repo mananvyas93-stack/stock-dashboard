@@ -2,17 +2,16 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 from datetime import datetime, timedelta
 
-# --- 0. PAGE CONFIGURATION & THEME SETUP ---
+# ---------- PAGE CONFIG ----------
 st.set_page_config(
-    layout="wide",
     page_title="Family Wealth Cockpit",
+    layout="wide",
     initial_sidebar_state="collapsed",
 )
 
-# --- CUSTOM CSS SYSTEM ---
+# ---------- THEME / CSS ----------
 st.markdown(
     """
 <style>
@@ -26,6 +25,8 @@ st.markdown(
         --muted: #9ba7b8;
         --accent: #4aa3ff;
         --accent-soft: #7fc3ff;
+        --danger: #f27d72;
+        --success: #6bcf8f;
     }
 
     html, body, [class*="css"] {
@@ -37,126 +38,93 @@ st.markdown(
     header {visibility: hidden;}
 
     .block-container {
-        padding: 1.2rem 1.6rem 2rem;
-        max-width: 1450px;
+        padding: 1.2rem 1.0rem 2rem;
+        max-width: 900px;   /* tighter, more mobile-like */
     }
 
-    .panel, .card-container, .kpi-card {
+    .card, .kpi-card {
         background: var(--card);
         border: 1px solid var(--border);
-        border-radius: 4px;
-        padding: 14px 16px;
+        border-radius: 8px;
+        padding: 12px 14px;
         box-shadow: none;
     }
 
     .page-title {
-        font-size: 1.6rem;
+        font-size: 1.4rem;
         font-weight: 700;
-        margin: 0 0 4px 0;
+        margin: 0 0 2px 0;
         color: var(--text);
     }
 
     .page-subtitle {
-        margin: 0 0 10px 0;
+        margin: 0 0 8px 0;
         color: var(--muted);
-        font-size: 0.95rem;
+        font-size: 0.9rem;
     }
 
-    .meta-row {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        color: var(--muted);
-        font-size: 0.85rem;
-    }
-
-    .meta-pill {
-        padding: 6px 10px;
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        background: #111b2c;
-    }
-
-    .kpi-card {
-        padding: 14px;
-    }
-
-    .kpi-label {
-        font-size: 0.78rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--muted);
-        margin-bottom: 6px;
-    }
-
-    .kpi-value {
-        font-size: 1.4rem;
-        font-weight: 700;
-        color: var(--text);
-        margin-bottom: 6px;
-    }
-
-    .kpi-delta {
+    .status-pill {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 4px 8px;
-        border-radius: 4px;
+        padding: 4px 10px;
+        border-radius: 999px;
         border: 1px solid var(--border);
-        background: #13243c;
-        font-size: 0.85rem;
+        background: #111b2c;
+        font-size: 0.78rem;
+        color: var(--muted);
     }
 
-    .section-title {
-        margin: 0 0 8px 0;
+    .kpi-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    @media (min-width: 900px) {
+        .kpi-row {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+    }
+
+    .kpi-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        margin-bottom: 4px;
+    }
+
+    .kpi-value-main {
+        font-size: 1.2rem;
         font-weight: 700;
         color: var(--text);
     }
 
-    .muted {
+    .kpi-sub {
+        font-size: 0.8rem;
         color: var(--muted);
+        margin-top: 2px;
     }
 
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 10px;
-        border-bottom: 1px solid var(--border);
-    }
-
-    .stTabs [data-baseweb="tab"] {
-        height: 42px;
-        background: transparent;
-        color: var(--muted);
+    .section-title {
+        margin: 14px 0 6px 0;
         font-weight: 600;
-        border-radius: 0;
-        border: none;
-        padding: 8px 6px;
-    }
-
-    .stTabs [data-baseweb="tab"]:hover {
+        font-size: 0.95rem;
         color: var(--text);
-    }
-
-    .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        color: var(--text);
-        box-shadow: inset 0 -2px 0 var(--accent);
-    }
-
-    .card-container {
-        margin-bottom: 14px;
     }
 
     .dataframe tbody tr:nth-child(odd) {
         background: rgba(255,255,255,0.02) !important;
     }
-
     .dataframe tbody tr:hover {
-        background: rgba(74,163,255,0.08) !important;
+        background: rgba(74,163,255,0.10) !important;
     }
-
     .dataframe th {
         color: var(--text) !important;
+        background: var(--card) !important;
     }
-
     thead tr th:first-child {display:none}
     tbody th {display:none}
 </style>
@@ -164,110 +132,114 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --- 1. DATA ENGINE ---
-
+# ---------- CONSTANTS ----------
 USD_TO_AED = 3.6725
 AED_TO_INR = 23.0
 
 COLOR_PRIMARY = "#4aa3ff"
-COLOR_ACCENT_SOFT = "#7fc3ff"
-COLOR_PROFIT = "#6bcf8f"
-COLOR_LOSS = "#f27d72"
-COLOR_NEUTRAL = "#9ba7b8"
+COLOR_SUCCESS = "#6bcf8f"
+COLOR_DANGER = "#f27d72"
 COLOR_BG = "#0f1a2b"
 
-
-def fmt_aed(val: float) -> str:
-    return f"Dh {val:,.0f}"
-
-
-def fmt_delta(val: float) -> str:
-    prefix = "+" if val >= 0 else ""
-    return f"{prefix}{val:.2f}%"
-
-
+# ---------- PORTFOLIO CONFIG ----------
 portfolio_config = [
-    {"Name": "Alphabet", "Ticker": "GOOGL", "Units": 51, "PurchaseValAED": 34128, "Owner": "MV", "Sector": "Tech"},
-    {"Name": "Apple", "Ticker": "AAPL", "Units": 50, "PurchaseValAED": 37183, "Owner": "MV", "Sector": "Tech"},
-    {"Name": "Tesla", "Ticker": "TSLA", "Units": 30, "PurchaseValAED": 33116, "Owner": "MV", "Sector": "Auto"},
-    {"Name": "Nasdaq 100", "Ticker": "QQQM", "Units": 180, "PurchaseValAED": 150894, "Owner": "MV", "Sector": "ETF"},
-    {"Name": "AMD", "Ticker": "AMD", "Units": 27, "PurchaseValAED": 16075, "Owner": "MV", "Sector": "Semi"},
-    {"Name": "Broadcom", "Ticker": "AVGO", "Units": 13, "PurchaseValAED": 13578, "Owner": "MV", "Sector": "Semi"},
-    {"Name": "Nvidia", "Ticker": "NVDA", "Units": 78, "PurchaseValAED": 49707, "Owner": "MV", "Sector": "Semi"},
-    {"Name": "Amazon", "Ticker": "AMZN", "Units": 59, "PurchaseValAED": 47720, "Owner": "MV", "Sector": "Retail"},
-    {"Name": "MSFT", "Ticker": "MSFT", "Units": 26, "PurchaseValAED": 49949, "Owner": "MV", "Sector": "Tech"},
-    {"Name": "Meta", "Ticker": "META", "Units": 18, "PurchaseValAED": 48744, "Owner": "MV", "Sector": "Tech"},
-    {"Name": "Broadcom [SV]", "Ticker": "AVGO", "Units": 2, "PurchaseValAED": 2122, "Owner": "SV", "Sector": "Semi"},
-    {"Name": "Apple [SV]", "Ticker": "AAPL", "Units": 2, "PurchaseValAED": 1486, "Owner": "SV", "Sector": "Tech"},
-    {"Name": "Nasdaq [SV]", "Ticker": "QQQ", "Units": 1, "PurchaseValAED": 2095, "Owner": "SV", "Sector": "ETF"},
-    {"Name": "Nvidia [SV]", "Ticker": "NVDA", "Units": 2, "PurchaseValAED": 1286, "Owner": "SV", "Sector": "Semi"},
-    {"Name": "Amazon [SV]", "Ticker": "AMZN", "Units": 4, "PurchaseValAED": 3179, "Owner": "SV", "Sector": "Retail"},
-    {"Name": "Novo [SV]", "Ticker": "NVO", "Units": 4, "PurchaseValAED": 714, "Owner": "SV", "Sector": "Health"},
-    {"Name": "Nasdaq 100 [SV]", "Ticker": "QQQM", "Units": 10, "PurchaseValAED": 8989, "Owner": "SV", "Sector": "ETF"},
-    {"Name": "MSFT [SV]", "Ticker": "MSFT", "Units": 4, "PurchaseValAED": 7476, "Owner": "SV", "Sector": "Tech"},
+    {"Name": "Alphabet",          "Ticker": "GOOGL", "Units": 51, "PurchaseValAED": 34128, "Owner": "MV", "Sector": "Tech"},
+    {"Name": "Apple",             "Ticker": "AAPL",  "Units": 50, "PurchaseValAED": 37183, "Owner": "MV", "Sector": "Tech"},
+    {"Name": "Tesla",             "Ticker": "TSLA",  "Units": 30, "PurchaseValAED": 33116, "Owner": "MV", "Sector": "Auto"},
+    {"Name": "Nasdaq 100",        "Ticker": "QQQM",  "Units": 180,"PurchaseValAED": 150894,"Owner": "MV", "Sector": "ETF"},
+    {"Name": "AMD",               "Ticker": "AMD",   "Units": 27, "PurchaseValAED": 16075, "Owner": "MV", "Sector": "Semi"},
+    {"Name": "Broadcom",          "Ticker": "AVGO",  "Units": 13, "PurchaseValAED": 13578, "Owner": "MV", "Sector": "Semi"},
+    {"Name": "Nvidia",            "Ticker": "NVDA",  "Units": 78, "PurchaseValAED": 49707, "Owner": "MV", "Sector": "Semi"},
+    {"Name": "Amazon",            "Ticker": "AMZN",  "Units": 59, "PurchaseValAED": 47720, "Owner": "MV", "Sector": "Retail"},
+    {"Name": "MSFT",              "Ticker": "MSFT",  "Units": 26, "PurchaseValAED": 49949, "Owner": "MV", "Sector": "Tech"},
+    {"Name": "Meta",              "Ticker": "META",  "Units": 18, "PurchaseValAED": 48744, "Owner": "MV", "Sector": "Tech"},
+    {"Name": "Broadcom [SV]",     "Ticker": "AVGO",  "Units": 2,  "PurchaseValAED": 2122,  "Owner": "SV", "Sector": "Semi"},
+    {"Name": "Apple [SV]",        "Ticker": "AAPL",  "Units": 2,  "PurchaseValAED": 1486,  "Owner": "SV", "Sector": "Tech"},
+    {"Name": "Nasdaq [SV]",       "Ticker": "QQQ",   "Units": 1,  "PurchaseValAED": 2095,  "Owner": "SV", "Sector": "ETF"},
+    {"Name": "Nvidia [SV]",       "Ticker": "NVDA",  "Units": 2,  "PurchaseValAED": 1286,  "Owner": "SV", "Sector": "Semi"},
+    {"Name": "Amazon [SV]",       "Ticker": "AMZN",  "Units": 4,  "PurchaseValAED": 3179,  "Owner": "SV", "Sector": "Retail"},
+    {"Name": "Novo [SV]",         "Ticker": "NVO",   "Units": 4,  "PurchaseValAED": 714,   "Owner": "SV", "Sector": "Health"},
+    {"Name": "Nasdaq 100 [SV]",   "Ticker": "QQQM",  "Units": 10, "PurchaseValAED": 8989,  "Owner": "SV", "Sector": "ETF"},
+    {"Name": "MSFT [SV]",         "Ticker": "MSFT",  "Units": 4,  "PurchaseValAED": 7476,  "Owner": "SV", "Sector": "Tech"},
 ]
 
+# ---------- HELPERS ----------
+def fmt_inr_lacs_from_aed(aed_value: float) -> str:
+    inr = aed_value * AED_TO_INR
+    lacs = inr / 100000.0
+    return f"₹ {lacs:,.2f} L"
 
 @st.cache_data(ttl=300)
-def load_history(days: int = 10) -> pd.DataFrame:
-    """Try to get last ~10 days of prices from Yahoo.
-    If Yahoo misbehaves, this will return an empty DataFrame."""
+def load_prices() -> pd.DataFrame:
+    """Fetch last few daily closes for all tickers, batched."""
     tickers = sorted({item["Ticker"] for item in portfolio_config})
-    end = datetime.utcnow()
-    start = end - timedelta(days=days)
+    # 5 days of daily closes is enough for yesterday vs today
+    data = yf.download(
+        tickers=tickers,
+        period="5d",
+        interval="1d",
+        auto_adjust=True,
+        group_by="ticker",
+        progress=False,
+        threads=False,
+    )
 
-    data_dict = {}
-
-    for t in tickers:
-        try:
-            d = yf.download(
-                t,
-                start=start,
-                end=end,
-                auto_adjust=True,
-                progress=False,
-                threads=False,
-            )
-            if d is None or d.empty:
-                continue
-
-            if isinstance(d, pd.DataFrame):
-                if "Adj Close" in d.columns:
-                    s = d["Adj Close"]
-                elif "Close" in d.columns:
-                    s = d["Close"]
-                else:
-                    continue
-            else:
-                s = d
-
-            data_dict[t] = s
-        except Exception:
-            continue
-
-    if not data_dict:
+    if data is None or data.empty:
         return pd.DataFrame()
 
-    prices = pd.DataFrame(data_dict).dropna(how="all")
-    return prices
+    if isinstance(data.columns, pd.MultiIndex):
+        if "Adj Close" in data.columns.levels[0]:
+            close = data["Adj Close"].copy()
+        else:
+            # fallback to first level
+            close = data.xs("Close", axis=1, level=1, drop_level=False)
+    else:
+        close = data.copy()
 
+    close = close.dropna(how="all")
+    return close
 
-def build_positions_live(prices: pd.DataFrame) -> pd.DataFrame:
-    """Build positions when we have live price history."""
+def build_positions_from_prices(prices: pd.DataFrame) -> pd.DataFrame:
+    """Return a row per portfolio_config line with P&L and weights."""
+    if prices is None or prices.empty or len(prices) < 2:
+        # no reliable history; fallback to static valuation
+        rows = []
+        for item in portfolio_config:
+            purchase = float(item["PurchaseValAED"])
+            rows.append(
+                {
+                    "Name": item["Name"],
+                    "Ticker": item["Ticker"],
+                    "Owner": item["Owner"],
+                    "Sector": item["Sector"],
+                    "Units": float(item["Units"]),
+                    "PriceUSD": 0.0,
+                    "ValueAED": purchase,
+                    "PurchaseAED": purchase,
+                    "DayPct": 0.0,
+                    "DayPLAED": 0.0,
+                    "TotalPct": 0.0,
+                    "TotalPLAED": 0.0,
+                }
+            )
+        df = pd.DataFrame(rows)
+        total_val = df["ValueAED"].sum()
+        df["WeightPct"] = df["ValueAED"] / total_val * 100 if total_val > 0 else 0
+        return df
+
     last = prices.iloc[-1]
-    prev = prices.iloc[-2] if len(prices) > 1 else prices.iloc[-1]
+    prev = prices.iloc[-2]
 
     rows = []
     for item in portfolio_config:
-        ticker = item["Ticker"]
-        units = float(item["Units"])
-        purchase_aed = float(item["PurchaseValAED"])
-
-        if ticker not in prices.columns:
+        t = item["Ticker"]
+        if t not in prices.columns:
             continue
 
-        last_usd = float(last[ticker])
-        prev_usd = float(prev[ticker]) if prev[ticker] > 0 else last_usd
+        units = float(item["Units"])
+        purchase = float(item["PurchaseValAED"])
+        last_usd = float(last[t])
+        prev_usd = float(prev[t]) if prev[t] > 0 else last_usd
 
         price_aed = last_usd * USD_TO_AED
         value_aed = price_aed * units
@@ -275,541 +247,225 @@ def build_positions_live(prices: pd.DataFrame) -> pd.DataFrame:
         day_pct = (last_usd / prev_usd - 1.0) * 100.0 if prev_usd != 0 else 0.0
         day_pl_aed = value_aed * (day_pct / 100.0)
 
-        total_pl_aed = value_aed - purchase_aed
-        total_pct = (total_pl_aed / purchase_aed) * 100.0 if purchase_aed != 0 else 0.0
+        total_pl_aed = value_aed - purchase
+        total_pct = (total_pl_aed / purchase) * 100.0 if purchase != 0 else 0.0
 
         rows.append(
             {
                 "Name": item["Name"],
-                "Ticker": ticker,
+                "Ticker": t,
                 "Owner": item["Owner"],
                 "Sector": item["Sector"],
                 "Units": units,
-                "Price": last_usd,
-                "Price (AED)": price_aed,
-                "Value": value_aed,
-                "PurchaseCost": purchase_aed,
-                "Day %": day_pct,
-                "Day P&L": day_pl_aed,
-                "Total %": total_pct,
-                "Total P&L": total_pl_aed,
+                "PriceUSD": last_usd,
+                "ValueAED": value_aed,
+                "PurchaseAED": purchase,
+                "DayPct": day_pct,
+                "DayPLAED": day_pl_aed,
+                "TotalPct": total_pct,
+                "TotalPLAED": total_pl_aed,
             }
         )
 
     df = pd.DataFrame(rows)
+    total_val = df["ValueAED"].sum()
+    df["WeightPct"] = df["ValueAED"] / total_val * 100.0 if total_val > 0 else 0.0
+    return df
+
+def aggregate_for_heatmap(df: pd.DataFrame) -> pd.DataFrame:
+    """Merge all SV positions into one 'SV Portfolio' tile."""
     if df.empty:
         return df
 
-    total_val = df["Value"].sum()
-    df["Weight"] = df["Value"] / total_val * 100.0
-    return df
+    mv = df[df["Owner"] == "MV"].copy()
 
+    # Aggregate SV as one bucket
+    sv = df[df["Owner"] == "SV"].copy()
+    if not sv.empty:
+        sv_row = {
+            "Name": "SV Portfolio",
+            "Ticker": "SVPF",
+            "Owner": "SV",
+            "Sector": "Mixed",
+            "Units": sv["Units"].sum(),
+            "PriceUSD": 0.0,  # not meaningful as a basket
+            "ValueAED": sv["ValueAED"].sum(),
+            "PurchaseAED": sv["PurchaseAED"].sum(),
+            "DayPct": (
+                sv["DayPLAED"].sum() / sv["ValueAED"].sum() * 100.0
+                if sv["ValueAED"].sum() > 0 else 0.0
+            ),
+            "DayPLAED": sv["DayPLAED"].sum(),
+            "TotalPct": (
+                sv["TotalPLAED"].sum() / sv["PurchaseAED"].sum() * 100.0
+                if sv["PurchaseAED"].sum() > 0 else 0.0
+            ),
+            "TotalPLAED": sv["TotalPLAED"].sum(),
+        }
+        mv = pd.concat([mv, pd.DataFrame([sv_row])], ignore_index=True)
 
-def build_positions_static() -> pd.DataFrame:
-    """Fallback when Yahoo gives us nothing:
-    treat purchase value as current value, zero P&L."""
-    rows = []
-    for item in portfolio_config:
-        units = float(item["Units"])
-        purchase_aed = float(item["PurchaseValAED"])
-        rows.append(
-            {
-                "Name": item["Name"],
-                "Ticker": item["Ticker"],
-                "Owner": item["Owner"],
-                "Sector": item["Sector"],
-                "Units": units,
-                "Price": 0.0,
-                "Price (AED)": 0.0,
-                "Value": purchase_aed,
-                "PurchaseCost": purchase_aed,
-                "Day %": 0.0,
-                "Day P&L": 0.0,
-                "Total %": 0.0,
-                "Total P&L": 0.0,
-            }
-        )
+    total_val = mv["ValueAED"].sum()
+    mv["WeightPct"] = mv["ValueAED"] / total_val * 100.0 if total_val > 0 else 0.0
+    return mv
 
-    df = pd.DataFrame(rows)
-    total_val = df["Value"].sum()
-    df["Weight"] = df["Value"] / total_val * 100.0
-    return df
+def detect_mode_label() -> str:
+    """Very simple time-based label for now."""
+    # US Eastern trading hours approx vs UTC
+    # Pre-market: 09:00–13:30 UTC, Regular: 13:30–20:00, Post: 20:00–01:00
+    now_utc = datetime.utcnow()
+    hour = now_utc.hour + now_utc.minute / 60
 
+    if 9 <= hour < 13.5:
+        return "Pre-Market Snapshot"
+    elif 13.5 <= hour < 20:
+        return "Live Market Snapshot"
+    else:
+        return "After-Hours Snapshot"
 
-def compute_portfolio_history(prices: pd.DataFrame) -> pd.DataFrame:
-    hist_val = pd.DataFrame(index=prices.index)
-    hist_val["Total"] = 0.0
+# ---------- LOAD DATA ----------
+prices = load_prices()
+positions = build_positions_from_prices(prices)
+heatmap_df = aggregate_for_heatmap(positions)
 
-    for item in portfolio_config:
-        t = item["Ticker"]
-        units = float(item["Units"])
-        if t in prices.columns:
-            hist_val["Total"] += prices[t] * units * USD_TO_AED
-
-    return hist_val
-
-
-def compute_static_history(df: pd.DataFrame) -> pd.DataFrame:
-    """Flat line history when we only have static data."""
-    total_val = df["Value"].sum()
-    idx = pd.date_range(end=datetime.utcnow(), periods=7, freq="D")
-    hist_val = pd.DataFrame(index=idx)
-    hist_val["Total"] = total_val
-    return hist_val
-
-
-def minimalist_chart(fig, height: int = 250):
-    fig.update_layout(
-        template=None,
-        margin=dict(t=10, l=0, r=0, b=0),
-        height=height,
-        font=dict(family="Inter", size=11, color=COLOR_NEUTRAL),
-        paper_bgcolor=COLOR_BG,
-        plot_bgcolor=COLOR_BG,
-        xaxis=dict(
-            showgrid=True,
-            gridcolor="#1f2d44",
-            zeroline=False,
-            showline=True,
-            linecolor="#1f2d44",
-            tickfont=dict(color=COLOR_NEUTRAL),
-        ),
-        yaxis=dict(
-            showgrid=True,
-            gridcolor="#1f2d44",
-            zeroline=False,
-            showline=True,
-            linecolor="#1f2d44",
-            tickfont=dict(color=COLOR_NEUTRAL),
-        ),
-        hovermode="x unified",
-        legend=dict(font=dict(color=COLOR_NEUTRAL)),
-    )
-    return fig
-
-
-# --- 2. LOAD DATA WITH FALLBACK ---
-
-try:
-    live_prices = load_history()
-except Exception:
-    live_prices = pd.DataFrame()
-
-if live_prices is not None and not live_prices.empty:
-    data_mode = "live"
-    df = build_positions_live(live_prices)
-    hist_val = compute_portfolio_history(live_prices)
-else:
-    data_mode = "static"
-    df = build_positions_static()
-    hist_val = compute_static_history(df)
-
-if df is None or df.empty:
-    st.error("Could not build positions from configuration.")
+if positions.empty:
+    st.error("Unable to build portfolio view from configuration.")
     st.stop()
 
-total_val = df["Value"].sum()
+# ---------- METRICS ----------
+total_value_aed = positions["ValueAED"].sum()
+total_purchase_aed = positions["PurchaseAED"].sum()
+total_pl_aed = positions["TotalPLAED"].sum()
+day_pl_aed = positions["DayPLAED"].sum()
 
-total_pl_val = df["Total P&L"].sum()
-total_purchase = df["PurchaseCost"].sum()
-total_pl_pct = (total_pl_val / total_purchase) * 100.0 if total_purchase != 0 else 0.0
-day_pl_val = df["Day P&L"].sum()
-day_pl_pct = (day_pl_val / (total_val - day_pl_val)) * 100.0 if (total_val - day_pl_val) != 0 else 0.0
-inr_val = (total_val * AED_TO_INR) / 100000.0
+total_pl_pct = (total_pl_aed / total_purchase_aed * 100.0) if total_purchase_aed > 0 else 0.0
+day_pl_inr = day_pl_aed * AED_TO_INR
+total_pl_inr = total_pl_aed * AED_TO_INR
+total_value_inr = total_value_aed * AED_TO_INR
 
-last_updated_ts = hist_val.index[-1]
-last_updated_str = last_updated_ts.strftime("%d %b %Y, %H:%M") if isinstance(
-    last_updated_ts, pd.Timestamp
-) else str(last_updated_ts)
+# ---------- LAYOUT: SINGLE MOBILE-FIRST SCREEN ----------
+mode_label = detect_mode_label()
 
-top_sector = df.groupby("Sector")["Value"].sum().idxmax()
-
-# --- 3. LAYOUT ---
-
-tab_overview, tab_positions, tab_analytics = st.tabs(
-    ["Overview", "Positions", "Analytics & Risk"]
-)
-
-# === TAB 1: OVERVIEW ===
-with tab_overview:
-    # HERO
-    with st.container():
-        st.markdown("<div class='panel'>", unsafe_allow_html=True)
-        h1, h2 = st.columns([2.2, 1])
-        with h1:
-            st.markdown(
-                "<div class='page-title'>Family Wealth Cockpit</div>",
-                unsafe_allow_html=True,
-            )
-            mode_label = "Live Yahoo prices" if data_mode == "live" else "Static purchase values (Yahoo unavailable)"
-            st.markdown(
-                f"<div class='page-subtitle'>{mode_label}.</div>",
-                unsafe_allow_html=True,
-            )
-            st.markdown(
-                f"""
-                <div class='meta-row'>
-                    <span class='meta-pill'>Last update: {last_updated_str}</span>
-                    <span class='meta-pill'>Top sector: {top_sector}</span>
-                    <span class='meta-pill'>Tickers tracked: {len({item["Ticker"] for item in portfolio_config})}</span>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-        with h2:
-            gauge_val = max(-50.0, min(50.0, total_pl_pct))
-            st.markdown(
-                f"""
-                <div style='text-align:right'>
-                    <div style='font-size:0.9rem; color:{COLOR_NEUTRAL}; text-transform:uppercase; letter-spacing:0.08em;'>Health</div>
-                    <div style='font-size:1.6rem; font-weight:700; color:{COLOR_PRIMARY};'>{total_pl_pct:+.1f}%</div>
-                    <div style='height:6px; border-radius:4px; background:#111b2c; overflow:hidden; border:1px solid #1f2d44;'>
-                        <div style='width:{gauge_val + 50}%; height:100%; background:{COLOR_PRIMARY};'></div>
-                    </div>
-                    <div style='margin-top:6px; color:{COLOR_NEUTRAL}; font-size:0.9rem;'>Return since inception</div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    # KPI cards
-    kpis = [
-        {"label": "Net Liquidation", "value": fmt_aed(total_val), "delta": None, "accent": COLOR_PRIMARY},
-        {
-            "label": "Daily P&L",
-            "value": fmt_aed(day_pl_val),
-            "delta": fmt_delta(day_pl_pct),
-            "accent": COLOR_PROFIT if day_pl_val >= 0 else COLOR_LOSS,
-        },
-        {
-            "label": "Total P&L",
-            "value": fmt_aed(total_pl_val),
-            "delta": fmt_delta(total_pl_pct),
-            "accent": COLOR_PROFIT if total_pl_val >= 0 else COLOR_LOSS,
-        },
-        {
-            "label": "Net Worth (INR)",
-            "value": f"₹ {inr_val:,.2f} L",
-            "delta": None,
-            "accent": COLOR_ACCENT_SOFT,
-        },
-    ]
-
-    c1, c2, c3, c4 = st.columns(4)
-    for col, card in zip([c1, c2, c3, c4], kpis):
-        with col:
-            st.markdown(
-                f"""
-                <div class='kpi-card' style='border-top: 3px solid {card['accent']};'>
-                    <div class='kpi-label'>{card['label']}</div>
-                    <div class='kpi-value'>{card['value']}</div>
-                    {'' if not card['delta'] else f"<div class='kpi-delta' style='color:{card['accent']}; border-color:{card['accent']}; background:#0f1a2b;'>Δ {card['delta']}</div>"}
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-    # Daily brief
-    top_gain = df.sort_values("Day %", ascending=False).head(1)
-    top_loss = df.sort_values("Day %", ascending=True).head(1)
-    gainer_name = top_gain.iloc[0]["Ticker"] if not top_gain.empty else "—"
-    loser_name = top_loss.iloc[0]["Ticker"] if not top_loss.empty else "—"
-    direction = "up" if day_pl_pct >= 0 else "down"
-
+with st.container():
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.markdown("<div class='page-title'>Family Wealth Cockpit</div>", unsafe_allow_html=True)
     st.markdown(
-        f"""
-        <div class='card-container' style='margin-top:6px;'>
-            <div class='section-title' style='font-size:0.9rem; letter-spacing:0.08em; text-transform:uppercase;'>Daily Brief</div>
-            <div class='muted'>Portfolio is {direction} <span style='color:{COLOR_PRIMARY}; font-weight:700'>{abs(day_pl_pct):.2f}%</span> today.</div>
-            <div class='muted'>Top driver: <span style='color:{COLOR_PROFIT}; font-weight:700'>{gainer_name}</span> · Main detractor: <span style='color:{COLOR_LOSS}; font-weight:700'>{loser_name}</span></div>
-        </div>
-        """,
+        f"<div class='page-subtitle'>Personal market view across MV + SV holdings.</div>",
         unsafe_allow_html=True,
     )
+    st.markdown(
+        f"<span class='status-pill'>{mode_label}</span>",
+        unsafe_allow_html=True,
+    )
+    st.markdown("</div>", unsafe_allow_html=True)
 
-    # Trend & allocation
-    c_trend, c_alloc = st.columns([2.5, 1.5])
+# KPI grid (Level 1 + Level 2)
+st.markdown("<div class='kpi-row'>", unsafe_allow_html=True)
 
-    with c_trend:
-        with st.container():
-            st.markdown("<div class='card-container'>", unsafe_allow_html=True)
-            st.markdown("#### Portfolio Value", unsafe_allow_html=True)
+# 1. Total profit in INR lacs
+st.markdown(
+    f"""
+    <div class='kpi-card'>
+        <div class='kpi-label'>Total Profit</div>
+        <div class='kpi-value-main'>{fmt_inr_lacs_from_aed(total_pl_aed)}</div>
+        <div class='kpi-sub'>Across entire portfolio</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
-            t_range = st.radio("Range", ["3D", "1W", "2W"], horizontal=True, label_visibility="collapsed")
-            hist_plot = hist_val.copy()
-            if not hist_plot.empty:
-                if t_range == "3D":
-                    hist_plot = hist_plot.iloc[-3:]
-                elif t_range == "1W":
-                    hist_plot = hist_plot.iloc[-7:]
-                elif t_range == "2W":
-                    hist_plot = hist_plot.iloc[-14:]
+# 2. Total profit %
+st.markdown(
+    f"""
+    <div class='kpi-card'>
+        <div class='kpi-label'>Total Profit %</div>
+        <div class='kpi-value-main'>{total_pl_pct:+.2f}%</div>
+        <div class='kpi-sub'>Vs total invested</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
-            fig_trend = px.area(hist_plot, x=hist_plot.index, y="Total")
-            fig_trend.update_traces(line_color=COLOR_PRIMARY, fillcolor="rgba(74, 163, 255, 0.18)")
-            fig_trend = minimalist_chart(fig_trend, height=280)
-            fig_trend.update_xaxes(title=None)
-            fig_trend.update_yaxes(title=None, tickprefix="Dh ", showgrid=True)
-            st.plotly_chart(fig_trend, use_container_width=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+# 3. Today's P&L in INR lacs
+st.markdown(
+    f"""
+    <div class='kpi-card'>
+        <div class='kpi-label'>Today P&L</div>
+        <div class='kpi-value-main'>{fmt_inr_lacs_from_aed(day_pl_aed)}</div>
+        <div class='kpi-sub'>Vs previous close</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
-    with c_alloc:
-        with st.container():
-            st.markdown("<div class='card-container'>", unsafe_allow_html=True)
-            st.markdown("#### Allocation", unsafe_allow_html=True)
+# 4. Total portfolio value in INR lacs
+st.markdown(
+    f"""
+    <div class='kpi-card'>
+        <div class='kpi-label'>Portfolio Value</div>
+        <div class='kpi-value-main'>{fmt_inr_lacs_from_aed(total_value_aed)}</div>
+        <div class='kpi-sub'>Current snapshot</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
-            owner_agg = df.groupby("Owner")["Value"].sum().reset_index()
-            fig_own = px.bar(owner_agg, x="Value", y="Owner", orientation="h", text_auto=".2s")
-            fig_own.update_traces(
-                marker_color=[COLOR_PRIMARY if x == "MV" else COLOR_ACCENT_SOFT for x in owner_agg["Owner"]]
-            )
-            fig_own = minimalist_chart(fig_own, height=100)
-            fig_own.update_yaxes(title=None)
-            fig_own.update_xaxes(showgrid=False, showticklabels=False, title=None)
-            st.plotly_chart(fig_own, use_container_width=True, config={"displayModeBar": False})
+st.markdown("</div>", unsafe_allow_html=True)  # end kpi-row
 
-            st.markdown("---")
+# ---------- HEAT MAP SECTION ----------
+st.markdown("<div class='section-title'>Today’s Heat Map</div>", unsafe_allow_html=True)
 
-            top_h = df.nlargest(5, "Value").sort_values("Value", ascending=True)
-            fig_top = px.bar(top_h, x="Value", y="Ticker", orientation="h")
-            fig_top.update_traces(marker_color=COLOR_ACCENT_SOFT)
-            fig_top.data[0].marker.color = [
-                COLOR_PRIMARY if i == len(top_h) - 1 else COLOR_ACCENT_SOFT for i in range(len(top_h))
-            ]
-            fig_top = minimalist_chart(fig_top, height=140)
-            fig_top.update_yaxes(title=None)
-            fig_top.update_xaxes(showgrid=False, showticklabels=False, title=None)
-            st.plotly_chart(fig_top, use_container_width=True, config={"displayModeBar": False})
-            st.markdown("</div>", unsafe_allow_html=True)
-
-    # Movers & alerts
-    c_movers, c_alerts = st.columns([1.5, 1.5])
-
-    with c_movers:
-        st.markdown("<div class='card-container'>", unsafe_allow_html=True)
-        st.markdown("#### Today's Movers", unsafe_allow_html=True)
-
-        movers = df.sort_values("Day %", ascending=False)
-        top_m = movers.head(5)
-        bot_m = movers.tail(5).sort_values("Day %", ascending=True)
-
-        col_w, col_l = st.columns(2)
-        with col_w:
-            st.caption("Gainers")
-            for _, r in top_m.iterrows():
-                if r["Day %"] > 0:
-                    st.markdown(
-                        f"**{r['Ticker']}** <span style='color:{COLOR_PROFIT}; float:right'>+{r['Day %']:.2f}%</span>",
-                        unsafe_allow_html=True,
-                    )
-        with col_l:
-            st.caption("Losers")
-            for _, r in bot_m.iterrows():
-                if r["Day %"] < 0:
-                    st.markdown(
-                        f"**{r['Ticker']}** <span style='color:{COLOR_LOSS}; float:right'>{r['Day %']:.2f}%</span>",
-                        unsafe_allow_html=True,
-                    )
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    with c_alerts:
-        st.markdown("<div class='card-container'>", unsafe_allow_html=True)
-        st.markdown("#### Risk & Alerts", unsafe_allow_html=True)
-
-        alerts = []
-        for _, r in df.iterrows():
-            if r["Weight"] > 15:
-                alerts.append(f"⚠️ **{r['Ticker']}** is overweight ({r['Weight']:.1f}%)")
-            if r["Day %"] < -5:
-                alerts.append(f"📉 **{r['Ticker']}** dropped > 5% today")
-            if r["Total %"] < -20:
-                alerts.append(f"❄️ **{r['Ticker']}** deep loss (>20%)")
-
-        if not alerts:
-            st.markdown(
-                f"<div style='text-align:center; color:{COLOR_PROFIT}; padding:14px; border:1px solid #1f2d44; border-radius:4px; background:#111b2c;'>✅ All Clear. No risk triggers.</div>",
-                unsafe_allow_html=True,
-            )
-        else:
-            for a in alerts:
-                st.markdown(
-                    f"<div style='border:1px solid #1f2d44; color:{COLOR_NEUTRAL}; padding:8px; border-radius:4px; margin-bottom:8px; background:#111b2c; font-size:0.9rem'>{a}</div>",
-                    unsafe_allow_html=True,
-                )
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    st.markdown("#### Key Positions")
-    key_pos = df.nlargest(8, "Weight")[["Ticker", "Owner", "Weight", "Total %", "Day %", "Value"]]
-
-    st.dataframe(
-        key_pos,
-        use_container_width=True,
-        hide_index=True,
-        column_config={
-            "Weight": st.column_config.NumberColumn(format="%.1f%%"),
-            "Total %": st.column_config.NumberColumn(format="%.1f%%"),
-            "Day %": st.column_config.NumberColumn(format="%.1f%%"),
-            "Value": st.column_config.NumberColumn(format="Dh %.0f"),
+if heatmap_df.empty:
+    st.info("No positions available for heat map.")
+else:
+    # For mobile, keep text minimal but clear
+    fig = px.treemap(
+        heatmap_df,
+        path=["Owner", "Name"],    # MV tickers + SV Portfolio under their owners
+        values="ValueAED",
+        color="DayPct",
+        color_continuous_scale=["#f27d72", "#16233a", "#6bcf8f"],  # red -> neutral -> green
+        color_continuous_midpoint=0,
+        hover_data={
+            "DayPct": ":.2f",
+            "TotalPct": ":.2f",
+            "ValueAED": ":.0f",
         },
     )
+    fig.update_layout(
+        margin=dict(t=0, l=0, r=0, b=0),
+        height=420,
+        paper_bgcolor=COLOR_BG,
+        plot_bgcolor=COLOR_BG,
+        font=dict(family="Inter", size=11, color="#e6eaf0"),
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
-# === TAB 2: POSITIONS ===
-with tab_positions:
-    with st.container():
-        st.markdown("<div class='card-container'>", unsafe_allow_html=True)
-        st.markdown("#### Filter positions", unsafe_allow_html=True)
+# ---------- OPTIONAL: SIMPLE MOVERS LIST ----------
+st.markdown("<div class='section-title'>Top Movers Today</div>", unsafe_allow_html=True)
 
-        col_owner, col_sector, col_pl = st.columns(3)
-        owners = ["All"] + sorted(df["Owner"].unique().tolist())
-        sectors = ["All"] + sorted(df["Sector"].unique().tolist())
+# Use aggregated view for clarity (MV tickers + SV Portfolio)
+movers = heatmap_df.sort_values("DayPct", ascending=False)
+top_gainers = movers.head(3)
+top_losers = movers.tail(3).sort_values("DayPct")
 
-        owner_sel = col_owner.selectbox("Owner", owners, index=0)
-        sector_sel = col_sector.selectbox("Sector", sectors, index=0)
-        pl_filter = col_pl.radio(
-            "P&L filter",
-            ["All", "Profitable", "Losing"],
-            horizontal=True,
-        )
+col_g, col_l = st.columns(2)
 
-        filtered_df = df.copy()
-        if owner_sel != "All":
-            filtered_df = filtered_df[filtered_df["Owner"] == owner_sel]
-        if sector_sel != "All":
-            filtered_df = filtered_df[filtered_df["Sector"] == sector_sel]
-        if pl_filter == "Profitable":
-            filtered_df = filtered_df[filtered_df["Total P&L"] > 0]
-        elif pl_filter == "Losing":
-            filtered_df = filtered_df[filtered_df["Total P&L"] < 0]
-
-        st.dataframe(
-            filtered_df,
-            use_container_width=True,
-            height=600,
-            hide_index=True,
-            column_config={
-                "Ticker": st.column_config.TextColumn("Symbol"),
-                "Value": st.column_config.NumberColumn(format="Dh %.0f"),
-                "Price": st.column_config.NumberColumn(format="$%.2f"),
-                "Total P&L": st.column_config.NumberColumn(format="Dh %.0f"),
-                "Total %": st.column_config.NumberColumn(format="%.1f%%"),
-                "Day P&L": st.column_config.NumberColumn(format="Dh %.0f"),
-                "Day %": st.column_config.NumberColumn(format="%.1f%%"),
-            },
-        )
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    with st.container():
-        st.markdown("<div class='card-container'>", unsafe_allow_html=True)
-
-        inspect_ticker = st.selectbox("Inspect Position", options=filtered_df["Ticker"].unique())
-        if inspect_ticker:
-            row = df[df["Ticker"] == inspect_ticker].iloc[0]
-
+with col_g:
+    st.caption("Gainers")
+    for _, row in top_gainers.iterrows():
+        if row["DayPct"] > 0:
             st.markdown(
-                f"### {row['Ticker']} <span style='font-size:0.9rem; color:{COLOR_NEUTRAL}; font-weight:500'>({row['Owner']})</span>",
+                f"**{row['Name']}**  \n"
+                f"<span style='color:{COLOR_SUCCESS}; font-size:0.85rem;'>+{row['DayPct']:.2f}% today</span>",
                 unsafe_allow_html=True,
             )
-            st.markdown(f"<span class='muted'>{row['Sector']}</span>", unsafe_allow_html=True)
 
-            st.divider()
-
-            i1, i2 = st.columns(2)
-            i1.metric("Units", f"{row['Units']:.0f}")
-            i2.metric("Weight", f"{row['Weight']:.2f}%")
-
-            i3, i4 = st.columns(2)
-            i3.metric("Total Return", f"{row['Total %']:+.1f}%", delta_color="normal")
-            i4.metric("Value", f"Dh {row['Value']/1000:.1f}k")
-
-            st.divider()
-            st.caption("Performance Trend (last few days)")
-
-            if inspect_ticker in (live_prices.columns if data_mode == "live" else []):
-                fig_mini = px.line(live_prices[inspect_ticker])
-                fig_mini.update_traces(line_color=COLOR_PRIMARY, line_width=2)
-                fig_mini = minimalist_chart(fig_mini, height=150)
-                fig_mini.update_xaxes(visible=False)
-                fig_mini.update_yaxes(visible=False)
-                st.plotly_chart(fig_mini, use_container_width=True)
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-# === TAB 3: ANALYTICS ===
-with tab_analytics:
-    with st.container():
-        st.markdown("<div class='card-container'>", unsafe_allow_html=True)
-        st.markdown("#### Portfolio vs Benchmark", unsafe_allow_html=True)
-
-        fig_bench = go.Figure()
-        fig_bench.add_trace(
-            go.Scatter(
-                x=hist_val.index,
-                y=hist_val["Total"],
-                name="Portfolio",
-                line=dict(color=COLOR_PRIMARY, width=3),
+with col_l:
+    st.caption("Losers")
+    for _, row in top_losers.iterrows():
+        if row["DayPct"] < 0:
+            st.markdown(
+                f"**{row['Name']}**  \n"
+                f"<span style='color:{COLOR_DANGER}; font-size:0.85rem;'>{row['DayPct']:.2f}% today</span>",
+                unsafe_allow_html=True,
             )
-        )
-        bench_sim = hist_val["Total"] * 0.95
-        fig_bench.add_trace(
-            go.Scatter(
-                x=hist_val.index,
-                y=bench_sim,
-                name="Nasdaq 100 (Est)",
-                line=dict(color=COLOR_ACCENT_SOFT, dash="dot"),
-            )
-        )
-
-        fig_bench = minimalist_chart(fig_bench, height=350)
-        fig_bench.update_layout(legend=dict(orientation="h", y=1.1))
-        st.plotly_chart(fig_bench, use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    c_cont, c_conc = st.columns(2)
-
-    with c_cont:
-        st.markdown("<div class='card-container'>", unsafe_allow_html=True)
-        st.markdown("#### Top Contributors (Total AED)", unsafe_allow_html=True)
-
-        contrib = df.nlargest(8, "Total P&L")[["Ticker", "Total P&L"]]
-        fig_ct = px.bar(contrib, x="Total P&L", y="Ticker", orientation="h")
-        fig_ct.update_traces(marker_color=COLOR_PROFIT)
-        fig_ct = minimalist_chart(fig_ct, height=300)
-        st.plotly_chart(fig_ct, use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    with c_conc:
-        st.markdown("<div class='card-container'>", unsafe_allow_html=True)
-        st.markdown("#### Sector Concentration", unsafe_allow_html=True)
-
-        sec_agg = df.groupby("Sector")["Value"].sum().reset_index()
-        fig_sec = px.pie(
-            sec_agg,
-            values="Value",
-            names="Sector",
-            hole=0.6,
-            color_discrete_sequence=[
-                COLOR_PRIMARY,
-                COLOR_ACCENT_SOFT,
-                "#3d7fc4",
-                "#2d5f92",
-                "#234a74",
-            ],
-        )
-        fig_sec.update_layout(
-            height=300,
-            margin=dict(t=0, b=0, l=0, r=0),
-            showlegend=True,
-            paper_bgcolor=COLOR_BG,
-            plot_bgcolor=COLOR_BG,
-            font=dict(color=COLOR_NEUTRAL),
-        )
-        st.plotly_chart(fig_sec, use_container_width=True)
-
-        top_1_w = df["Weight"].max()
-        top_5_w = df.nlargest(5, "Weight")["Weight"].sum()
-
-        st.markdown(f"**Top 5 Holdings:** {top_5_w:.1f}%", unsafe_allow_html=True)
-        st.markdown(f"**Largest Single Position:** {top_1_w:.1f}%", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
