@@ -5,7 +5,7 @@ import plotly.express as px
 
 # ---------- PAGE CONFIG ----------
 st.set_page_config(
-    page_title="Family Wealth Cockpit",
+    page_title="Stocks Dashboard",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -37,7 +37,7 @@ st.markdown(
     header {visibility: hidden;}
 
     .block-container {
-        padding: 1.2rem 1.0rem 2rem;
+        padding: 1.0rem 1.0rem 2rem;
         max-width: 900px;
     }
 
@@ -45,7 +45,7 @@ st.markdown(
         background: var(--card);
         border: 1px solid var(--border);
         border-radius: 8px;
-        padding: 12px 14px;
+        padding: 8px 14px;
         box-shadow: none;
         margin-bottom: 12px;
     }
@@ -61,28 +61,10 @@ st.markdown(
     }
 
     .page-title {
-        font-size: 1.4rem;
+        font-size: 1.2rem;
         font-weight: 700;
-        margin: 0 0 2px 0;
+        margin: 2px 0 2px 0;
         color: var(--text);
-    }
-
-    .page-subtitle {
-        margin: 0 0 8px 0;
-        color: var(--muted);
-        font-size: 0.9rem;
-    }
-
-    .status-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 4px 10px;
-        border-radius: 999px;
-        border: 1px solid var(--border);
-        background: #111b2c;
-        font-size: 0.78rem;
-        color: var(--muted);
     }
 
     .kpi-label {
@@ -392,41 +374,32 @@ total_val_inr_lacs = fmt_inr_lacs_from_aed(total_val_aed, AED_TO_INR)
 total_pl_inr_lacs = fmt_inr_lacs_from_aed(total_pl_aed, AED_TO_INR)
 day_pl_inr_lacs = fmt_inr_lacs_from_aed(day_pl_aed, AED_TO_INR)
 
-# Last data timestamp
-if prices is not None and not prices.empty:
-    last_ts = prices.index[-1]
-    last_str = last_ts.strftime("%d %b %Y")
-else:
-    last_str = "N/A"
+overall_pct_str = f"{total_pl_pct:+.2f}%"
 
-# ---------- HERO CARD ----------
+# ---------- HEADER ----------
 st.markdown(
-    f"""
+    """
 <div class="card">
-  <div class="page-title">Family Wealth Cockpit</div>
-  <div class="page-subtitle">Clean mobile-first view of capital, momentum, and daily moves.</div>
-  <div class="status-pill">
-    <span>Last price: {last_str}</span>
-  </div>
+  <div class="page-title">Stocks Dashboard</div>
 </div>
 """,
     unsafe_allow_html=True,
 )
 
-# KPI row (Streamlit columns, each with its own kpi-card HTML)
+# ---------- KPI CARDS ----------
 c1, c2, c3, c4 = st.columns(4)
 
 with c1:
-    render_kpi("Total Profit (INR)", total_pl_inr_lacs, f"{total_pl_pct:+.2f}% overall")
+    render_kpi("Total Profit (INR)", total_pl_inr_lacs, "Absolute profit / loss")
 
 with c2:
-    render_kpi("Today's P&L (INR)", day_pl_inr_lacs, "vs. previous close (0% if data missing)")
+    render_kpi("Today's P&L (INR)", day_pl_inr_lacs, "")
 
 with c3:
     render_kpi("Portfolio Size (INR)", total_val_inr_lacs, "Live mark-to-market")
 
 with c4:
-    render_kpi("Holdings", str(positions['Ticker'].nunique()), "MV + SV (SV aggregated in heatmap)")
+    render_kpi("Overall Return (%)", overall_pct_str, "Since inception")
 
 # ---------- HEATMAP ----------
 st.markdown('<div class="section-title">Heat Map – Today</div>', unsafe_allow_html=True)
@@ -453,33 +426,3 @@ else:
         paper_bgcolor=COLOR_BG,
     )
     st.plotly_chart(fig, use_container_width=True)
-
-# ---------- POSITIONS TABLE (compact) ----------
-st.markdown('<div class="section-title">Positions (detail)</div>', unsafe_allow_html=True)
-
-show_cols = [
-    "Name",
-    "Ticker",
-    "Owner",
-    "Sector",
-    "Units",
-    "PriceUSD",
-    "ValueAED",
-    "DayPct",
-    "TotalPct",
-]
-
-if positions.empty:
-    st.info("No positions to show.")
-else:
-    table = positions[show_cols].copy()
-    table["ValueAED"] = table["ValueAED"].round(0)
-    table["PriceUSD"] = table["PriceUSD"].round(2)
-    table["DayPct"] = table["DayPct"].round(2)
-    table["TotalPct"] = table["TotalPct"].round(2)
-
-    st.dataframe(
-        table,
-        hide_index=True,
-        use_container_width=True,
-    )
