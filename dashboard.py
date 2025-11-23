@@ -457,7 +457,6 @@ else:
     plot_bgcolor="rgba(0,0,0,0)",
     coloraxis_showscale=False,
     font=dict(family="Inter"),
-),
     )
 
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
