@@ -441,7 +441,8 @@ else:
         color="DayPLINR",
         color_continuous_scale=[COLOR_DANGER, "#16233a", COLOR_SUCCESS],
         color_continuous_midpoint=0,
-        custom_data=["DayPLINR", "Ticker", "DayPLKLabel"],
+        custom_data=["DayPLINR", "Ticker", "DayPLKLabel"]
+        root_color="#ffffff",
     )
 
     fig.update_traces(
@@ -453,7 +454,7 @@ else:
 
     fig.update_layout(
         margin=dict(t=0, l=0, r=0, b=0),
-        paper_bgcolor=COLOR_BG,
+        paper_bgcolor="#ffffff",
         coloraxis_showscale=False,
         font=dict(family="Inter"),
     )
