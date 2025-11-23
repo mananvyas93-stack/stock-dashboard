@@ -91,6 +91,11 @@ st.markdown(
         font-weight: 600;
         color: var(--text);
     }
+
+    /* Make the Plotly container match the page background so no grey frame */
+    [data-testid="stPlotlyChart"] div {
+        background-color: transparent !important;
+    }
 </style>
 """,
     unsafe_allow_html=True,
@@ -442,14 +447,27 @@ else:
         color_continuous_scale=[COLOR_DANGER, "#16233a", COLOR_SUCCESS],
         color_continuous_midpoint=0,
         custom_data=["DayPLINR", "Ticker", "DayPLKLabel"],
-        root_color="rgba(0,0,0,0)",  # make root fully transparent → no grey outer box
     )
 
+    # Make labels & hover
     fig.update_traces(
         hovertemplate="<b>%{label}</b><br>Ticker: %{customdata[1]}<br>Day P&L: ₹%{customdata[0]:,.0f}<extra></extra>",
         texttemplate="%{label}<br>%{customdata[2]}",
-        marker=dict(line=dict(width=0)),  # no borders between tiles or around root
+        marker=dict(line=dict(width=0)),
     )
+
+    # Try to make the root/background fully transparent so no visible outer box
+    try:
+        fig.data[0].root = dict(color="rgba(0,0,0,0)")
+    except Exception:
+        try:
+            # Fallback for older Plotly: force first marker color (root) transparent
+            colors = list(fig.data[0].marker.colors)
+            if colors:
+                colors[0] = "rgba(0,0,0,0)"
+                fig.data[0].marker.colors = colors
+        except Exception:
+            pass
 
     fig.update_layout(
         margin=dict(t=0, l=0, r=0, b=0),
