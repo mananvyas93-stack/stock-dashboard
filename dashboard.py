@@ -39,17 +39,17 @@ st.markdown(
     header {visibility: hidden;}
 
     .block-container {
-        padding: 1.0rem 1.0rem 2rem;
+        padding: 0.8rem 0.9rem 2rem;
         max-width: 900px;
     }
 
     .card {
         background: var(--card);
         border: 1px solid var(--border);
-        border-radius: 8px;
-        padding: 8px 14px;
+        border-radius: 6px;
+        padding: 6px 10px;
         box-shadow: none;
-        margin-bottom: 12px;
+        margin-bottom: 8px;
     }
 
     .kpi-card {
@@ -58,21 +58,23 @@ st.markdown(
         border-radius: 8px;
         padding: 10px 12px;
         box-shadow: none;
-        margin-top: 6px;
-        margin-bottom: 6px;
+        margin-top: 4px;
+        margin-bottom: 4px;
     }
 
     .page-title {
-        font-size: 1.2rem;
-        font-weight: 700;
-        margin: 2px 0 2px 0;
+        font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-size: 1.0rem;
+        font-weight: 600;
+        margin: 0 0 2px 0;
         color: var(--text);
     }
 
     .page-subtitle {
-        font-size: 0.78rem;
+        font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-size: 0.7rem;
         color: var(--muted);
-        margin-top: 2px;
+        margin: 0;
     }
 
     .kpi-label {
@@ -142,7 +144,7 @@ def get_aed_inr_rate_from_yahoo() -> float:
 def fmt_inr_lacs_from_aed(aed_value: float, aed_to_inr: float) -> str:
     inr = aed_value * aed_to_inr
     lacs = inr / 100000.0
-    return f"₹ {lacs:,.2f} L"
+    return f"₹{lacs:,.2f} L"
 
 # ---------- PRICE FETCHING ----------
 
@@ -164,7 +166,6 @@ def load_prices() -> pd.DataFrame:
     if data is None or data.empty:
         return pd.DataFrame()
 
-    # Multiple-ticker MultiIndex: (Ticker, Field)
     if isinstance(data.columns, pd.MultiIndex):
         lvl1 = data.columns.get_level_values(1)
         if "Adj Close" in lvl1:
@@ -176,7 +177,6 @@ def load_prices() -> pd.DataFrame:
 
         close.columns = close.columns.get_level_values(0)
     else:
-        # Single-ticker case
         if "Adj Close" in data.columns:
             close = data[["Adj Close"]]
         elif "Close" in data.columns:
@@ -255,7 +255,7 @@ def build_positions_from_prices(prices: pd.DataFrame) -> pd.DataFrame:
             if use_day_change and prev_usd > 0:
                 day_pct = (price_usd / prev_usd - 1.0) * 100.0
             else:
-                day_pct = 0.0  # treat missing as 0 move
+                day_pct = 0.0
             day_pl_aed = value_aed * (day_pct / 100.0)
 
             total_pl_aed = value_aed - purchase
@@ -296,7 +296,6 @@ def aggregate_for_heatmap(df: pd.DataFrame) -> pd.DataFrame:
     sv = df[df["Owner"] == "SV"].copy()
 
     if sv.empty:
-        # no SV, just return MV rows
         return mv.reset_index(drop=True)
 
     total_val_all = df["ValueAED"].sum()
@@ -335,7 +334,6 @@ def aggregate_for_heatmap(df: pd.DataFrame) -> pd.DataFrame:
 # ---------- UI HELPERS ----------
 
 def render_kpi(label: str, value: str):
-    """KPI card without sub-text."""
     st.markdown(
         f"""
         <div class="kpi-card">
@@ -348,10 +346,9 @@ def render_kpi(label: str, value: str):
 
 
 def get_market_status_text() -> str:
-    """Return simple label for pre-market / live / post-market / weekend."""
     us_tz = ZoneInfo("America/New_York")
     now_us = datetime.now(us_tz)
-    weekday = now_us.weekday()  # 0=Mon, 6=Sun
+    weekday = now_us.weekday()
     t = now_us.time()
     open_time = time(9, 30)
     close_time = time(16, 0)
@@ -379,7 +376,6 @@ prices = load_prices()
 positions = build_positions_from_prices(prices)
 agg_for_heatmap = aggregate_for_heatmap(positions) if not positions.empty else positions
 
-# Top-level aggregates
 total_val_aed = positions["ValueAED"].sum()
 total_purchase_aed = positions["PurchaseAED"].sum()
 total_pl_aed = positions["TotalPLAED"].sum()
@@ -426,33 +422,40 @@ if agg_for_heatmap is None or agg_for_heatmap.empty:
     st.info("No live price data. Showing static valuation only; heat map disabled.")
 else:
     hm = agg_for_heatmap.copy()
-    # Day P&L in INR
     hm["DayPLINR"] = hm["DayPLAED"] * AED_TO_INR
-    # size purely by magnitude of day move
     hm["SizeForHeatmap"] = hm["DayPLINR"].abs() + 1e-6
-    # thousands for display
     hm["DayPLK"] = hm["DayPLINR"] / 1000.0
+
+    def label_for_k(v: float) -> str:
+        if v >= 0:
+            return f"₹{abs(v):,.0f}k"
+        else:
+            return f"[₹{abs(v):,.0f}k]"
+
+    hm["DayPLKLabel"] = hm["DayPLK"].apply(label_for_k)
 
     fig = px.treemap(
         hm,
-        path=["Name"],  # single-level tiles, no MV wrapper
+        path=["Name"],
         values="SizeForHeatmap",
         color="DayPLINR",
         color_continuous_scale=[COLOR_DANGER, "#16233a", COLOR_SUCCESS],
         color_continuous_midpoint=0,
-        custom_data=["DayPLINR", "Ticker", "DayPLK"],
+        custom_data=["DayPLINR", "Ticker", "DayPLKLabel"],
+        root_color="rgba(0,0,0,0)",
     )
 
     fig.update_traces(
-        hovertemplate="<b>%{label}</b><br>Ticker: %{customdata[1]}<br>Day P&L: ₹ %{customdata[0]:,.0f}<extra></extra>",
-        texttemplate="%{label}<br>₹ %{customdata[2]:,.0f}k",
+        hovertemplate="<b>%{label}</b><br>Ticker: %{customdata[1]}<br>Day P&L: ₹%{customdata[0]:,.0f}<extra></extra>",
+        texttemplate="%{label}<br>%{customdata[2]}",
+        marker=dict(line=dict(width=0)),
     )
 
     fig.update_layout(
         margin=dict(t=0, l=0, r=0, b=0),
         paper_bgcolor=COLOR_BG,
-        coloraxis_showscale=False,  # hide color bar
+        coloraxis_showscale=False,
         font=dict(family="Inter"),
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
