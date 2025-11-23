@@ -442,7 +442,6 @@ else:
     color_continuous_scale=[COLOR_DANGER, "#16233a", COLOR_SUCCESS],
     color_continuous_midpoint=0,
     custom_data=["DayPLINR", "Ticker", "DayPLKLabel"],
-    root_color="white",
     )
 
     fig.update_traces(
@@ -453,10 +452,12 @@ else:
     )
 
     fig.update_layout(
-        margin=dict(t=0, l=0, r=0, b=0),
-        paper_bgcolor="#ffffff",
-        coloraxis_showscale=False,
-        font=dict(family="Inter"),
+    margin=dict(t=0, l=0, r=0, b=0),
+    paper_bgcolor="rgba(0,0,0,0)",
+    plot_bgcolor="rgba(0,0,0,0)",
+    coloraxis_showscale=False,
+    font=dict(family="Inter"),
+),
     )
 
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
