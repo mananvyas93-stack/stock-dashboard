@@ -2,7 +2,6 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 import plotly.express as px
-from datetime import datetime
 
 # ---------- PAGE CONFIG ----------
 st.set_page_config(
@@ -42,12 +41,23 @@ st.markdown(
         max-width: 900px;
     }
 
-    .card, .kpi-card {
+    .card {
         background: var(--card);
         border: 1px solid var(--border);
         border-radius: 8px;
         padding: 12px 14px;
         box-shadow: none;
+        margin-bottom: 12px;
+    }
+
+    .kpi-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 12px;
+        box-shadow: none;
+        margin-top: 6px;
+        margin-bottom: 6px;
     }
 
     .page-title {
@@ -73,19 +83,6 @@ st.markdown(
         background: #111b2c;
         font-size: 0.78rem;
         color: var(--muted);
-    }
-
-    .kpi-row {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-        margin-top: 10px;
-    }
-
-    @media (min-width: 900px) {
-        .kpi-row {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-        }
     }
 
     .kpi-label {
@@ -120,7 +117,7 @@ st.markdown(
 )
 
 # ---------- CONSTANTS ----------
-USD_TO_AED = 3.6725  # this is essentially fixed (USD peg)
+USD_TO_AED = 3.6725  # USD–AED peg
 
 COLOR_PRIMARY = "#4aa3ff"
 COLOR_SUCCESS = "#6bcf8f"
@@ -153,12 +150,12 @@ portfolio_config = [
 
 @st.cache_data(ttl=3600)
 def get_aed_inr_rate_from_yahoo() -> float:
-    """Fetch AED→INR from Yahoo FX ticker AEDINR=X, fallback to manual if needed."""
+    """Fetch AED→INR from Yahoo FX ticker AEDINR=X, fallback if needed."""
     try:
         tkr = yf.Ticker("AEDINR=X")
         hist = tkr.history(period="5d")
         if hist is None or hist.empty or "Close" not in hist.columns:
-            return 22.50  # fallback manual rate
+            return 22.50  # fallback
         return float(hist["Close"].iloc[-1])
     except Exception:
         return 22.50
@@ -216,8 +213,7 @@ def load_prices() -> pd.DataFrame:
 # ---------- PORTFOLIO BUILDERS ----------
 
 def build_positions_from_prices(prices: pd.DataFrame) -> pd.DataFrame:
-    """Row per config line with P&L and weights.
-    Missing / odd data ⇒ treat daily move as 0."""
+    """Row per config line with P&L and weights. Missing data ⇒ daily move = 0."""
     if prices is None or prices.empty or len(prices) < 1:
         rows = []
         for item in portfolio_config:
@@ -281,7 +277,7 @@ def build_positions_from_prices(prices: pd.DataFrame) -> pd.DataFrame:
             if use_day_change and prev_usd > 0:
                 day_pct = (price_usd / prev_usd - 1.0) * 100.0
             else:
-                day_pct = 0.0  # your rule: treat missing as 0 move
+                day_pct = 0.0  # treat missing as 0 move
             day_pl_aed = value_aed * (day_pct / 100.0)
 
             total_pl_aed = value_aed - purchase
@@ -353,6 +349,20 @@ def aggregate_for_heatmap(df: pd.DataFrame) -> pd.DataFrame:
 
     return pd.concat([mv, sv_row], ignore_index=True)
 
+# ---------- UI HELPERS ----------
+
+def render_kpi(label: str, value: str, sub: str):
+    st.markdown(
+        f"""
+        <div class="kpi-card">
+            <div class="kpi-label">{label}</div>
+            <div class="kpi-value-main">{value}</div>
+            <div class="kpi-sub">{sub}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
 # ---------- UI / MAIN ----------
 
 # Sidebar: FX settings
@@ -398,36 +408,25 @@ st.markdown(
   <div class="status-pill">
     <span>Last price: {last_str}</span>
   </div>
-
-  <div class="kpi-row">
-    <div class="kpi-card">
-      <div class="kpi-label">Total Profit (INR)</div>
-      <div class="kpi-value-main">{total_pl_inr_lacs}</div>
-      <div class="kpi-sub">{total_pl_pct:+.2f}% overall</div>
-    </div>
-
-    <div class="kpi-card">
-      <div class="kpi-label">Today's P&L (INR)</div>
-      <div class="kpi-value-main">{day_pl_inr_lacs}</div>
-      <div class="kpi-sub">vs. previous close (0% if data missing)</div>
-    </div>
-
-    <div class="kpi-card">
-      <div class="kpi-label">Portfolio Size (INR)</div>
-      <div class="kpi-value-main">{total_val_inr_lacs}</div>
-      <div class="kpi-sub">Live mark-to-market</div>
-    </div>
-
-    <div class="kpi-card">
-      <div class="kpi-label">Holdings</div>
-      <div class="kpi-value-main">{positions['Ticker'].nunique()}</div>
-      <div class="kpi-sub">MV + SV (SV aggregated in heatmap)</div>
-    </div>
-  </div>
 </div>
 """,
     unsafe_allow_html=True,
 )
+
+# KPI row (Streamlit columns, each with its own kpi-card HTML)
+c1, c2, c3, c4 = st.columns(4)
+
+with c1:
+    render_kpi("Total Profit (INR)", total_pl_inr_lacs, f"{total_pl_pct:+.2f}% overall")
+
+with c2:
+    render_kpi("Today's P&L (INR)", day_pl_inr_lacs, "vs. previous close (0% if data missing)")
+
+with c3:
+    render_kpi("Portfolio Size (INR)", total_val_inr_lacs, "Live mark-to-market")
+
+with c4:
+    render_kpi("Holdings", str(positions['Ticker'].nunique()), "MV + SV (SV aggregated in heatmap)")
 
 # ---------- HEATMAP ----------
 st.markdown('<div class="section-title">Heat Map – Today</div>', unsafe_allow_html=True)
