@@ -179,4 +179,131 @@ def load_prices() -> pd.DataFrame:
         tickers=tickers,
         period="5d",
         interval="1d",
-        auto_adjust=True,_
+        auto_adjust=True,
+        group_by="ticker",
+        progress=False,
+        threads=False,
+    )
+
+    if data is None or data.empty:
+        return pd.DataFrame()
+
+    # Normalise MultiIndex to plain [dates x tickers]
+    if isinstance(data.columns, pd.MultiIndex):
+        lvl0 = data.columns.get_level_values(0)
+        lvl1 = data.columns.get_level_values(1)
+
+        close = None
+
+        # Case 1: first level is price type
+        if "Adj Close" in lvl0:
+            close = data["Adj Close"]
+        elif "Close" in lvl0:
+            close = data["Close"]
+
+        # Case 2: second level is price type
+        if close is None:
+            if "Adj Close" in lvl1:
+                close = data.xs("Adj Close", level=1, axis=1)
+            elif "Close" in lvl1:
+                close = data.xs("Close", level=1, axis=1)
+
+        if close is None:
+            # Fallback: just take the first level slice
+            close = data.xs(data.columns.levels[1][0], level=1, axis=1)
+
+        # Ensure flat columns = ticker symbols
+        if isinstance(close.columns, pd.MultiIndex):
+            close.columns = close.columns.get_level_values(-1)
+
+    else:
+        # Single ticker case
+        close = data.copy()
+        if "Adj Close" in close.columns:
+            close = close[["Adj Close"]]
+            close.columns = [tickers[0]]
+        elif "Close" in close.columns:
+            close = close[["Close"]]
+            close.columns = [tickers[0]]
+
+    close = close.dropna(how="all")
+    return close
+
+
+def build_positions_from_prices(prices: pd.DataFrame) -> pd.DataFrame:
+    """Return a row per portfolio_config line with P&L and weights.
+    If price data is missing/odd, treat daily change as 0 (your choice)."""
+    if prices is None or prices.empty or len(prices) < 1:
+        # no reliable history; fallback to static valuation
+        rows = []
+        for item in portfolio_config:
+            purchase = float(item["PurchaseValAED"])
+            rows.append(
+                {
+                    "Name": item["Name"],
+                    "Ticker": item["Ticker"],
+                    "Owner": item["Owner"],
+                    "Sector": item["Sector"],
+                    "Units": float(item["Units"]),
+                    "PriceUSD": 0.0,
+                    "ValueAED": purchase,
+                    "PurchaseAED": purchase,
+                    "DayPct": 0.0,
+                    "DayPLAED": 0.0,
+                    "TotalPct": 0.0,
+                    "TotalPLAED": 0.0,
+                }
+            )
+        df = pd.DataFrame(rows)
+        total_val = df["ValueAED"].sum()
+        df["WeightPct"] = df["ValueAED"] / total_val * 100 if total_val > 0 else 0
+        return df
+
+    # Need at least 2 rows for a "yesterday vs today" view; otherwise day change = 0
+    use_day_change = len(prices) >= 2
+    last = prices.iloc[-1]
+    prev = prices.iloc[-2] if use_day_change else prices.iloc[-1]
+
+    rows = []
+    for item in portfolio_config:
+        t = item["Ticker"]
+        if t not in prices.columns:
+            continue
+
+        units = float(item["Units"])
+        purchase = float(item["PurchaseValAED"])
+
+        # Robust numeric conversion
+        last_raw = last[t]
+        prev_raw = prev[t]
+
+        try:
+            last_usd = float(last_raw)
+        except Exception:
+            last_usd = 0.0
+
+        try:
+            prev_usd = float(prev_raw)
+        except Exception:
+            prev_usd = last_usd  # fallback ⇒ 0% move
+
+        if last_usd <= 0:
+            # No valid price ⇒ keep static
+            price_aed = 0.0
+            value_aed = purchase
+            day_pct = 0.0
+            day_pl_aed = 0.0
+            total_pl_aed = 0.0
+            total_pct = 0.0
+        else:
+            price_aed = last_usd * USD_TO_AED
+            value_aed = price_aed * units
+
+            if use_day_change and prev_usd > 0:
+                day_pct = (last_usd / prev_usd - 1.0) * 100.0
+            else:
+                day_pct = 0.0  # your rule: treat missing as 0 move
+            day_pl_aed = value_aed * (day_pct / 100.0)
+
+            total_pl_aed = value_aed - purchase
+            total_pct = (total_pl_aed / purchase) * 100
