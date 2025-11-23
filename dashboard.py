@@ -16,7 +16,7 @@ st.set_page_config(
 st.markdown(
     """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
 
     :root {
         --bg: #0f1a2b;
@@ -31,7 +31,7 @@ st.markdown(
     }
 
     html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
+        font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         background: var(--bg);
         color: var(--text);
     }
@@ -84,8 +84,9 @@ st.markdown(
     }
 
     .kpi-value-main {
+        font-family: 'Space Grotesk', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         font-size: 1.2rem;
-        font-weight: 700;
+        font-weight: 600;
         color: var(--text);
     }
 </style>
@@ -284,7 +285,10 @@ def build_positions_from_prices(prices: pd.DataFrame) -> pd.DataFrame:
 
 
 def aggregate_for_heatmap(df: pd.DataFrame) -> pd.DataFrame:
-    """Merge all SV positions into one 'SV Portfolio' row."""
+    """
+    Merge all SV positions into one 'SV Portfolio' row.
+    Everything else remains as individual tiles.
+    """
     if df.empty:
         return df
 
@@ -292,7 +296,8 @@ def aggregate_for_heatmap(df: pd.DataFrame) -> pd.DataFrame:
     sv = df[df["Owner"] == "SV"].copy()
 
     if sv.empty:
-        return df
+        # no SV, just return MV rows
+        return mv.reset_index(drop=True)
 
     total_val_all = df["ValueAED"].sum()
 
@@ -324,7 +329,8 @@ def aggregate_for_heatmap(df: pd.DataFrame) -> pd.DataFrame:
     mv = mv.copy()
     mv["WeightPct"] = mv["ValueAED"] / total_val_all * 100.0 if total_val_all > 0 else 0.0
 
-    return pd.concat([mv, sv_row], ignore_index=True)
+    combined = pd.concat([mv, sv_row], ignore_index=True)
+    return combined
 
 # ---------- UI HELPERS ----------
 
@@ -422,27 +428,31 @@ else:
     hm = agg_for_heatmap.copy()
     # Day P&L in INR
     hm["DayPLINR"] = hm["DayPLAED"] * AED_TO_INR
-    # Size for treemap driven purely by magnitude of today's P&L (INR)
-    hm["SizeForHeatmap"] = hm["DayPLINR"].abs() + 1e-6  # avoid zero-area tiles
+    # size purely by magnitude of day move
+    hm["SizeForHeatmap"] = hm["DayPLINR"].abs() + 1e-6
+    # thousands for display
+    hm["DayPLK"] = hm["DayPLINR"] / 1000.0
 
     fig = px.treemap(
         hm,
-        path=["Owner", "Name"],
+        path=["Name"],  # single-level tiles, no MV wrapper
         values="SizeForHeatmap",
         color="DayPLINR",
         color_continuous_scale=[COLOR_DANGER, "#16233a", COLOR_SUCCESS],
         color_continuous_midpoint=0,
-        custom_data=["DayPLINR", "Ticker"],
+        custom_data=["DayPLINR", "Ticker", "DayPLK"],
     )
 
-    # Show INR day P&L on tile and in hover
     fig.update_traces(
         hovertemplate="<b>%{label}</b><br>Ticker: %{customdata[1]}<br>Day P&L: ₹ %{customdata[0]:,.0f}<extra></extra>",
-        texttemplate="%{label}<br>₹ %{customdata[0]:,.0f}",
+        texttemplate="%{label}<br>₹ %{customdata[2]:,.0f}k",
     )
 
     fig.update_layout(
         margin=dict(t=0, l=0, r=0, b=0),
         paper_bgcolor=COLOR_BG,
+        coloraxis_showscale=False,  # hide color bar
+        font=dict(family="Inter"),
     )
+
     st.plotly_chart(fig, use_container_width=True)
