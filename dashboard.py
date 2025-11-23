@@ -435,14 +435,14 @@ else:
     hm["DayPLKLabel"] = hm["DayPLK"].apply(label_for_k)
 
     fig = px.treemap(
-        hm,
-        path=["Name"],
-        values="SizeForHeatmap",
-        color="DayPLINR",
-        color_continuous_scale=[COLOR_DANGER, "#16233a", COLOR_SUCCESS],
-        color_continuous_midpoint=0,
-        custom_data=["DayPLINR", "Ticker", "DayPLKLabel"],
-        root_color="#ffffff",
+    hm,
+    path=["Name"],
+    values="SizeForHeatmap",
+    color="DayPLINR",
+    color_continuous_scale=[COLOR_DANGER, "#16233a", COLOR_SUCCESS],
+    color_continuous_midpoint=0,
+    custom_data=["DayPLINR", "Ticker", "DayPLKLabel"],
+    root_color="white",
     )
 
     fig.update_traces(
