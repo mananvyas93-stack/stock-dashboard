@@ -92,7 +92,6 @@ st.markdown(
         color: var(--text);
     }
 
-    /* Make Plotly container transparent so only the figure background shows */
     .stPlotlyChart {
         background: transparent !important;
     }
@@ -102,8 +101,7 @@ st.markdown(
 )
 
 # ---------- CONSTANTS ----------
-USD_TO_AED = 3.6725  # USD–AED peg
-
+USD_TO_AED = 3.6725
 COLOR_PRIMARY = "#4aa3ff"
 COLOR_SUCCESS = "#6bcf8f"
 COLOR_DANGER = "#f27d72"
@@ -111,36 +109,35 @@ COLOR_BG = "#0f1a2b"
 
 # ---------- PORTFOLIO CONFIG ----------
 portfolio_config = [
-    {"Name": "Alphabet",          "Ticker": "GOOGL", "Units": 51, "PurchaseValAED": 34128,  "Owner": "MV", "Sector": "Tech"},
-    {"Name": "Apple",             "Ticker": "AAPL",  "Units": 50, "PurchaseValAED": 37183,  "Owner": "MV", "Sector": "Tech"},
-    {"Name": "Tesla",             "Ticker": "TSLA",  "Units": 30, "PurchaseValAED": 33116,  "Owner": "MV", "Sector": "Auto"},
-    {"Name": "Nasdaq 100",        "Ticker": "QQQM",  "Units": 180,"PurchaseValAED": 150894, "Owner": "MV", "Sector": "ETF"},
-    {"Name": "AMD",               "Ticker": "AMD",   "Units": 27, "PurchaseValAED": 16075,  "Owner": "MV", "Sector": "Semi"},
-    {"Name": "Broadcom",          "Ticker": "AVGO",  "Units": 13, "PurchaseValAED": 13578,  "Owner": "MV", "Sector": "Semi"},
-    {"Name": "Nvidia",            "Ticker": "NVDA",  "Units": 78, "PurchaseValAED": 49707,  "Owner": "MV", "Sector": "Semi"},
-    {"Name": "Amazon",            "Ticker": "AMZN",  "Units": 59, "PurchaseValAED": 47720,  "Owner": "MV", "Sector": "Retail"},
-    {"Name": "MSFT",              "Ticker": "MSFT",  "Units": 26, "PurchaseValAED": 49949,  "Owner": "MV", "Sector": "Tech"},
-    {"Name": "Meta",              "Ticker": "META",  "Units": 18, "PurchaseValAED": 48744,  "Owner": "MV", "Sector": "Tech"},
-    {"Name": "Broadcom [SV]",     "Ticker": "AVGO",  "Units": 2,  "PurchaseValAED": 2122,   "Owner": "SV", "Sector": "Semi"},
-    {"Name": "Apple [SV]",        "Ticker": "AAPL",  "Units": 2,  "PurchaseValAED": 1486,   "Owner": "SV", "Sector": "Tech"},
-    {"Name": "Nasdaq [SV]",       "Ticker": "QQQ",   "Units": 1,  "PurchaseValAED": 2095,   "Owner": "SV", "Sector": "ETF"},
-    {"Name": "Nvidia [SV]",       "Ticker": "NVDA",  "Units": 2,  "PurchaseValAED": 1286,   "Owner": "SV", "Sector": "Semi"},
-    {"Name": "Amazon [SV]",       "Ticker": "AMZN",  "Units": 4,  "PurchaseValAED": 3179,   "Owner": "SV", "Sector": "Retail"},
-    {"Name": "Novo [SV]",         "Ticker": "NVO",   "Units": 4,  "PurchaseValAED": 714,    "Owner": "SV", "Sector": "Health"},
-    {"Name": "Nasdaq 100 [SV]",   "Ticker": "QQQM",  "Units": 10, "PurchaseValAED": 8989,   "Owner": "SV", "Sector": "ETF"},
-    {"Name": "MSFT [SV]",         "Ticker": "MSFT",  "Units": 4,  "PurchaseValAED": 7476,   "Owner": "SV", "Sector": "Tech"},
+    {"Name": "Alphabet", "Ticker": "GOOGL", "Units": 51, "PurchaseValAED": 34128, "Owner": "MV", "Sector": "Tech"},
+    {"Name": "Apple", "Ticker": "AAPL", "Units": 50, "PurchaseValAED": 37183, "Owner": "MV", "Sector": "Tech"},
+    {"Name": "Tesla", "Ticker": "TSLA", "Units": 30, "PurchaseValAED": 33116, "Owner": "MV", "Sector": "Auto"},
+    {"Name": "Nasdaq 100", "Ticker": "QQQM", "Units": 180, "PurchaseValAED": 150894, "Owner": "MV", "Sector": "ETF"},
+    {"Name": "AMD", "Ticker": "AMD", "Units": 27, "PurchaseValAED": 16075, "Owner": "MV", "Sector": "Semi"},
+    {"Name": "Broadcom", "Ticker": "AVGO", "Units": 13, "PurchaseValAED": 13578, "Owner": "MV", "Sector": "Semi"},
+    {"Name": "Nvidia", "Ticker": "NVDA", "Units": 78, "PurchaseValAED": 49707, "Owner": "MV", "Sector": "Semi"},
+    {"Name": "Amazon", "Ticker": "AMZN", "Units": 59, "PurchaseValAED": 47720, "Owner": "MV", "Sector": "Retail"},
+    {"Name": "MSFT", "Ticker": "MSFT", "Units": 26, "PurchaseValAED": 49949, "Owner": "MV", "Sector": "Tech"},
+    {"Name": "Meta", "Ticker": "META", "Units": 18, "PurchaseValAED": 48744, "Owner": "MV", "Sector": "Tech"},
+    {"Name": "Broadcom [SV]", "Ticker": "AVGO", "Units": 2, "PurchaseValAED": 2122, "Owner": "SV", "Sector": "Semi"},
+    {"Name": "Apple [SV]", "Ticker": "AAPL", "Units": 2, "PurchaseValAED": 1486, "Owner": "SV", "Sector": "Tech"},
+    {"Name": "Nasdaq [SV]", "Ticker": "QQQ", "Units": 1, "PurchaseValAED": 2095, "Owner": "SV", "Sector": "ETF"},
+    {"Name": "Nvidia [SV]", "Ticker": "NVDA", "Units": 2, "PurchaseValAED": 1286, "Owner": "SV", "Sector": "Semi"},
+    {"Name": "Amazon [SV]", "Ticker": "AMZN", "Units": 4, "PurchaseValAED": 3179, "Owner": "SV", "Sector": "Retail"},
+    {"Name": "Novo [SV]", "Ticker": "NVO", "Units": 4, "PurchaseValAED": 714, "Owner": "SV", "Sector": "Health"},
+    {"Name": "Nasdaq 100 [SV]", "Ticker": "QQQM", "Units": 10, "PurchaseValAED": 8989, "Owner": "SV", "Sector": "ETF"},
+    {"Name": "MSFT [SV]", "Ticker": "MSFT", "Units": 4, "PurchaseValAED": 7476, "Owner": "SV", "Sector": "Tech"},
 ]
 
 # ---------- FX HELPERS ----------
 
 @st.cache_data(ttl=3600)
 def get_aed_inr_rate_from_yahoo() -> float:
-    """Fetch AED→INR from Yahoo FX ticker AEDINR=X, fallback if needed."""
     try:
         tkr = yf.Ticker("AEDINR=X")
         hist = tkr.history(period="5d")
         if hist is None or hist.empty or "Close" not in hist.columns:
-            return 22.50  # fallback
+            return 22.50
         return float(hist["Close"].iloc[-1])
     except Exception:
         return 22.50
@@ -151,13 +148,11 @@ def fmt_inr_lacs_from_aed(aed_value: float, aed_to_inr: float) -> str:
     lacs = inr / 100000.0
     return f"₹{lacs:,.2f} L"
 
-# ---------- PRICE FETCHING ----------
+# ---------- PRICE FETCHING (REGULAR CLOSE) ----------
 
 @st.cache_data(ttl=300)
-def load_prices() -> pd.DataFrame:
-    """Fetch last few daily closes for all tickers, return DataFrame [date x ticker]."""
+def load_prices_close() -> pd.DataFrame:
     tickers = sorted({item["Ticker"] for item in portfolio_config})
-
     data = yf.download(
         tickers=tickers,
         period="5d",
@@ -167,10 +162,8 @@ def load_prices() -> pd.DataFrame:
         progress=False,
         threads=False,
     )
-
     if data is None or data.empty:
         return pd.DataFrame()
-
     if isinstance(data.columns, pd.MultiIndex):
         lvl1 = data.columns.get_level_values(1)
         if "Adj Close" in lvl1:
@@ -179,7 +172,6 @@ def load_prices() -> pd.DataFrame:
             close = data.xs("Close", level=1, axis=1)
         else:
             close = data.xs(lvl1[0], level=1, axis=1)
-
         close.columns = close.columns.get_level_values(0)
     else:
         if "Adj Close" in data.columns:
@@ -189,63 +181,88 @@ def load_prices() -> pd.DataFrame:
         else:
             return pd.DataFrame()
         close.columns = [tickers[0]]
-
     close = close.dropna(how="all")
     return close
 
+# ---------- PRICE FETCHING (INTRADAY) ----------
+
+@st.cache_data(ttl=60)
+def load_prices_intraday() -> pd.Series:
+    """Get last intraday price per ticker using 1m/5m data."""
+    tickers = sorted({item["Ticker"] for item in portfolio_config})
+    last_prices = {}
+    for t in tickers:
+        try:
+            tkr = yf.Ticker(t)
+            hist = tkr.history(period="1d", interval="1m")
+            if hist is None or hist.empty:
+                hist = tkr.history(period="1d", interval="5m")
+            if hist is None or hist.empty or "Close" not in hist.columns:
+                continue
+            last_prices[t] = float(hist["Close"].iloc[-1])
+        except Exception:
+            continue
+    if not last_prices:
+        return pd.Series(dtype=float)
+    return pd.Series(last_prices)
+
+# ---------- MARKET STATUS & DATA SOURCE ----------
+
+def get_market_phase_and_prices():
+    us_tz = ZoneInfo("America/New_York")
+    now_us = datetime.now(us_tz)
+    weekday = now_us.weekday()
+    t = now_us.time()
+    open_time = time(9, 30)
+    close_time = time(16, 0)
+
+    base_close = load_prices_close()
+
+    if weekday >= 5:
+        return "US market closed (weekend) – showing last available close", base_close
+
+    intraday = load_prices_intraday()
+    if intraday.empty:
+        return "Live data unavailable – falling back to last close", base_close
+
+    if t < open_time:
+        # pre-market: use intraday if available
+        return "Pre-market – using intraday Yahoo prices (may lag)", intraday
+    if t >= close_time:
+        # post-market: intraday includes last regular/after-hours trade
+        return "Post-market – using last intraday prices", intraday
+    # regular session
+    return "Market live – using intraday Yahoo prices (may lag slightly)", intraday
+
 # ---------- PORTFOLIO BUILDERS ----------
 
-def build_positions_from_prices(prices: pd.DataFrame) -> pd.DataFrame:
-    """Row per config line with P&L and weights. Missing data ⇒ daily move = 0."""
-    if prices is None or prices.empty or len(prices) < 1:
-        rows = []
-        for item in portfolio_config:
-            purchase = float(item["PurchaseValAED"])
-            rows.append(
-                {
-                    "Name": item["Name"],
-                    "Ticker": item["Ticker"],
-                    "Owner": item["Owner"],
-                    "Sector": item["Sector"],
-                    "Units": float(item["Units"]),
-                    "PriceUSD": 0.0,
-                    "ValueAED": purchase,
-                    "PurchaseAED": purchase,
-                    "DayPct": 0.0,
-                    "DayPLAED": 0.0,
-                    "TotalPct": 0.0,
-                    "TotalPLAED": 0.0,
-                }
-            )
-        df = pd.DataFrame(rows)
-        total_val = df["ValueAED"].sum()
-        df["WeightPct"] = df["ValueAED"] / total_val * 100 if total_val > 0 else 0
-        return df
-
-    use_day_change = len(prices) >= 2
-    last = prices.iloc[-1]
-    prev = prices.iloc[-2] if use_day_change else prices.iloc[-1]
-
+def build_positions_from_prices(prices_close: pd.DataFrame, prices_intraday: pd.Series | None) -> pd.DataFrame:
+    """Row per config line with P&L and weights.
+    prices_close: daily close frame (for previous day).
+    prices_intraday: optional Series of latest prices; when present, drives today move.
+    """
     rows = []
+    has_close = prices_close is not None and not prices_close.empty
+
+    if has_close and len(prices_close) >= 1:
+        last_close = prices_close.iloc[-1]
+        prev_close = prices_close.iloc[-2] if len(prices_close) >= 2 else prices_close.iloc[-1]
+    else:
+        last_close = pd.Series(dtype=float)
+        prev_close = pd.Series(dtype=float)
+
     for item in portfolio_config:
         t = item["Ticker"]
-        if t not in prices.columns:
-            continue
-
         units = float(item["Units"])
         purchase = float(item["PurchaseValAED"])
 
-        try:
-            last_usd = float(last[t])
-        except Exception:
-            last_usd = 0.0
+        # base price from last close
+        base_price = float(last_close.get(t, 0.0)) if has_close else 0.0
 
-        try:
-            prev_usd = float(prev[t])
-        except Exception:
-            prev_usd = last_usd
+        # override with intraday if available (pre/live/post market)
+        live_price = float(prices_intraday.get(t, base_price)) if prices_intraday is not None else base_price
 
-        if last_usd <= 0:
+        if live_price <= 0:
             value_aed = purchase
             day_pct = 0.0
             day_pl_aed = 0.0
@@ -253,14 +270,13 @@ def build_positions_from_prices(prices: pd.DataFrame) -> pd.DataFrame:
             total_pct = 0.0
             price_usd = 0.0
         else:
-            price_usd = last_usd
+            price_usd = live_price
             price_aed = price_usd * USD_TO_AED
             value_aed = price_aed * units
 
-            if use_day_change and prev_usd > 0:
-                day_pct = (price_usd / prev_usd - 1.0) * 100.0
-            else:
-                day_pct = 0.0
+            # previous reference = yesterday close if available
+            prev_usd = float(prev_close.get(t, price_usd)) if has_close else price_usd
+            day_pct = (price_usd / prev_usd - 1.0) * 100.0 if prev_usd > 0 else 0.0
             day_pl_aed = value_aed * (day_pct / 100.0)
 
             total_pl_aed = value_aed - purchase
@@ -290,21 +306,14 @@ def build_positions_from_prices(prices: pd.DataFrame) -> pd.DataFrame:
 
 
 def aggregate_for_heatmap(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Merge all SV positions into one 'SV Portfolio' row.
-    Everything else remains as individual tiles.
-    """
     if df.empty:
         return df
-
     mv = df[df["Owner"] == "MV"].copy()
     sv = df[df["Owner"] == "SV"].copy()
-
     if sv.empty:
         return mv.reset_index(drop=True)
 
     total_val_all = df["ValueAED"].sum()
-
     sv_val = sv["ValueAED"].sum()
     sv_purchase = sv["PurchaseAED"].sum()
     sv_day_pl = sv["DayPLAED"].sum()
@@ -350,36 +359,24 @@ def render_kpi(label: str, value: str):
     )
 
 
-def get_market_status_text() -> str:
-    us_tz = ZoneInfo("America/New_York")
-    now_us = datetime.now(us_tz)
-    weekday = now_us.weekday()
-    t = now_us.time()
-    open_time = time(9, 30)
-    close_time = time(16, 0)
-
-    if weekday >= 5:
-        return "US market closed (weekend) – showing last available close"
-    if t < open_time:
-        return "Pre-market – showing last official close"
-    if t >= close_time:
-        return "Post-market – showing today’s close (once available)"
-    return "Market live – numbers based on latest Yahoo prices (may lag slightly)"
-
-# ---------- SIDEBAR FX ----------
-st.sidebar.markdown("### Settings")
-base_fx = get_aed_inr_rate_from_yahoo()
-AED_TO_INR = st.sidebar.number_input(
-    "AED → INR (from Yahoo, editable)",
-    value=float(round(base_fx, 2)),
-    step=0.05,
-    format="%.2f",
-)
-
 # ---------- DATA PIPELINE ----------
-prices = load_prices()
-positions = build_positions_from_prices(prices)
+
+market_status, price_source = get_market_phase_and_prices()
+
+# prices_close always needed for yesterday reference
+prices_close = load_prices_close()
+
+# price_source can be a DataFrame (close) or Series (intraday)
+if isinstance(price_source, pd.DataFrame):
+    positions = build_positions_from_prices(price_source, None)
+else:
+    positions = build_positions_from_prices(prices_close, price_source)
+
 agg_for_heatmap = aggregate_for_heatmap(positions) if not positions.empty else positions
+
+# totals
+base_fx = get_aed_inr_rate_from_yahoo()
+AED_TO_INR = base_fx
 
 total_val_aed = positions["ValueAED"].sum()
 total_purchase_aed = positions["PurchaseAED"].sum()
@@ -389,13 +386,12 @@ day_pl_aed = positions["DayPLAED"].sum()
 total_pl_pct = (total_pl_aed / total_purchase_aed * 100.0) if total_purchase_aed > 0 else 0.0
 
 total_val_inr_lacs = fmt_inr_lacs_from_aed(total_val_aed, AED_TO_INR)
-total_pl_inr_lacs = fmt_inr_lacs_from_aed(total_pl_aed, AED_TO_INR)
-day_pl_inr_lacs = fmt_inr_lacs_from_aed(day_pl_aed, AED_TO_INR)
+ total_pl_inr_lacs = fmt_inr_lacs_from_aed(total_pl_aed, AED_TO_INR)
+ day_pl_inr_lacs = fmt_inr_lacs_from_aed(day_pl_aed, AED_TO_INR)
 
 overall_pct_str = f"{total_pl_pct:+.2f}%"
 
 # ---------- HEADER ----------
-market_status = get_market_status_text()
 
 st.markdown(
     f"""
@@ -408,6 +404,7 @@ st.markdown(
 )
 
 # ---------- KPI CARDS ----------
+
 c1, c2, c3, c4 = st.columns(4)
 
 with c1:
@@ -423,6 +420,7 @@ with c4:
     render_kpi("Overall Return (%)", overall_pct_str)
 
 # ---------- HEATMAP ----------
+
 if agg_for_heatmap is None or agg_for_heatmap.empty:
     st.info("No live price data. Showing static valuation only; heat map disabled.")
 else:
@@ -453,12 +451,12 @@ else:
         hovertemplate="<b>%{label}</b><br>Ticker: %{customdata[1]}<br>Day P&L: ₹%{customdata[0]:,.0f}<extra></extra>",
         texttemplate="%{label}<br>%{customdata[2]}",
         marker=dict(line=dict(width=0)),
-        root_color=COLOR_BG,   # outer tile same as page background
+        root_color=COLOR_BG,
     )
 
     fig.update_layout(
         margin=dict(t=0, l=0, r=0, b=0),
-        paper_bgcolor=COLOR_BG,   # match page background
+        paper_bgcolor=COLOR_BG,
         plot_bgcolor=COLOR_BG,
         coloraxis_showscale=False,
         font=dict(family="Inter"),
