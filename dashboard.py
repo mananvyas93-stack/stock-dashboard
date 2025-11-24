@@ -496,10 +496,10 @@ st.markdown(
 # ---------- TABS ----------
 
 home_tab, sv_tab, portfolio_tab, news_tab = st.tabs([
-    "Overview",
-    "SV Portfolio",
-    "Holdings",
-    "News",
+    "🪙 Overview",
+    "💷 SV Portfolio",
+    "🏦 Holdings",
+    "📜 News",
 ])
 
 # ---------- HOME TAB (existing KPI + heatmap) ----------
