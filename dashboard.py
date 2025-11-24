@@ -100,21 +100,35 @@ st.markdown(
     }
     .stTabs {
         margin-top: 0.75rem;
+        padding: 0.25rem 0.35rem 0 0.35rem;
+        background: var(--bg);
     }
 
     .stTabs [data-baseweb="tab-list"] {
-        gap: 0.2rem;
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        gap: 0.25rem;
+        padding: 0.25rem 0.4rem 0 0.4rem;
+        background: var(--card);
+        border-radius: 10px 10px 0 0;
         border-bottom: 1px solid var(--border);
     }
 
     .stTabs [data-baseweb="tab"] {
         position: relative;
+        flex: 1 1 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
         font-family: 'Space Grotesk', sans-serif !important;
-        font-size: 0.78rem !important;
-        padding: 7px 18px 5px 18px !important;
+        font-size: 0.8rem !important;
+        padding: 6px 10px 5px 10px !important;
         color: var(--muted) !important;
         background: transparent !important;
         border: none !important;
+        cursor: pointer;
     }
 
     .stTabs [data-baseweb="tab"]::before {
@@ -122,12 +136,12 @@ st.markdown(
         position: absolute;
         inset: 0;
         border-radius: 9px 9px 0 0;
-        background: linear-gradient(135deg, #18253a, #111c2f);
-        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+        background: linear-gradient(135deg, #19263b, #0f1a2b);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
         opacity: 0;
-        transform: translateY(6px) scale(0.98);
+        transform: translateY(4px) scale(0.97);
         transform-origin: center bottom;
-        transition: opacity 160ms ease-out, transform 160ms ease-out;
+        transition: opacity 140ms ease-out, transform 140ms ease-out;
         z-index: -1;
     }
 
@@ -445,10 +459,10 @@ st.markdown(
 # ---------- TABS ----------
 
 home_tab, sv_tab, portfolio_tab, news_tab = st.tabs([
-    "⬡ Overview",
-    "⬢ SV Portfolio",
-    "⬢ Holdings",
-    "⬡ News",
+    "⬢ Overview",
+    "⬡ SV Portfolio",
+    "⬣ Holdings",
+    "⬠ News",
 ])
 
 # ---------- HOME TAB (existing KPI + heatmap) ----------
@@ -469,7 +483,7 @@ with home_tab:
         render_kpi("Overall Return (%)", overall_pct_str)
 
     st.markdown(
-        "<div style='color:black; font-size:0.75rem; margin:4px 0;'>Today's Gains</div>",
+        "<div style="font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#e6eaf0; font-size:0.75rem; margin:4px 0;">Today's Gains</div>",
         unsafe_allow_html=True,
     )
 
