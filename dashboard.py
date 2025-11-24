@@ -100,19 +100,15 @@ st.markdown(
     }
     .stTabs {
         margin-top: 0.75rem;
-        padding: 0.25rem 0.35rem 0 0.35rem;
-        background: var(--bg);
     }
 
     .stTabs [data-baseweb="tab-list"] {
         display: flex;
-        justify-content: space-between;
-        width: 100%;
+        align-items: flex-end;
         gap: 0.25rem;
-        padding: 0.25rem 0.4rem 0 0.4rem;
-        background: var(--card);
-        border-radius: 10px 10px 0 0;
+        width: 100%;
         border-bottom: 1px solid var(--border);
+        background: transparent;
     }
 
     .stTabs [data-baseweb="tab"] {
@@ -121,10 +117,10 @@ st.markdown(
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.4rem;
+        gap: 0.35rem;
         font-family: 'Space Grotesk', sans-serif !important;
         font-size: 0.8rem !important;
-        padding: 6px 10px 5px 10px !important;
+        padding: 6px 10px 4px 10px !important;
         color: var(--muted) !important;
         background: transparent !important;
         border: none !important;
@@ -134,13 +130,13 @@ st.markdown(
     .stTabs [data-baseweb="tab"]::before {
         content: "";
         position: absolute;
-        inset: 0;
-        border-radius: 9px 9px 0 0;
-        background: linear-gradient(135deg, #19263b, #0f1a2b);
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+        inset: -4px 4px 0 4px;
+        border-radius: 8px 8px 0 0;
+        background: #111a2b;
+        border: 1px solid var(--border);
+        border-bottom: none;
         opacity: 0;
-        transform: translateY(4px) scale(0.97);
-        transform-origin: center bottom;
+        transform: translateY(4px);
         transition: opacity 140ms ease-out, transform 140ms ease-out;
         z-index: -1;
     }
@@ -152,7 +148,8 @@ st.markdown(
 
     .stTabs [aria-selected="true"]::before {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: translateY(0);
+        background: #16233a;
     }
 
 </style>
@@ -459,10 +456,10 @@ st.markdown(
 # ---------- TABS ----------
 
 home_tab, sv_tab, portfolio_tab, news_tab = st.tabs([
-    "▣ Overview",
-    "▤ SV Portfolio",
-    "▥ Holdings",
-    "✶ News",
+    "ⓞ Overview",
+    "ⓢ SV Portfolio",
+    "ⓗ Holdings",
+    "ⓝ News",
 ])
 
 # ---------- HOME TAB (existing KPI + heatmap) ----------
