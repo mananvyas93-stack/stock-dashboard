@@ -576,36 +576,85 @@ with home_tab:
 # ---------- SV TAB (Sae Vyas portfolio detail) ----------
 
 with sv_tab:
-    st.markdown("<div class='kpi-label'>SV Portfolio – detailed view</div>", unsafe_allow_html=True)
+    st.markdown("<div class='kpi-label'>SV Portfolio – snapshot</div>", unsafe_allow_html=True)
 
     sv_positions = positions[positions["Owner"] == "SV"].copy()
 
     if sv_positions.empty:
         st.info("No SV positions found.")
     else:
-        sv_positions["ValueINR"] = sv_positions["ValueAED"] * AED_TO_INR
-        sv_positions["DayPLINR"] = sv_positions["DayPLAED"] * AED_TO_INR
-        sv_positions["TotalPLINR"] = sv_positions["TotalPLAED"] * AED_TO_INR
+        # Recompute SV-only aggregates in AED and INR
+        sv_total_val_aed = sv_positions["ValueAED"].sum()
+        sv_total_purchase_aed = sv_positions["PurchaseAED"].sum()
+        sv_total_pl_aed = sv_positions["TotalPLAED"].sum()
+        sv_day_pl_aed = sv_positions["DayPLAED"].sum()
 
-        display_cols = [
-            "Name",
-            "Ticker",
-            "Units",
-            "ValueAED",
-            "ValueINR",
-            "DayPLAED",
-            "DayPLINR",
-            "TotalPLAED",
-            "TotalPLINR",
-            "TotalPct",
-        ]
+        sv_total_pl_pct = (sv_total_pl_aed / sv_total_purchase_aed * 100.0) if sv_total_purchase_aed > 0 else 0.0
 
-        st.dataframe(
-            sv_positions[display_cols].round(2),
-            use_container_width=True,
+        sv_total_val_inr_lacs = fmt_inr_lacs_from_aed(sv_total_val_aed, AED_TO_INR)
+        sv_total_pl_inr_lacs = fmt_inr_lacs_from_aed(sv_total_pl_aed, AED_TO_INR)
+        sv_day_pl_inr_lacs = fmt_inr_lacs_from_aed(sv_day_pl_aed, AED_TO_INR)
+
+        sv_overall_pct_str = f"{sv_total_pl_pct:+.2f}%"
+
+        c1, c2, c3, c4 = st.columns(4)
+        with c1:
+            render_kpi("SV Total Profit (INR)", sv_total_pl_inr_lacs)
+        with c2:
+            render_kpi("SV Today's P&L (INR)", sv_day_pl_inr_lacs)
+        with c3:
+            render_kpi("SV Portfolio Size (INR)", sv_total_val_inr_lacs)
+        with c4:
+            render_kpi("SV Overall Return (%)", sv_overall_pct_str)
+
+        st.markdown(
+            """<div style=\"font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#16233a; font-size:0.75rem; margin:4px 0;\">Today's Gains – SV</div>""",
+            unsafe_allow_html=True,
         )
 
+        hm_sv = sv_positions.copy()
+        hm_sv["DayPLINR"] = hm_sv["DayPLAED"] * AED_TO_INR
+        hm_sv["SizeForHeatmap"] = hm_sv["DayPLINR"].abs() + 1e-6
+        hm_sv["DayPLK"] = hm_sv["DayPLINR"] / 1000.0
+
+        def label_for_k_sv(v: float) -> str:
+            if v >= 0:
+                return f"₹{abs(v):,.0f}k"
+            else:
+                return f"[₹{abs(v):,.0f}k]"
+
+        hm_sv["DayPLKLabel"] = hm_sv["DayPLK"].apply(label_for_k_sv)
+
+        fig_sv = px.treemap(
+            hm_sv,
+            path=["Name"],
+            values="SizeForHeatmap",
+            color="DayPLINR",
+            color_continuous_scale=[COLOR_DANGER, "#16233a", COLOR_SUCCESS],
+            color_continuous_midpoint=0,
+            custom_data=["DayPLINR", "Ticker", "DayPLKLabel"],
+        )
+
+        fig_sv.update_traces(
+            hovertemplate="<b>%{label}</b><br>Ticker: %{customdata[1]}<br>Day P&L: ₹%{customdata[0]:,.0f}<extra></extra>",
+            texttemplate="%{label}<br>%{customdata[2]}",
+            textfont=dict(family="Space Grotesk, sans-serif", color="#e6eaf0", size=11),
+            marker=dict(line=dict(width=0)),
+            root_color=COLOR_BG,
+        )
+
+        fig_sv.update_layout(
+            margin=dict(t=0, l=0, r=0, b=0),
+            paper_bgcolor=COLOR_BG,
+            plot_bgcolor=COLOR_BG,
+            coloraxis_showscale=False,
+            font=dict(family="Space Grotesk, sans-serif"),
+        )
+
+        st.plotly_chart(fig_sv, use_container_width=True, config={"displayModeBar": False})
+
 # ---------- PLACEHOLDER TABS ----------
+
 
 with portfolio_tab:
     st.info("Portfolio tab coming next.")
