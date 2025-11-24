@@ -141,14 +141,14 @@ st.markdown(
 
     .stTabs [data-baseweb="tab"] {
         position: relative;
-        flex: 1 1 0;
+        flex: 1 1 0 !important;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.25rem;
+        gap: 0.2rem;
         font-family: 'Space Grotesk', sans-serif !important;
-        font-size: 0.72rem !important;
-        padding: 4px 4px 3px 4px !important;
+        font-size: 0.7rem !important;
+        padding: 4px 2px 3px 2px !important;
         color: #16233a !important;
         background: transparent !important;
         border: none !important;
@@ -583,7 +583,7 @@ with sv_tab:
     if sv_positions.empty:
         st.info("No SV positions found.")
     else:
-        # Recompute SV-only aggregates in AED and INR
+        # Recompute SV-only aggregates in AED
         sv_total_val_aed = sv_positions["ValueAED"].sum()
         sv_total_purchase_aed = sv_positions["PurchaseAED"].sum()
         sv_total_pl_aed = sv_positions["TotalPLAED"].sum()
@@ -591,23 +591,19 @@ with sv_tab:
 
         sv_total_pl_pct = (sv_total_pl_aed / sv_total_purchase_aed * 100.0) if sv_total_purchase_aed > 0 else 0.0
 
-        sv_total_val_inr = sv_total_val_aed * AED_TO_INR
-        sv_total_pl_inr = sv_total_pl_aed * AED_TO_INR
-        sv_day_pl_inr = sv_day_pl_aed * AED_TO_INR
-
-        sv_total_val_str = f"₹{sv_total_val_inr:,.0f}"
-        sv_total_pl_str = f"₹{sv_total_pl_inr:,.0f}"
-        sv_day_pl_str = f"₹{sv_day_pl_inr:,.0f}"
+        sv_total_val_str = f"AED {sv_total_val_aed:,.0f}"
+        sv_total_pl_str = f"AED {sv_total_pl_aed:,.0f}"
+        sv_day_pl_str = f"AED {sv_day_pl_aed:,.0f}"
 
         sv_overall_pct_str = f"{sv_total_pl_pct:+.2f}%"
 
         c1, c2, c3, c4 = st.columns(4)
         with c1:
-            render_kpi("SV Total Profit (INR)", sv_total_pl_str)
+            render_kpi("SV Total Profit (AED)", sv_total_pl_str)
         with c2:
-            render_kpi("SV Today's P&L (INR)", sv_day_pl_str)
+            render_kpi("SV Today's P&L (AED)", sv_day_pl_str)
         with c3:
-            render_kpi("SV Portfolio Size (INR)", sv_total_val_str)
+            render_kpi("SV Portfolio Size (AED)", sv_total_val_str)
         with c4:
             render_kpi("SV Overall Return (%)", sv_overall_pct_str)
 
@@ -617,16 +613,16 @@ with sv_tab:
         )
 
         hm_sv = sv_positions.copy()
-        hm_sv["Name"] = hm_sv["Name"].str.replace(r"\s*\[SV\]", "", regex=True)
-        hm_sv["DayPLINR"] = hm_sv["DayPLAED"] * AED_TO_INR
-        hm_sv["SizeForHeatmap"] = hm_sv["DayPLINR"].abs() + 1e-6
-        hm_sv["DayPLK"] = hm_sv["DayPLINR"] / 1000.0
+        hm_sv["Name"] = hm_sv["Name"].str.replace(r"\\s*\\[SV\\]", "", regex=True)
+        hm_sv["DayPLAED"] = hm_sv["DayPLAED"]
+        hm_sv["SizeForHeatmap"] = hm_sv["DayPLAED"].abs() + 1e-6
+        hm_sv["DayPLK"] = hm_sv["DayPLAED"] / 1000.0
 
         def label_for_k_sv(v: float) -> str:
             if v >= 0:
-                return f"₹{abs(v):,.0f}k"
+                return f"AED {abs(v):,.0f}k"
             else:
-                return f"[₹{abs(v):,.0f}k]"
+                return f"[AED {abs(v):,.0f}k]"
 
         hm_sv["DayPLKLabel"] = hm_sv["DayPLK"].apply(label_for_k_sv)
 
@@ -634,14 +630,14 @@ with sv_tab:
             hm_sv,
             path=["Name"],
             values="SizeForHeatmap",
-            color="DayPLINR",
+            color="DayPLAED",
             color_continuous_scale=[COLOR_DANGER, "#16233a", COLOR_SUCCESS],
             color_continuous_midpoint=0,
-            custom_data=["DayPLINR", "Ticker", "DayPLKLabel"],
+            custom_data=["DayPLAED", "Ticker", "DayPLKLabel"],
         )
 
         fig_sv.update_traces(
-            hovertemplate="<b>%{label}</b><br>Ticker: %{customdata[1]}<br>Day P&L: ₹%{customdata[0]:,.0f}<extra></extra>",
+            hovertemplate="<b>%{label}</b><br>Ticker: %{customdata[1]}<br>Day P&L: AED %{customdata[0]:,.0f}<extra></extra>",
             texttemplate="%{label}<br>%{customdata[2]}",
             textfont=dict(family="Space Grotesk, sans-serif", color="#e6eaf0", size=11),
             marker=dict(line=dict(width=0)),
@@ -667,35 +663,7 @@ with portfolio_tab:
 with news_tab:
     st.info("News tab coming next.")
 
-ICON_PATCH_JS = """
-<script>
-const TAB_CONFIG = {
-  "Overview":     { icon: "analytics",              label: "Overview" },
-  "SV Portfolio": { icon: "account_balance_wallet", label: "SV Portfolio" },
-  "Holdings":     { icon: "bar_chart_4_bars",      label: "Holdings" },
-  "News":         { icon: "article",                label: "News" }
-};
 
-function patchTabs() {
-  const buttons = document.querySelectorAll('button[role="tab"]');
-  buttons.forEach(btn => {
-    const text = btn.innerText.trim();
-    const conf = TAB_CONFIG[text];
-    if (!conf || btn.dataset.iconPatched === "1") return;
-    btn.innerHTML = `
-      <span class="tab-icon material-symbols-rounded">${conf.icon}</span>
-      <span class="tab-label">${conf.label}</span>`;
-    btn.dataset.iconPatched = "1";
-  });
-}
-
-const observer = new MutationObserver(patchTabs);
-observer.observe(document.body, { childList: true, subtree: true });
-patchTabs();
-</script>
-"""
-
-st.markdown(ICON_PATCH_JS, unsafe_allow_html=True)
 
 
 
