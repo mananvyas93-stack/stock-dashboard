@@ -397,7 +397,7 @@ st.markdown(
     f"""
 <div class="card">
   <div class="page-title">Stocks Dashboard</div>
-  <div class="page-subtitle">{market_status}</div>
+  <div class="page-subtitle"></div>
 </div>
 """,
     unsafe_allow_html=True,
@@ -422,7 +422,7 @@ with c4:
 # ---------- HEATMAP ----------
 
 # Add Today's Gains label above the heatmap
-st.markdown('<div style="color:white; font-size:0.75rem; margin:4px 0;">Today\'s Gains</div>', unsafe_allow_html=True)
+st.markdown('<div style="color:white; font-size:0.75rem; margin:4px 0;"><div style="color:black; font-size:0.75rem; margin:4px 0;">Today&#39;s Gains</div></div>', unsafe_allow_html=True)
 
 if agg_for_heatmap is None or agg_for_heatmap.empty:
     st.info("No live price data. Showing static valuation only; heat map disabled.")
