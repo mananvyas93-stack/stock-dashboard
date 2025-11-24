@@ -121,7 +121,7 @@ st.markdown(
         font-family: 'Space Grotesk', sans-serif !important;
         font-size: 0.8rem !important;
         padding: 6px 10px 4px 10px !important;
-        color: var(--muted) !important;
+        color: #16233a !important;
         background: transparent !important;
         border: none !important;
         cursor: pointer;
@@ -132,8 +132,8 @@ st.markdown(
         position: absolute;
         inset: -4px 4px 0 4px;
         border-radius: 8px 8px 0 0;
-        background: #111a2b;
-        border: 1px solid var(--border);
+        background: #f4f5f8;
+        border: 1px solid #d1d5e0;
         border-bottom: none;
         opacity: 0;
         transform: translateY(4px);
@@ -142,14 +142,17 @@ st.markdown(
     }
 
     .stTabs [aria-selected="true"] {
-        color: var(--text) !important;
+        color: #0f172a !important;
         font-weight: 500 !important;
     }
 
     .stTabs [aria-selected="true"]::before {
         opacity: 1;
         transform: translateY(0);
-        background: #16233a;
+    }
+
+    .stTabs [data-baseweb="tab-highlight"] {
+        background-color: transparent !important;
     }
 
 </style>
@@ -456,10 +459,10 @@ st.markdown(
 # ---------- TABS ----------
 
 home_tab, sv_tab, portfolio_tab, news_tab = st.tabs([
-    "ⓞ Overview",
-    "ⓢ SV Portfolio",
-    "ⓗ Holdings",
-    "ⓝ News",
+    "⌂ Overview",
+    "✦ SV Portfolio",
+    "▤ Holdings",
+    "✉ News",
 ])
 
 # ---------- HOME TAB (existing KPI + heatmap) ----------
@@ -513,6 +516,7 @@ with home_tab:
         fig.update_traces(
             hovertemplate="<b>%{label}</b><br>Ticker: %{customdata[1]}<br>Day P&L: ₹%{customdata[0]:,.0f}<extra></extra>",
             texttemplate="%{label}<br>%{customdata[2]}",
+            textfont=dict(family="Space Grotesk, sans-serif", color="#e6eaf0", size=11),
             marker=dict(line=dict(width=0)),
             root_color=COLOR_BG,
         )
@@ -522,7 +526,7 @@ with home_tab:
             paper_bgcolor=COLOR_BG,
             plot_bgcolor=COLOR_BG,
             coloraxis_showscale=False,
-            font=dict(family="Inter"),
+            font=dict(family="Space Grotesk, sans-serif"),
         )
 
         st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
