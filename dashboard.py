@@ -386,8 +386,8 @@ day_pl_aed = positions["DayPLAED"].sum()
 total_pl_pct = (total_pl_aed / total_purchase_aed * 100.0) if total_purchase_aed > 0 else 0.0
 
 total_val_inr_lacs = fmt_inr_lacs_from_aed(total_val_aed, AED_TO_INR)
- total_pl_inr_lacs = fmt_inr_lacs_from_aed(total_pl_aed, AED_TO_INR)
- day_pl_inr_lacs = fmt_inr_lacs_from_aed(day_pl_aed, AED_TO_INR)
+total_pl_inr_lacs = fmt_inr_lacs_from_aed(total_pl_aed, AED_TO_INR)
+day_pl_inr_lacs = fmt_inr_lacs_from_aed(day_pl_aed, AED_TO_INR)
 
 overall_pct_str = f"{total_pl_pct:+.2f}%"
 
@@ -420,6 +420,9 @@ with c4:
     render_kpi("Overall Return (%)", overall_pct_str)
 
 # ---------- HEATMAP ----------
+
+# Add Today's Gains label above the heatmap
+st.markdown('<div style="color:white; font-size:0.75rem; margin:4px 0;">Today\'s Gains</div>', unsafe_allow_html=True)
 
 if agg_for_heatmap is None or agg_for_heatmap.empty:
     st.info("No live price data. Showing static valuation only; heat map disabled.")
