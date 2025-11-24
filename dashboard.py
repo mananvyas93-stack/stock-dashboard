@@ -508,7 +508,7 @@ with home_tab:
         render_kpi("Overall Return (%)", overall_pct_str)
 
     st.markdown(
-        '''<div style="font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#e6eaf0; font-size:0.75rem; margin:4px 0;">Today's Gains</div>''',
+        '''<div style="font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#16233a; font-size:0.75rem; margin:4px 0;">Today's Gains</div>''',
         unsafe_allow_html=True,
     )
 
@@ -606,7 +606,7 @@ const TAB_CONFIG = {
 };
 
 function patchTabs() {
-  const rootDoc = window.parent ? window.parent.document : document;
+  const rootDoc = document;
   const buttons = rootDoc.querySelectorAll('button[role="tab"]');
   buttons.forEach(btn => {
     const text = btn.innerText.trim();
@@ -621,7 +621,7 @@ function patchTabs() {
 
 window.addEventListener("load", patchTabs);
 const observer = new MutationObserver(patchTabs);
-observer.observe(window.parent ? window.parent.document.body : document.body, {childList:true, subtree:true});
+observer.observe(document.body, {childList:true, subtree:true});
 </script>
 """
 
