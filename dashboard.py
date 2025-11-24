@@ -16,7 +16,7 @@ st.set_page_config(
 st.markdown(
     """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..24,400,1,0&display=swap');
 
     :root {
         --bg: #0f1a2b;
@@ -98,6 +98,27 @@ st.markdown(
     .stPlotlyChart {
         background: transparent !important;
     }
+
+    .material-symbols-rounded {
+        font-family: 'Material Symbols Rounded';
+        font-weight: 400;
+        font-style: normal;
+        font-size: 16px;
+        line-height: 1;
+        letter-spacing: normal;
+        text-transform: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .tab-icon {
+        margin-right: 0.35rem;
+    }
+
+    .tab-label {
+        display: inline-block;
+    }
     .stTabs {
         margin-top: 0.75rem;
     }
@@ -127,18 +148,15 @@ st.markdown(
         cursor: pointer;
     }
 
+    /* disable raised card, keep tabs flat */
     .stTabs [data-baseweb="tab"]::before {
         content: "";
         position: absolute;
-        inset: -4px 4px 0 4px;
-        border-radius: 8px 8px 0 0;
-        background: #f4f5f8;
-        border: 1px solid #d1d5e0;
-        border-bottom: none;
+        inset: 0;
+        border-radius: 0;
+        background: transparent;
+        border: none;
         opacity: 0;
-        transform: translateY(4px);
-        transition: opacity 140ms ease-out, transform 140ms ease-out;
-        z-index: -1;
     }
 
     .stTabs [aria-selected="true"] {
@@ -146,20 +164,21 @@ st.markdown(
         font-weight: 500 !important;
     }
 
-    .stTabs [aria-selected="true"]::before {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-    .stTabs [aria-selected="true"]::after {
+    /* navy underline equal to tab width */
+    .stTabs [data-baseweb="tab"]::after {
         content: "";
         position: absolute;
-        left: 20%;
-        right: 20%;
+        left: 0;
+        right: 0;
         bottom: -1px;
         height: 2px;
         border-radius: 999px;
-        background: var(--accent-soft);
+        background: transparent;
+        transition: background-color 140ms ease-out;
+    }
+
+    .stTabs [aria-selected="true"]::after {
+        background: #0b1530; /* navy indicator */
     }
 
     .stTabs [data-baseweb="tab-highlight"] {
@@ -469,12 +488,7 @@ st.markdown(
 
 # ---------- TABS ----------
 
-home_tab, sv_tab, portfolio_tab, news_tab = st.tabs([
-    "▣ Overview",
-    "◎ SV Portfolio",
-    "▥ Holdings",
-    "✉ News",
-])
+home_tab, sv_tab, portfolio_tab, news_tab = st.tabs(["Overview", "SV Portfolio", "Holdings", "News"])
 
 # ---------- HOME TAB (existing KPI + heatmap) ----------
 
@@ -581,3 +595,35 @@ with portfolio_tab:
 
 with news_tab:
     st.info("News tab coming next.")
+
+ICON_PATCH_JS = """
+<script>
+const TAB_CONFIG = {
+  "Overview": { icon: "dashboard", label: "Overview" },
+  "SV Portfolio": { icon: "person", label: "SV Portfolio" },
+  "Holdings": { icon: "stacked_bar_chart", label: "Holdings" },
+  "News": { icon: "article", label: "News" }
+};
+
+function patchTabs() {
+  const rootDoc = window.parent ? window.parent.document : document;
+  const buttons = rootDoc.querySelectorAll('button[role="tab"]');
+  buttons.forEach(btn => {
+    const text = btn.innerText.trim();
+    const conf = TAB_CONFIG[text];
+    if (!conf || btn.dataset.iconPatched === "1") return;
+    btn.innerHTML = `
+      <span class="tab-icon material-symbols-rounded">${conf.icon}</span>
+      <span class="tab-label">${conf.label}</span>`;
+    btn.dataset.iconPatched = "1";
+  });
+}
+
+window.addEventListener("load", patchTabs);
+const observer = new MutationObserver(patchTabs);
+observer.observe(window.parent ? window.parent.document.body : document.body, {childList:true, subtree:true});
+</script>
+"""
+
+st.markdown(ICON_PATCH_JS, unsafe_allow_html=True)
+
