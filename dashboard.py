@@ -591,19 +591,23 @@ with sv_tab:
 
         sv_total_pl_pct = (sv_total_pl_aed / sv_total_purchase_aed * 100.0) if sv_total_purchase_aed > 0 else 0.0
 
-        sv_total_val_inr_lacs = fmt_inr_lacs_from_aed(sv_total_val_aed, AED_TO_INR)
-        sv_total_pl_inr_lacs = fmt_inr_lacs_from_aed(sv_total_pl_aed, AED_TO_INR)
-        sv_day_pl_inr_lacs = fmt_inr_lacs_from_aed(sv_day_pl_aed, AED_TO_INR)
+        sv_total_val_inr = sv_total_val_aed * AED_TO_INR
+        sv_total_pl_inr = sv_total_pl_aed * AED_TO_INR
+        sv_day_pl_inr = sv_day_pl_aed * AED_TO_INR
+
+        sv_total_val_str = f"₹{sv_total_val_inr:,.0f}"
+        sv_total_pl_str = f"₹{sv_total_pl_inr:,.0f}"
+        sv_day_pl_str = f"₹{sv_day_pl_inr:,.0f}"
 
         sv_overall_pct_str = f"{sv_total_pl_pct:+.2f}%"
 
         c1, c2, c3, c4 = st.columns(4)
         with c1:
-            render_kpi("SV Total Profit (INR)", sv_total_pl_inr_lacs)
+            render_kpi("SV Total Profit (INR)", sv_total_pl_str)
         with c2:
-            render_kpi("SV Today's P&L (INR)", sv_day_pl_inr_lacs)
+            render_kpi("SV Today's P&L (INR)", sv_day_pl_str)
         with c3:
-            render_kpi("SV Portfolio Size (INR)", sv_total_val_inr_lacs)
+            render_kpi("SV Portfolio Size (INR)", sv_total_val_str)
         with c4:
             render_kpi("SV Overall Return (%)", sv_overall_pct_str)
 
@@ -613,6 +617,7 @@ with sv_tab:
         )
 
         hm_sv = sv_positions.copy()
+        hm_sv["Name"] = hm_sv["Name"].str.replace(r"\s*\[SV\]", "", regex=True)
         hm_sv["DayPLINR"] = hm_sv["DayPLAED"] * AED_TO_INR
         hm_sv["SizeForHeatmap"] = hm_sv["DayPLINR"].abs() + 1e-6
         hm_sv["DayPLK"] = hm_sv["DayPLINR"] / 1000.0
