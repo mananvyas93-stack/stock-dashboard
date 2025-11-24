@@ -217,19 +217,25 @@ def get_market_phase_and_prices():
     close_time = time(16, 0)
 
     base_close = load_prices_close()
-
-    if weekday >= 5:
-        return "US market closed (weekend) – showing last available close", base_close
-
     intraday = load_prices_intraday()
-    if intraday.empty:
-        return "Live data unavailable – falling back to last close", base_close
 
+    # Weekend: always treated as closed
+    if weekday >= 5:
+        return "Market Closed", base_close
+
+    # Weekday phase label
     if t < open_time:
-        return "Pre-market – using intraday Yahoo prices (may lag)", intraday
-    if t >= close_time:
-        return "Post-market – using last intraday prices", intraday
-    return "Market live – using intraday Yahoo prices (may lag slightly)", intraday
+        phase = "Pre-Market Data"
+    elif t >= close_time:
+        phase = "Post-Market Data"
+    else:
+        phase = "Live Market Data"
+
+    # Prefer intraday when available, otherwise fall back to last close
+    if intraday is None or intraday.empty:
+        return phase, base_close
+
+    return phase, intraday
 
 # ---------- PORTFOLIO BUILDERS ----------
 
@@ -293,6 +299,7 @@ def build_positions_from_prices(prices_close: pd.DataFrame, prices_intraday: pd.
     total_val = df["ValueAED"].sum()
     df["WeightPct"] = df["ValueAED"] / total_val * 100.0 if total_val > 0 else 0.0
     return df
+
 
 
 def aggregate_for_heatmap(df: pd.DataFrame) -> pd.DataFrame:
@@ -391,7 +398,7 @@ st.markdown(
 
 # ---------- TABS ----------
 
-home_tab, sv_tab, portfolio_tab, news_tab = st.tabs(["🏠 Home", "👩‍💼 SV", "📊 Portfolio", "📰 News"])
+home_tab, sv_tab, portfolio_tab, news_tab = st.tabs(["Overview", "SV Portfolio", "Holdings", "News"])
 
 # ---------- HOME TAB (existing KPI + heatmap) ----------
 
