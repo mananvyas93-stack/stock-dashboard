@@ -459,10 +459,10 @@ st.markdown(
 # ---------- TABS ----------
 
 home_tab, sv_tab, portfolio_tab, news_tab = st.tabs([
-    "⬢ Overview",
-    "⬡ SV Portfolio",
-    "⬣ Holdings",
-    "⬠ News",
+    "▣ Overview",
+    "▤ SV Portfolio",
+    "▥ Holdings",
+    "✶ News",
 ])
 
 # ---------- HOME TAB (existing KPI + heatmap) ----------
@@ -483,7 +483,7 @@ with home_tab:
         render_kpi("Overall Return (%)", overall_pct_str)
 
     st.markdown(
-        "<div style="font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#e6eaf0; font-size:0.75rem; margin:4px 0;">Today's Gains</div>",
+        '''<div style="font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#e6eaf0; font-size:0.75rem; margin:4px 0;">Today's Gains</div>''',
         unsafe_allow_html=True,
     )
 
