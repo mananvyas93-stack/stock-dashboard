@@ -151,6 +151,17 @@ st.markdown(
         transform: translateY(0);
     }
 
+    .stTabs [aria-selected="true"]::after {
+        content: "";
+        position: absolute;
+        left: 20%;
+        right: 20%;
+        bottom: -1px;
+        height: 2px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+    }
+
     .stTabs [data-baseweb="tab-highlight"] {
         background-color: transparent !important;
     }
@@ -459,9 +470,9 @@ st.markdown(
 # ---------- TABS ----------
 
 home_tab, sv_tab, portfolio_tab, news_tab = st.tabs([
-    "⌂ Overview",
-    "✦ SV Portfolio",
-    "▤ Holdings",
+    "▣ Overview",
+    "◎ SV Portfolio",
+    "▥ Holdings",
     "✉ News",
 ])
 
