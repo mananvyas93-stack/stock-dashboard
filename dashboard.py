@@ -95,6 +95,20 @@ st.markdown(
     .stPlotlyChart {
         background: transparent !important;
     }
+    .stTabs [data-baseweb="tab"] {
+        font-family: 'Space Grotesk', sans-serif !important;
+        font-size: 0.8rem !important;
+        padding: 6px 14px !important;
+        color: var(--muted) !important;
+        border-bottom: 1px solid var(--border) !important;
+    }
+
+    .stTabs [aria-selected="true"] {
+        color: var(--text) !important;
+        border-bottom: 2px solid var(--accent) !important;
+        font-weight: 600 !important;
+    }
+
 </style>
 """,
     unsafe_allow_html=True,
