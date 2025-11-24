@@ -133,8 +133,7 @@ st.markdown(
     .stTabs [data-baseweb="tab-list"] {
         display: flex;
         align-items: flex-end;
-        gap: 0.15rem;
-        width: 100%;
+        gap: 0rem;h: 100%;
         border-bottom: 1px solid var(--border);
         background: transparent;
     }
@@ -576,9 +575,7 @@ with home_tab:
 # ---------- SV TAB (Sae Vyas portfolio detail) ----------
 
 with sv_tab:
-    st.markdown("<div class='kpi-label'>SV Portfolio – snapshot</div>", unsafe_allow_html=True)
-
-    sv_positions = positions[positions["Owner"] == "SV"].copy()
+    st.markdown("tions = positions[positions["Owner"] == "SV"].copy()
 
     if sv_positions.empty:
         st.info("No SV positions found.")
@@ -608,23 +605,21 @@ with sv_tab:
             render_kpi("SV Overall Return (%)", sv_overall_pct_str)
 
         st.markdown(
-            """<div style=\"font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#16233a; font-size:0.75rem; margin:4px 0;\">Today's Gains – SV</div>""",
-            unsafe_allow_html=True,
+            """<div style=\"font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#16233a; font-size:0.75rem; margin:4pcolor_continuous_midpoint=0,
+            custom_data=["DayPLAED", "Ticker", "DayPLKLabel"],
         )
 
-        hm_sv = sv_positions.copy()
-        hm_sv["Name"] = hm_sv["Name"].str.replace(r"\s*\[SV\]", "", regex=True)
-        hm_sv["DayPLAED"] = hm_sv["DayPLAED"]
+ hm_sv = sv_positions.copy()
+        hm_sv["Name"] = hm_sv["Name"].str.replace(r"\\s*\\[SV\\]", "", regex=True)
         hm_sv["SizeForHeatmap"] = hm_sv["DayPLAED"].abs() + 1e-6
-        hm_sv["DayPLK"] = hm_sv["DayPLAED"] / 1000.0
 
-        def label_for_k_sv(v: float) -> str:
+        def label_for_sv(v: float) -> str:
             if v >= 0:
-                return f"AED {abs(v):,.0f}k"
+                return f"AED {v:,.0f}"
             else:
-                return f"[AED {abs(v):,.0f}k]"
+                return f"[AED {abs(v):,.0f}]"
 
-        hm_sv["DayPLKLabel"] = hm_sv["DayPLK"].apply(label_for_k_sv)
+        hm_sv["DayPLLabel"] = hm_sv["DayPLAED"].apply(label_for_sv)
 
         fig_sv = px.treemap(
             hm_sv,
@@ -633,34 +628,7 @@ with sv_tab:
             color="DayPLAED",
             color_continuous_scale=[COLOR_DANGER, "#16233a", COLOR_SUCCESS],
             color_continuous_midpoint=0,
-            custom_data=["DayPLAED", "Ticker", "DayPLKLabel"],
-        )
-
-        fig_sv.update_traces(
-            hovertemplate="<b>%{label}</b><br>Ticker: %{customdata[1]}<br>Day P&L: AED %{customdata[0]:,.0f}<extra></extra>",
-            texttemplate="%{label}<br>%{customdata[2]}",
-            textfont=dict(family="Space Grotesk, sans-serif", color="#e6eaf0", size=11),
-            marker=dict(line=dict(width=0)),
-            root_color=COLOR_BG,
-        )
-
-        fig_sv.update_layout(
-            margin=dict(t=0, l=0, r=0, b=0),
-            paper_bgcolor=COLOR_BG,
-            plot_bgcolor=COLOR_BG,
-            coloraxis_showscale=False,
-            font=dict(family="Space Grotesk, sans-serif"),
-        )
-
-        st.plotly_chart(fig_sv, use_container_width=True, config={"displayModeBar": False})
-
-# ---------- PLACEHOLDER TABS ----------
-
-
-with portfolio_tab:
-    st.info("Portfolio tab coming next.")
-
-with news_tab:
+            custom_data=["DayPLAED", "Ticker", "DayPLLabel"],with news_tab:
     st.info("News tab coming next.")
 
 
