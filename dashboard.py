@@ -16,7 +16,7 @@ st.set_page_config(
 st.markdown(
     """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap');
 
     :root {
         --bg: #0f1a2b;
@@ -31,7 +31,7 @@ st.markdown(
     }
 
     html, body, [class*="css"] {
-        font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         background: var(--bg);
         color: var(--text);
     }
@@ -68,6 +68,7 @@ st.markdown(
         font-weight: 600;
         margin: 0 0 2px 0;
         color: var(--text);
+        letter-spacing: 0.01em;
     }
 
     .page-subtitle {
@@ -75,9 +76,11 @@ st.markdown(
         font-size: 0.7rem;
         color: var(--muted);
         margin: 0;
+        letter-spacing: 0.03em;
     }
 
     .kpi-label {
+        font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         font-size: 0.75rem;
         text-transform: uppercase;
         letter-spacing: 0.08em;
@@ -86,7 +89,7 @@ st.markdown(
     }
 
     .kpi-value-main {
-        font-family: 'Space Grotesk', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         font-size: 1.2rem;
         font-weight: 600;
         color: var(--text);
@@ -95,18 +98,47 @@ st.markdown(
     .stPlotlyChart {
         background: transparent !important;
     }
+    .stTabs {
+        margin-top: 0.75rem;
+    }
+
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 0.2rem;
+        border-bottom: 1px solid var(--border);
+    }
+
     .stTabs [data-baseweb="tab"] {
+        position: relative;
         font-family: 'Space Grotesk', sans-serif !important;
-        font-size: 0.8rem !important;
-        padding: 6px 14px !important;
+        font-size: 0.78rem !important;
+        padding: 7px 18px 5px 18px !important;
         color: var(--muted) !important;
-        border-bottom: 1px solid var(--border) !important;
+        background: transparent !important;
+        border: none !important;
+    }
+
+    .stTabs [data-baseweb="tab"]::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 9px 9px 0 0;
+        background: linear-gradient(135deg, #18253a, #111c2f);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+        opacity: 0;
+        transform: translateY(6px) scale(0.98);
+        transform-origin: center bottom;
+        transition: opacity 160ms ease-out, transform 160ms ease-out;
+        z-index: -1;
     }
 
     .stTabs [aria-selected="true"] {
         color: var(--text) !important;
-        border-bottom: 2px solid var(--accent) !important;
-        font-weight: 600 !important;
+        font-weight: 500 !important;
+    }
+
+    .stTabs [aria-selected="true"]::before {
+        opacity: 1;
+        transform: translateY(0) scale(1);
     }
 
 </style>
@@ -412,7 +444,12 @@ st.markdown(
 
 # ---------- TABS ----------
 
-home_tab, sv_tab, portfolio_tab, news_tab = st.tabs(["Overview", "SV Portfolio", "Holdings", "News"])
+home_tab, sv_tab, portfolio_tab, news_tab = st.tabs([
+    "⬡ Overview",
+    "⬢ SV Portfolio",
+    "⬢ Holdings",
+    "⬡ News",
+])
 
 # ---------- HOME TAB (existing KPI + heatmap) ----------
 
