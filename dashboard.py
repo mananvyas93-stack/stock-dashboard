@@ -226,21 +226,15 @@ def get_market_phase_and_prices():
         return "Live data unavailable – falling back to last close", base_close
 
     if t < open_time:
-        # pre-market: use intraday if available
         return "Pre-market – using intraday Yahoo prices (may lag)", intraday
     if t >= close_time:
-        # post-market: intraday includes last regular/after-hours trade
         return "Post-market – using last intraday prices", intraday
-    # regular session
     return "Market live – using intraday Yahoo prices (may lag slightly)", intraday
 
 # ---------- PORTFOLIO BUILDERS ----------
 
 def build_positions_from_prices(prices_close: pd.DataFrame, prices_intraday: pd.Series | None) -> pd.DataFrame:
-    """Row per config line with P&L and weights.
-    prices_close: daily close frame (for previous day).
-    prices_intraday: optional Series of latest prices; when present, drives today move.
-    """
+    """Row per config line with P&L and weights."""
     rows = []
     has_close = prices_close is not None and not prices_close.empty
 
@@ -256,10 +250,7 @@ def build_positions_from_prices(prices_close: pd.DataFrame, prices_intraday: pd.
         units = float(item["Units"])
         purchase = float(item["PurchaseValAED"])
 
-        # base price from last close
         base_price = float(last_close.get(t, 0.0)) if has_close else 0.0
-
-        # override with intraday if available (pre/live/post market)
         live_price = float(prices_intraday.get(t, base_price)) if prices_intraday is not None else base_price
 
         if live_price <= 0:
@@ -274,7 +265,6 @@ def build_positions_from_prices(prices_close: pd.DataFrame, prices_intraday: pd.
             price_aed = price_usd * USD_TO_AED
             value_aed = price_aed * units
 
-            # previous reference = yesterday close if available
             prev_usd = float(prev_close.get(t, price_usd)) if has_close else price_usd
             day_pct = (price_usd / prev_usd - 1.0) * 100.0 if prev_usd > 0 else 0.0
             day_pl_aed = value_aed * (day_pct / 100.0)
@@ -362,11 +352,8 @@ def render_kpi(label: str, value: str):
 # ---------- DATA PIPELINE ----------
 
 market_status, price_source = get_market_phase_and_prices()
-
-# prices_close always needed for yesterday reference
 prices_close = load_prices_close()
 
-# price_source can be a DataFrame (close) or Series (intraday)
 if isinstance(price_source, pd.DataFrame):
     positions = build_positions_from_prices(price_source, None)
 else:
@@ -374,7 +361,6 @@ else:
 
 agg_for_heatmap = aggregate_for_heatmap(positions) if not positions.empty else positions
 
-# totals
 base_fx = get_aed_inr_rate_from_yahoo()
 AED_TO_INR = base_fx
 
@@ -397,72 +383,117 @@ st.markdown(
     f"""
 <div class="card">
   <div class="page-title">Stocks Dashboard</div>
-  <div class="page-subtitle"></div>
+  <div class="page-subtitle">{market_status}</div>
 </div>
 """,
     unsafe_allow_html=True,
 )
 
-# ---------- KPI CARDS ----------
+# ---------- TABS ----------
 
-c1, c2, c3, c4 = st.columns(4)
+home_tab, sv_tab, portfolio_tab, news_tab = st.tabs(["🏠 Home", "👩‍💼 SV", "📊 Portfolio", "📰 News"])
 
-with c1:
-    render_kpi("Total Profit (INR)", total_pl_inr_lacs)
+# ---------- HOME TAB (existing KPI + heatmap) ----------
 
-with c2:
-    render_kpi("Today's P&L (INR)", day_pl_inr_lacs)
+with home_tab:
+    c1, c2, c3, c4 = st.columns(4)
 
-with c3:
-    render_kpi("Portfolio Size (INR)", total_val_inr_lacs)
+    with c1:
+        render_kpi("Total Profit (INR)", total_pl_inr_lacs)
 
-with c4:
-    render_kpi("Overall Return (%)", overall_pct_str)
+    with c2:
+        render_kpi("Today's P&L (INR)", day_pl_inr_lacs)
 
-# ---------- HEATMAP ----------
+    with c3:
+        render_kpi("Portfolio Size (INR)", total_val_inr_lacs)
 
-# Add Today's Gains label above the heatmap
-st.markdown('<div style="color:white; font-size:0.75rem; margin:4px 0;"><div style="color:black; font-size:0.75rem; margin:4px 0;">Today&#39;s Gains</div></div>', unsafe_allow_html=True)
+    with c4:
+        render_kpi("Overall Return (%)", overall_pct_str)
 
-if agg_for_heatmap is None or agg_for_heatmap.empty:
-    st.info("No live price data. Showing static valuation only; heat map disabled.")
-else:
-    hm = agg_for_heatmap.copy()
-    hm["DayPLINR"] = hm["DayPLAED"] * AED_TO_INR
-    hm["SizeForHeatmap"] = hm["DayPLINR"].abs() + 1e-6
-    hm["DayPLK"] = hm["DayPLINR"] / 1000.0
-
-    def label_for_k(v: float) -> str:
-        if v >= 0:
-            return f"₹{abs(v):,.0f}k"
-        else:
-            return f"[₹{abs(v):,.0f}k]"
-
-    hm["DayPLKLabel"] = hm["DayPLK"].apply(label_for_k)
-
-    fig = px.treemap(
-        hm,
-        path=["Name"],
-        values="SizeForHeatmap",
-        color="DayPLINR",
-        color_continuous_scale=[COLOR_DANGER, "#16233a", COLOR_SUCCESS],
-        color_continuous_midpoint=0,
-        custom_data=["DayPLINR", "Ticker", "DayPLKLabel"],
+    st.markdown(
+        "<div style='color:black; font-size:0.75rem; margin:4px 0;'>Today's Gains</div>",
+        unsafe_allow_html=True,
     )
 
-    fig.update_traces(
-        hovertemplate="<b>%{label}</b><br>Ticker: %{customdata[1]}<br>Day P&L: ₹%{customdata[0]:,.0f}<extra></extra>",
-        texttemplate="%{label}<br>%{customdata[2]}",
-        marker=dict(line=dict(width=0)),
-        root_color=COLOR_BG,
-    )
+    if agg_for_heatmap is None or agg_for_heatmap.empty:
+        st.info("No live price data. Showing static valuation only; heat map disabled.")
+    else:
+        hm = agg_for_heatmap.copy()
+        hm["DayPLINR"] = hm["DayPLAED"] * AED_TO_INR
+        hm["SizeForHeatmap"] = hm["DayPLINR"].abs() + 1e-6
+        hm["DayPLK"] = hm["DayPLINR"] / 1000.0
 
-    fig.update_layout(
-        margin=dict(t=0, l=0, r=0, b=0),
-        paper_bgcolor=COLOR_BG,
-        plot_bgcolor=COLOR_BG,
-        coloraxis_showscale=False,
-        font=dict(family="Inter"),
-    )
+        def label_for_k(v: float) -> str:
+            if v >= 0:
+                return f"₹{abs(v):,.0f}k"
+            else:
+                return f"[₹{abs(v):,.0f}k]"
 
-    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+        hm["DayPLKLabel"] = hm["DayPLK"].apply(label_for_k)
+
+        fig = px.treemap(
+            hm,
+            path=["Name"],
+            values="SizeForHeatmap",
+            color="DayPLINR",
+            color_continuous_scale=[COLOR_DANGER, "#16233a", COLOR_SUCCESS],
+            color_continuous_midpoint=0,
+            custom_data=["DayPLINR", "Ticker", "DayPLKLabel"],
+        )
+
+        fig.update_traces(
+            hovertemplate="<b>%{label}</b><br>Ticker: %{customdata[1]}<br>Day P&L: ₹%{customdata[0]:,.0f}<extra></extra>",
+            texttemplate="%{label}<br>%{customdata[2]}",
+            marker=dict(line=dict(width=0)),
+            root_color=COLOR_BG,
+        )
+
+        fig.update_layout(
+            margin=dict(t=0, l=0, r=0, b=0),
+            paper_bgcolor=COLOR_BG,
+            plot_bgcolor=COLOR_BG,
+            coloraxis_showscale=False,
+            font=dict(family="Inter"),
+        )
+
+        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+
+# ---------- SV TAB (Sae Vyas portfolio detail) ----------
+
+with sv_tab:
+    st.markdown("<div class='kpi-label'>SV Portfolio – detailed view</div>", unsafe_allow_html=True)
+
+    sv_positions = positions[positions["Owner"] == "SV"].copy()
+
+    if sv_positions.empty:
+        st.info("No SV positions found.")
+    else:
+        sv_positions["ValueINR"] = sv_positions["ValueAED"] * AED_TO_INR
+        sv_positions["DayPLINR"] = sv_positions["DayPLAED"] * AED_TO_INR
+        sv_positions["TotalPLINR"] = sv_positions["TotalPLAED"] * AED_TO_INR
+
+        display_cols = [
+            "Name",
+            "Ticker",
+            "Units",
+            "ValueAED",
+            "ValueINR",
+            "DayPLAED",
+            "DayPLINR",
+            "TotalPLAED",
+            "TotalPLINR",
+            "TotalPct",
+        ]
+
+        st.dataframe(
+            sv_positions[display_cols].round(2),
+            use_container_width=True,
+        )
+
+# ---------- PLACEHOLDER TABS ----------
+
+with portfolio_tab:
+    st.info("Portfolio tab coming next.")
+
+with news_tab:
+    st.info("News tab coming next.")
