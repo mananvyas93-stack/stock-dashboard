@@ -488,7 +488,12 @@ st.markdown(
 
 # ---------- TABS ----------
 
-home_tab, sv_tab, portfolio_tab, news_tab = st.tabs(["Overview", "SV Portfolio", "Holdings", "News"])
+home_tab, sv_tab, portfolio_tab, news_tab = st.tabs([
+    "⌂ Overview",
+    "✦ SV Portfolio",
+    "▤ Holdings",
+    "✉ News",
+])
 
 # ---------- HOME TAB (existing KPI + heatmap) ----------
 
@@ -596,34 +601,5 @@ with portfolio_tab:
 with news_tab:
     st.info("News tab coming next.")
 
-ICON_PATCH_JS = """
-<script>
-const TAB_CONFIG = {
-  "Overview": { icon: "dashboard", label: "Overview" },
-  "SV Portfolio": { icon: "person", label: "SV Portfolio" },
-  "Holdings": { icon: "stacked_bar_chart", label: "Holdings" },
-  "News": { icon: "article", label: "News" }
-};
 
-function patchTabs() {
-  const rootDoc = document;
-  const buttons = rootDoc.querySelectorAll('button[role="tab"]');
-  buttons.forEach(btn => {
-    const text = btn.innerText.trim();
-    const conf = TAB_CONFIG[text];
-    if (!conf || btn.dataset.iconPatched === "1") return;
-    btn.innerHTML = `
-      <span class="tab-icon material-symbols-rounded">${conf.icon}</span>
-      <span class="tab-label">${conf.label}</span>`;
-    btn.dataset.iconPatched = "1";
-  });
-}
-
-window.addEventListener("load", patchTabs);
-const observer = new MutationObserver(patchTabs);
-observer.observe(document.body, {childList:true, subtree:true});
-</script>
-"""
-
-st.markdown(ICON_PATCH_JS, unsafe_allow_html=True)
 
