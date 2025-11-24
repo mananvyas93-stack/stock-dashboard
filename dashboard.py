@@ -101,15 +101,22 @@ st.markdown(
 
     .material-symbols-rounded {
         font-family: 'Material Symbols Rounded';
-        font-weight: 400;
+        font-weight: normal;
         font-style: normal;
-        font-size: 16px;
+        font-size: 18px;
         line-height: 1;
         letter-spacing: normal;
         text-transform: none;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        vertical-align: middle;
+        /* Recommended settings from Google */
+        font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24;
     }
 
     .tab-icon {
@@ -604,10 +611,10 @@ with news_tab:
 ICON_PATCH_JS = """
 <script>
 const TAB_CONFIG = {
-  "Overview":     { icon: "space_dashboard", label: "Overview" },
-  "SV Portfolio": { icon: "person",          label: "SV Portfolio" },
-  "Holdings":     { icon: "monitoring",      label: "Holdings" },
-  "News":         { icon: "newspaper",       label: "News" }
+  "Overview":     { icon: "analytics",              label: "Overview" },
+  "SV Portfolio": { icon: "account_balance_wallet", label: "SV Portfolio" },
+  "Holdings":     { icon: "bar_chart_4_bars",      label: "Holdings" },
+  "News":         { icon: "article",                label: "News" }
 };
 
 function patchTabs() {
