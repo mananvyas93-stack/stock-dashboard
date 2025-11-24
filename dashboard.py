@@ -133,7 +133,7 @@ st.markdown(
     .stTabs [data-baseweb="tab-list"] {
         display: flex;
         align-items: flex-end;
-        gap: 0.25rem;
+        gap: 0.15rem;
         width: 100%;
         border-bottom: 1px solid var(--border);
         background: transparent;
@@ -145,14 +145,19 @@ st.markdown(
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.35rem;
+        gap: 0.25rem;
         font-family: 'Space Grotesk', sans-serif !important;
-        font-size: 0.8rem !important;
-        padding: 6px 10px 4px 10px !important;
+        font-size: 0.72rem !important;
+        padding: 4px 4px 3px 4px !important;
         color: #16233a !important;
         background: transparent !important;
         border: none !important;
         cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .stTabs [role="tab"] {
+        min-width: 0 !important;
     }
 
     /* disable raised card, keep tabs flat */
