@@ -290,9 +290,17 @@ def load_prices_close() -> pd.DataFrame:
 
 @st.cache_data(ttl=60)
 def load_prices_intraday() -> pd.Series:
-    """Get last intraday price per ticker using 1m/5m data."""
+    """Get last intraday price per ticker using 1m/5m data, **only if** data is from today (US date).
+
+    This ensures pre-market moves are captured, but we don't accidentally reuse
+    yesterday's last tick before the first trade of the new session.
+    """
     tickers = sorted({item["Ticker"] for item in portfolio_config})
-    last_prices = {}
+    last_prices: dict[str, float] = {}
+
+    us_tz = ZoneInfo("America/New_York")
+    today_us = datetime.now(us_tz).date()
+
     for t in tickers:
         try:
             tkr = yf.Ticker(t)
@@ -301,9 +309,23 @@ def load_prices_intraday() -> pd.Series:
                 hist = tkr.history(period="1d", interval="5m")
             if hist is None or hist.empty or "Close" not in hist.columns:
                 continue
+
+            last_idx = hist.index[-1]
+            # yfinance usually returns a tz-aware index in US/Eastern
+            try:
+                last_dt = last_idx.tz_convert(us_tz)
+            except Exception:
+                # Fallback: assume US timezone if tz info is missing
+                last_dt = last_idx.replace(tzinfo=us_tz)
+
+            # Skip if the latest bar is not from "today" in US time
+            if last_dt.date() != today_us:
+                continue
+
             last_prices[t] = float(hist["Close"].iloc[-1])
         except Exception:
             continue
+
     if not last_prices:
         return pd.Series(dtype=float)
     return pd.Series(last_prices)
@@ -319,21 +341,23 @@ def get_market_phase_and_prices():
     close_time = time(16, 0)
 
     base_close = load_prices_close()
-    intraday = load_prices_intraday()
 
-    # Weekend: always treated as closed
+    # Weekend: always treated as closed, use last available close
     if weekday >= 5:
         return "Market Closed", base_close
 
-    # Weekday phase label
+    # Try to get intraday prices **only for today's US date**
+    intraday = load_prices_intraday()
+
+    # Decide phase label based on clock + whether we have any intraday ticks
     if t < open_time:
-        phase = "Pre-Market Data"
+        phase = "Pre-Market Data" if intraday is not None and not intraday.empty else "Market Closed"
     elif t >= close_time:
         phase = "Post-Market Data"
     else:
         phase = "Live Market Data"
 
-    # Prefer intraday when available, otherwise fall back to last close
+    # Prefer intraday when we have it; otherwise fall back to last close
     if intraday is None or intraday.empty:
         return phase, base_close
 
@@ -375,7 +399,14 @@ def build_positions_from_prices(prices_close: pd.DataFrame, prices_intraday: pd.
 
             prev_usd = float(prev_close.get(t, price_usd)) if has_close else price_usd
             day_pct = (price_usd / prev_usd - 1.0) * 100.0 if prev_usd > 0 else 0.0
+            # Artificial reset pre-market
+            from __main__ import market_status
+            if market_status == "Pre-Market Data":
+                day_pct = 0.0
             day_pl_aed = value_aed * (day_pct / 100.0)
+            # Artificial reset pre-market
+            if market_status == "Pre-Market Data":
+                day_pl_aed = 0.0
 
             total_pl_aed = value_aed - purchase
             total_pct = (total_pl_aed / purchase) * 100.0 if purchase > 0 else 0.0
