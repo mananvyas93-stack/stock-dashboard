@@ -850,38 +850,53 @@ with mf_tab:
     if not MF_CONFIG:
         st.info("No mutual fund data configured.")
     else:
-        # Try to load live NAVs from Yahoo for schemes where a ticker is provided.
+        # Live NAVs where available
         mf_navs = load_mf_navs_from_yahoo()
 
+        # Build computed list first so we can sort by total value (descending)
+        mf_rows = []
         for mf_entry in MF_CONFIG:
             scheme = mf_entry["Scheme"]
-            category = mf_entry["Category"]
             units = mf_entry["Units"]
             stored_value_inr = mf_entry["CurrentValueINR"]
             xirr = mf_entry["XIRR"]
 
-            # If we have a live NAV, recompute current value; else fall back to stored value.
             live_nav = mf_navs.get(scheme)
             if live_nav is not None and live_nav > 0:
                 value_inr = live_nav * units
             else:
                 value_inr = stored_value_inr
 
+            mf_rows.append(
+                {
+                    "scheme": scheme,
+                    "value_inr": float(value_inr or 0.0),
+                    "xirr": xirr,
+                }
+            )
+
+        # Sort by total value (descending)
+        mf_rows.sort(key=lambda r: r["value_inr"], reverse=True)
+
+        for row in mf_rows:
+            scheme = row["scheme"]
+            value_inr = row["value_inr"]
+            xirr = row["xirr"]
+
             value_str = fmt_inr_lacs(value_inr)
-            xirr_str = f"{xirr:.2f}%" if xirr is not None else "N/A"
+            xirr_str = f"{xirr:.1f}%" if xirr is not None else "N/A"
 
             st.markdown(
                 f"""
-                <div class="card">
-                    <div class="page-title">{scheme}</div>
-                    <div class="page-subtitle">{category}</div>
-                    <div style="margin-top:6px; display:flex; justify-content:space-between; align-items:baseline;">
+                <div class="card" style="padding:8px 10px; margin-bottom:6px;">
+                    <div class="page-title" style="margin-bottom:4px;">{scheme}</div>
+                    <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
                         <div>
-                            <div class="kpi-label" style="margin-bottom:2px;">Total Value</div>
+                            <div class="kpi-label" style="margin-bottom:1px;">Total Value</div>
                             <div class="kpi-value-main">{value_str}</div>
                         </div>
                         <div style="text-align:right;">
-                            <div class="kpi-label" style="margin-bottom:2px;">XIRR</div>
+                            <div class="kpi-label" style="margin-bottom:1px;">XIRR</div>
                             <div class="kpi-value-main">{xirr_str}</div>
                         </div>
                     </div>
