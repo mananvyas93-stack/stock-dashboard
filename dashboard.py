@@ -231,6 +231,161 @@ portfolio_config = [
     {"Name": "MSFT [SV]", "Ticker": "MSFT", "Units": 4, "PurchaseValAED": 7476, "Owner": "SV", "Sector": "Tech"},
 ]
 
+# ---------- INDIA MF CONFIG ----------
+MF_CONFIG = [
+    {
+        "Scheme": "Axis Large and Mid Cap Fund Growth",
+        "Category": "Large & Mid Cap",
+        "Units": 55026.38,
+        "CostINR": 1754912.25,
+        "CurrentValueINR": 1829626.97,
+        "XIRR": 8.66,
+        "Ticker": "0P0001EP9Q.BO",  # Axis Large & Midcap Reg Gr
+    },
+    {
+        "Scheme": "Franklin India ELSS Tax Saver Fund Growth 19360019",
+        "Category": "ELSS",
+        "Units": 286.62,
+        "CostINR": 160000.00,
+        "CurrentValueINR": 430364.02,
+        "XIRR": 15.96,
+        "Ticker": "0P00005VDI.BO",  # Franklin India ELSS Tax Saver Reg Gr
+    },
+    {
+        "Scheme": "Franklin India ELSS Tax Saver Fund Growth 30097040",
+        "Category": "ELSS",
+        "Units": 190.43,
+        "CostINR": 95000.00,
+        "CurrentValueINR": 285933.35,
+        "XIRR": 13.79,
+        "Ticker": "0P00005VDI.BO",  # Same scheme/plan as above
+    },
+    {
+        "Scheme": "ICICI Prudential ELSS Tax Saver Fund Growth 7389918/81",
+        "Category": "ELSS",
+        "Units": 267.83,
+        "CostINR": 98000.00,
+        "CurrentValueINR": 257506.11,
+        "XIRR": 15.27,
+        "Ticker": "0P00005WD6.BO",  # ICICI Pru ELSS Tax Saver Reg Gr
+    },
+    {
+        "Scheme": "ICICI Prudential NASDAQ 100 Index Fund Growth 35135108/17",
+        "Category": "US Index",
+        "Units": 43574.66,
+        "CostINR": 654967.25,
+        "CurrentValueINR": 825534.95,
+        "XIRR": 32.66,
+        "Ticker": "0P0001NCLS.BO",  # ICICI Pru NASDAQ 100 Index Reg Gr
+    },
+    {
+        "Scheme": "Mirae Asset Large and Mid Cap Fund Growth 79975690352",
+        "Category": "Large & Mid Cap",
+        "Units": 9054.85,
+        "CostINR": 1327433.63,
+        "CurrentValueINR": 1412837.30,
+        "XIRR": 15.38,
+        "Ticker": "0P0000ON3O.BO",  # Mirae Asset Large & Midcap Reg Gr
+    },
+    {
+        "Scheme": "Nippon India Multi Cap Fund Growth 499355757325",
+        "Category": "Multi Cap",
+        "Units": 4813.52,
+        "CostINR": 1404929.75,
+        "CurrentValueINR": 1447001.15,
+        "XIRR": 5.58,
+        "Ticker": "0P00005WDS.BO",  # Nippon India Multi Cap Reg Gr
+    },
+    {
+        "Scheme": "Parag Parikh Flexi Cap Fund Growth 15530560",
+        "Category": "Flexi Cap",
+        "Units": 25345.69,
+        "CostINR": 2082395.88,
+        "CurrentValueINR": 2191061.05,
+        "XIRR": 9.66,
+        "Ticker": "0P0000YWL0.BO",  # PPFAS Flexi Cap Reg Gr (old LT Equity Reg Gr)
+    },
+    {
+        "Scheme": "Parag Parikh Flexi Cap Fund Growth 15722429",
+        "Category": "Flexi Cap",
+        "Units": 6095.12,
+        "CostINR": 499975.00,
+        "CurrentValueINR": 526905.71,
+        "XIRR": 4.60,
+        "Ticker": "0P0000YWL0.BO",  # Same scheme/plan as above
+    },
+    {
+        "Scheme": "SBI Multicap Fund Growth 40501504",
+        "Category": "Multi Cap",
+        "Units": 83983.45,
+        "CostINR": 1404929.75,
+        "CurrentValueINR": 1434941.30,
+        "XIRR": 3.97,
+        "Ticker": "0P0001OF6C.BO",  # SBI Multicap Reg Gr
+    },
+]
+
+# Helper: format INR values as "₹10.1 L"
+
+def fmt_inr_lacs(inr_value: float) -> str:
+    if inr_value is None or inr_value != inr_value:  # NaN check
+        return "₹0.0 L"
+    lacs = inr_value / 100000.0
+    return f"₹{lacs:,.1f} L"
+
+
+@st.cache_data(ttl=3600)
+def load_mf_navs_from_yahoo() -> dict:
+    """Fetch latest NAV for each MF that has a Yahoo ticker.
+
+    Returns a mapping {SchemeName: nav_in_inr}. If a ticker is missing or
+    data is unavailable, that scheme is simply omitted from the result.
+    """
+    navs: dict[str, float] = {}
+    for entry in MF_CONFIG:
+        ticker = entry.get("Ticker") or ""
+        scheme = entry["Scheme"]
+        if not ticker:
+            continue
+        try:
+            tkr = yf.Ticker(ticker)
+            hist = tkr.history(period="5d", interval="1d")
+            if hist is None or hist.empty:
+                continue
+            # Use the last available close as NAV
+            nav = float(hist["Close"].iloc[-1])
+            if nav > 0:
+                navs[scheme] = nav
+        except Exception:
+            continue
+    return navs
+
+@st.cache_data(ttl=3600)
+def load_mf_navs_from_yahoo() -> dict:
+    """Fetch latest NAV for each MF that has a Yahoo ticker.
+
+    Returns a mapping {SchemeName: nav_in_inr}. If a ticker is missing or
+    data is unavailable, that scheme is simply omitted from the result.
+    """
+    navs: dict[str, float] = {}
+    for entry in MF_CONFIG:
+        ticker = entry.get("Ticker") or ""
+        scheme = entry["Scheme"]
+        if not ticker:
+            continue
+        try:
+            tkr = yf.Ticker(ticker)
+            hist = tkr.history(period="5d", interval="1d")
+            if hist is None or hist.empty:
+                continue
+            # Use the last available close as NAV
+            nav = float(hist["Close"].iloc[-1])
+            if nav > 0:
+                navs[scheme] = nav
+        except Exception:
+            continue
+    return navs
+
 # ---------- FX HELPERS ----------
 
 @st.cache_data(ttl=3600)
@@ -531,16 +686,16 @@ st.markdown(
 
 # ---------- TABS ----------
 
-home_tab, sv_tab, portfolio_tab, news_tab = st.tabs([
+overview_tab, sv_tab, us_tab, mf_tab = st.tabs([
     "🪙 Overview",
-    "💷 SV Portfolio",
-    "🏦 Holdings",
-    "📜 News",
+    "💷 SV Stocks",
+    "🏦 US Stocks",
+    "📜 India MF",
 ])
 
 # ---------- HOME TAB (existing KPI + heatmap) ----------
 
-with home_tab:
+with overview_tab:
     c1, c2, c3, c4 = st.columns(4)
 
     with c1:
@@ -683,16 +838,54 @@ with sv_tab:
 
         st.plotly_chart(fig_sv, use_container_width=True, config={"displayModeBar": False})
 
-# ---------- PLACEHOLDER TABS ----------
+# ---------- US STOCKS TAB ----------
+
+with us_tab:
+    st.info("US Stocks tab coming next.")
+
+# ---------- INDIA MF TAB ----------
 
 
-with portfolio_tab:
-    st.info("Portfolio tab coming next.")
+with mf_tab:
+    if not MF_CONFIG:
+        st.info("No mutual fund data configured.")
+    else:
+        # Try to load live NAVs from Yahoo for schemes where a ticker is provided.
+        mf_navs = load_mf_navs_from_yahoo()
 
-with news_tab:
-    st.info("News tab coming next.")
+        for mf_entry in MF_CONFIG:
+            scheme = mf_entry["Scheme"]
+            category = mf_entry["Category"]
+            units = mf_entry["Units"]
+            stored_value_inr = mf_entry["CurrentValueINR"]
+            xirr = mf_entry["XIRR"]
 
+            # If we have a live NAV, recompute current value; else fall back to stored value.
+            live_nav = mf_navs.get(scheme)
+            if live_nav is not None and live_nav > 0:
+                value_inr = live_nav * units
+            else:
+                value_inr = stored_value_inr
 
+            value_str = fmt_inr_lacs(value_inr)
+            xirr_str = f"{xirr:.2f}%" if xirr is not None else "N/A"
 
-
-
+            st.markdown(
+                f"""
+                <div class="card">
+                    <div class="page-title">{scheme}</div>
+                    <div class="page-subtitle">{category}</div>
+                    <div style="margin-top:6px; display:flex; justify-content:space-between; align-items:baseline;">
+                        <div>
+                            <div class="kpi-label" style="margin-bottom:2px;">Total Value</div>
+                            <div class="kpi-value-main">{value_str}</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div class="kpi-label" style="margin-bottom:2px;">XIRR</div>
+                            <div class="kpi-value-main">{xirr_str}</div>
+                        </div>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
