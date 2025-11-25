@@ -197,6 +197,22 @@ st.markdown(
         background-color: transparent !important;
     }
 
+    /* MF card styling */
+    .mf-card {
+        background: #f4f6f8 !important;
+        border-color: #e0e4ea !important;
+        color: #0f1a2b !important;
+    }
+    .mf-card .page-title {
+        color: #0f1a2b !important;
+    }
+    .mf-card .kpi-label {
+        color: #4b5563 !important;
+    }
+    .mf-card .kpi-value-main {
+        color: #0f1a2b !important;
+    }
+
 </style>
 """,
     unsafe_allow_html=True,
@@ -908,7 +924,7 @@ with mf_tab:
 
             st.markdown(
                 f"""
-                <div class="card" style="padding:8px 10px; margin-bottom:6px;">
+                <div class="card mf-card" style="padding:8px 10px; margin-bottom:6px;">
                     <div class="page-title" style="margin-bottom:4px;">{display_name}</div>
                     <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
                         <div>
