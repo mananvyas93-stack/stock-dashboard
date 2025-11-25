@@ -862,10 +862,19 @@ with mf_tab:
 
             live_nav = mf_navs.get(scheme)
 
-            # If we have a live NAV from Yahoo, use that with the true units from the XLS.
-            # Otherwise fall back to the static total from the XLS.
+            # Prefer Yahoo NAV * units, but only if it is consistent with
+            # the portfolio file (within ~20% of stored total). Otherwise,
+            # fall back to the XLS total to avoid bad ticker mappings.
             if live_nav is not None and live_nav > 0 and units > 0:
-                value_inr = live_nav * units
+                candidate_value = live_nav * units
+                if stored_value_inr > 0:
+                    ratio = candidate_value / stored_value_inr
+                    if 0.8 <= ratio <= 1.2:
+                        value_inr = candidate_value
+                    else:
+                        value_inr = stored_value_inr
+                else:
+                    value_inr = candidate_value
             else:
                 value_inr = stored_value_inr
 
@@ -885,13 +894,22 @@ with mf_tab:
             value_inr = row["value_inr"]
             xirr = row["xirr"]
 
+            # Shorten scheme name for display: drop trailing numeric codes
+            # and the verbose "Fund Growth" suffix.
+            display_name = scheme
+            parts = display_name.split()
+            if parts and all(ch.isdigit() or ch in "/-" for ch in parts[-1]):
+                display_name = " ".join(parts[:-1])
+            if "Fund Growth" in display_name:
+                display_name = display_name.replace(" Fund Growth", "")
+
             value_str = fmt_inr_lacs(value_inr)
             xirr_str = f"{xirr:.1f}%" if xirr is not None else "N/A"
 
             st.markdown(
                 f"""
                 <div class="card" style="padding:8px 10px; margin-bottom:6px;">
-                    <div class="page-title" style="margin-bottom:4px;">{scheme}</div>
+                    <div class="page-title" style="margin-bottom:4px;">{display_name}</div>
                     <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
                         <div>
                             <div class="kpi-label" style="margin-bottom:1px;">Total Value</div>
