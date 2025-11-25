@@ -850,19 +850,21 @@ with mf_tab:
     if not MF_CONFIG:
         st.info("No mutual fund data configured.")
     else:
-        # Live NAVs where available
+        # Fetch latest NAVs from Yahoo for all mapped schemes
         mf_navs = load_mf_navs_from_yahoo()
 
-        # Build computed list first so we can sort by total value (descending)
         mf_rows = []
         for mf_entry in MF_CONFIG:
             scheme = mf_entry["Scheme"]
-            units = mf_entry["Units"]
-            stored_value_inr = mf_entry["CurrentValueINR"]
+            units = float(mf_entry["Units"] or 0.0)
+            stored_value_inr = float(mf_entry["CurrentValueINR"] or 0.0)
             xirr = mf_entry["XIRR"]
 
             live_nav = mf_navs.get(scheme)
-            if live_nav is not None and live_nav > 0:
+
+            # If we have a live NAV from Yahoo, use that with the true units from the XLS.
+            # Otherwise fall back to the static total from the XLS.
+            if live_nav is not None and live_nav > 0 and units > 0:
                 value_inr = live_nav * units
             else:
                 value_inr = stored_value_inr
@@ -870,7 +872,7 @@ with mf_tab:
             mf_rows.append(
                 {
                     "scheme": scheme,
-                    "value_inr": float(value_inr or 0.0),
+                    "value_inr": value_inr,
                     "xirr": xirr,
                 }
             )
