@@ -995,11 +995,11 @@ with sv_tab:
                 <div class="page-title" style="margin-bottom:4px;">Today's Profit</div>
                 <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
                     <div>
-                        <div class="kpi-label" style="margin-bottom:1px;">AED</div>
+                        
                         <div class="kpi-value-main">{sv_day_pl_aed_str}</div>
                     </div>
                     <div style="text-align:right;">
-                        <div class="kpi-label" style="margin-bottom:1px;">%</div>
+                        
                         <div class="kpi-value-main">{sv_day_pl_pct_str}</div>
                     </div>
                 </div>
@@ -1015,11 +1015,11 @@ with sv_tab:
                 <div class="page-title" style="margin-bottom:4px;">Total Profit</div>
                 <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
                     <div>
-                        <div class="kpi-label" style="margin-bottom:1px;">AED</div>
+                        
                         <div class="kpi-value-main">{sv_total_pl_aed_str}</div>
                     </div>
                     <div style="text-align:right;">
-                        <div class="kpi-label" style="margin-bottom:1px;">%</div>
+                        
                         <div class="kpi-value-main">{sv_total_pl_pct_str}</div>
                     </div>
                 </div>
@@ -1035,11 +1035,11 @@ with sv_tab:
                 <div class="page-title" style="margin-bottom:4px;">Total Holding Value</div>
                 <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
                     <div>
-                        <div class="kpi-label" style="margin-bottom:1px;">AED</div>
+                        
                         <div class="kpi-value-main">{sv_total_val_aed_str}</div>
                     </div>
                     <div style="text-align:right;">
-                        <div class="kpi-label" style="margin-bottom:1px;">INR</div>
+                        
                         <div class="kpi-value-main">{sv_total_val_inr_lacs_str}</div>
                     </div>
                 </div>
