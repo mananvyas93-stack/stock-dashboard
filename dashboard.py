@@ -831,25 +831,92 @@ overview_tab, sv_tab, us_tab, mf_tab = st.tabs([
     "💴 India MF",
 ])
 
-# ---------- HOME TAB (existing KPI + heatmap) ----------
+# ---------- HOME TAB ----------
 
 with overview_tab:
+    # --- 1. PREPARE DATA FOR CARDS ---
+
+    # A. US Stocks (Calculated from global variables)
+    us_day_pl_inr = day_pl_aed * AED_TO_INR
+    # Derive yesterday's value to calculate today's % change
+    us_prev_val_aed = total_val_aed - day_pl_aed
+    us_day_pct = (day_pl_aed / us_prev_val_aed * 100.0) if us_prev_val_aed > 0 else 0.0
+
+    # B. India Mutual Funds
+    # We call this here (instead of inside heatmap logic) so we can use it for cards
+    mf_agg = compute_india_mf_aggregate()
+    mf_val_inr = float(mf_agg.get("total_value_inr", 0.0) or 0.0)
+    mf_day_pl_inr = float(mf_agg.get("daily_pl_inr", 0.0) or 0.0)
+    
+    # MF Today %
+    mf_prev_val = mf_val_inr - mf_day_pl_inr
+    mf_day_pct = (mf_day_pl_inr / mf_prev_val * 100.0) if mf_prev_val > 0 else 0.0
+
+    # MF Total Return %
+    mf_total_cost = sum(item["CostINR"] for item in MF_CONFIG)
+    mf_total_profit = mf_val_inr - mf_total_cost
+    mf_total_pct = (mf_total_profit / mf_total_cost * 100.0) if mf_total_cost > 0 else 0.0
+
+    # --- 2. RENDER CARDS ---
+    
     c1, c2, c3, c4 = st.columns(4)
 
-    with c1:
-        render_kpi("Total Profit (INR)", total_pl_inr_lacs)
+    # Helper function to render the grey card style
+    def render_grey_card(col, title, value_left, value_right):
+        with col:
+            st.markdown(
+                f"""
+                <div class="card mf-card" style="padding:12px 14px; margin-bottom:8px;">
+                    <div class="page-title" style="margin-bottom:4px; font-size: 0.85rem;">{title}</div>
+                    <div style="margin-top:6px; display:flex; justify-content:space-between; align-items:flex-end;">
+                        <div>
+                            <div class="kpi-value-main" style="font-size:1.1rem;">{value_left}</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div class="kpi-value-main" style="font-size:1.1rem;">{value_right}</div>
+                        </div>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
-    with c2:
-        render_kpi("Today's P&L (INR)", day_pl_inr_lacs)
+    # Card 1: Today's Profit - US Stocks (Full Value INR)
+    render_grey_card(
+        c1, 
+        "Today's Profit - US Stocks", 
+        f"₹{us_day_pl_inr:,.0f}", 
+        f"{us_day_pct:+.2f}%"
+    )
 
-    with c3:
-        render_kpi("Portfolio Size (INR)", total_val_inr_lacs)
+    # Card 2: Today's Profit - India MF (Full Value INR)
+    render_grey_card(
+        c2, 
+        "Today's Profit - India MF", 
+        f"₹{mf_day_pl_inr:,.0f}", 
+        f"{mf_day_pct:+.2f}%"
+    )
 
-    with c4:
-        render_kpi("Overall Return (%)", overall_pct_str)
+    # Card 3: Total Holding - US Stocks (Lacs)
+    render_grey_card(
+        c3, 
+        "Total Holding - US Stocks", 
+        total_val_inr_lacs,  # Already formatted as Lacs in global section
+        f"{total_pl_pct:+.2f}%"
+    )
+
+    # Card 4: Total Holding - India MF (Lacs)
+    render_grey_card(
+        c4, 
+        "Total Holding - India MF", 
+        fmt_inr_lacs(mf_val_inr), 
+        f"{mf_total_pct:+.2f}%"
+    )
+
+    # --- 3. RENDER HEATMAP ---
 
     st.markdown(
-        '''<div style="font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#16233a; font-size:0.75rem; margin:4px 0;">Today's Gains</div>''',
+        '''<div style="font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#16233a; font-size:0.75rem; margin:10px 0 4px 0;">Today's Gains</div>''',
         unsafe_allow_html=True,
     )
 
@@ -860,12 +927,8 @@ with overview_tab:
         # Start from daily P&L in INR for stocks
         hm["DayPLINR"] = hm["DayPLAED"] * AED_TO_INR
 
-        # Add aggregate Indian MF block as a single tile, using DAILY P&L
-        mf_agg = compute_india_mf_aggregate()
-        ind_mf_val_inr = float(mf_agg.get("total_value_inr", 0.0) or 0.0)
-        ind_mf_daily_pl_inr = float(mf_agg.get("daily_pl_inr", 0.0) or 0.0)
-
-        if ind_mf_val_inr > 0 or ind_mf_daily_pl_inr != 0.0:
+        # Add aggregate Indian MF block as a single tile using the data calculated above
+        if mf_val_inr > 0 or mf_day_pl_inr != 0.0:
             ind_mf_row = {
                 "Name": "Indian MF",
                 "Ticker": "INDMF",
@@ -873,17 +936,14 @@ with overview_tab:
                 "Sector": "India MF",
                 "Units": 0.0,
                 "PriceUSD": 0.0,
-                # value fields are not used for sizing, but keep them logical
-                "ValueAED": ind_mf_val_inr / AED_TO_INR if ind_mf_val_inr > 0 else 0.0,
+                "ValueAED": mf_val_inr / AED_TO_INR if mf_val_inr > 0 else 0.0,
                 "PurchaseAED": 0.0,
-                # daily % not needed; daily P&L drives size & colour
                 "DayPct": 0.0,
-                "DayPLAED": ind_mf_daily_pl_inr / AED_TO_INR,
+                "DayPLAED": mf_day_pl_inr / AED_TO_INR,
                 "TotalPct": 0.0,
                 "TotalPLAED": 0.0,
                 "WeightPct": 0.0,
             }
-
             hm = pd.concat([hm, pd.DataFrame([ind_mf_row])], ignore_index=True)
 
         # Size tiles by ABSOLUTE DAILY P&L (profit/loss), colour by sign
@@ -1017,7 +1077,7 @@ with sv_tab:
         )
 
         st.markdown(
-            """<div style=\"font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#16233a; font-size:0.75rem; margin:4px 0;\">Today's Gains – SV</div>""",
+            """<div style="font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#16233a; font-size:0.75rem; margin:4px 0;">Today's Gains – SV</div>""",
             unsafe_allow_html=True,
         )
 
@@ -1062,12 +1122,6 @@ with sv_tab:
         st.plotly_chart(fig_sv, use_container_width=True, config={"displayModeBar": False})
 
 # ---------- US STOCKS TAB ----------
-
-with us_tab:
-    st.info("US Stocks tab coming next.")
-
-# ---------- INDIA MF TAB ----------
-
 
 with us_tab:
     st.info("US Stocks tab coming next.")
