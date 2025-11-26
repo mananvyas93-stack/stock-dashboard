@@ -955,7 +955,6 @@ with overview_tab:
 # ---------- SV TAB (Sae Vyas portfolio detail) ----------
 
 with sv_tab:
-    
 
     sv_positions = positions[positions["Owner"] == "SV"].copy()
 
@@ -968,23 +967,86 @@ with sv_tab:
         sv_total_pl_aed = sv_positions["TotalPLAED"].sum()
         sv_day_pl_aed = sv_positions["DayPLAED"].sum()
 
-        sv_total_pl_pct = (sv_total_pl_aed / sv_total_purchase_aed * 100.0) if sv_total_purchase_aed > 0 else 0.0
+        # Total return since inception
+        sv_total_pl_pct = (
+            sv_total_pl_aed / sv_total_purchase_aed * 100.0
+        ) if sv_total_purchase_aed > 0 else 0.0
 
-        sv_total_val_str = f"AED {sv_total_val_aed:,.0f}"
-        sv_total_pl_str = f"AED {sv_total_pl_aed:,.0f}"
-        sv_day_pl_str = f"AED {sv_day_pl_aed:,.0f}"
+        # Approximate today's % return using today's P&L vs yesterday's value
+        prev_total_val = sv_total_val_aed - sv_day_pl_aed
+        sv_day_pl_pct = (
+            sv_day_pl_aed / prev_total_val * 100.0
+        ) if prev_total_val > 0 else 0.0
 
-        sv_overall_pct_str = f"{sv_total_pl_pct:+.2f}%"
+        # String formats
+        sv_day_pl_aed_str = f"AED {sv_day_pl_aed:,.0f}"
+        sv_day_pl_pct_str = f"{sv_day_pl_pct:+.2f}%"
 
-        c1, c2, c3, c4 = st.columns(4)
-        with c1:
-            render_kpi("SV Total Profit (AED)", sv_total_pl_str)
-        with c2:
-            render_kpi("SV Today's P&L (AED)", sv_day_pl_str)
-        with c3:
-            render_kpi("SV Portfolio Size (AED)", sv_total_val_str)
-        with c4:
-            render_kpi("SV Overall Return (%)", sv_overall_pct_str)
+        sv_total_pl_aed_str = f"AED {sv_total_pl_aed:,.0f}"
+        sv_total_pl_pct_str = f"{sv_total_pl_pct:+.2f}%"
+
+        sv_total_val_aed_str = f"AED {sv_total_val_aed:,.0f}"
+        sv_total_val_inr_lacs_str = fmt_inr_lacs_from_aed(sv_total_val_aed, AED_TO_INR)
+
+        # ---- Card 1: Today's Profit ----
+        st.markdown(
+            f"""
+            <div class="card" style="padding:10px 12px; margin-bottom:6px;">
+                <div class="page-title" style="margin-bottom:4px;">Today's Profit</div>
+                <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
+                    <div>
+                        <div class="kpi-label" style="margin-bottom:1px;">Today's Profit (AED)</div>
+                        <div class="kpi-value-main">{sv_day_pl_aed_str}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="kpi-label" style="margin-bottom:1px;">Today's Return (%)</div>
+                        <div class="kpi-value-main">{sv_day_pl_pct_str}</div>
+                    </div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        # ---- Card 2: Total Profit ----
+        st.markdown(
+            f"""
+            <div class="card" style="padding:10px 12px; margin-bottom:6px;">
+                <div class="page-title" style="margin-bottom:4px;">Total Profit</div>
+                <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
+                    <div>
+                        <div class="kpi-label" style="margin-bottom:1px;">Total Profit (AED)</div>
+                        <div class="kpi-value-main">{sv_total_pl_aed_str}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="kpi-label" style="margin-bottom:1px;">Total Return (%)</div>
+                        <div class="kpi-value-main">{sv_total_pl_pct_str}</div>
+                    </div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        # ---- Card 3: Holding Value ----
+        st.markdown(
+            f"""
+            <div class="card" style="padding:10px 12px; margin-bottom:8px;">
+                <div class="page-title" style="margin-bottom:4px;">Total Holding Value</div>
+                <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
+                    <div>
+                        <div class="kpi-label" style="margin-bottom:1px;">Holding Value (AED)</div>
+                        <div class="kpi-value-main">{sv_total_val_aed_str}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="kpi-label" style="margin-bottom:1px;">Holding Value (INR)</div>
+                        <div class="kpi-value-main">{sv_total_val_inr_lacs_str}</div>
+                    </div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
         st.markdown(
             """<div style=\"font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#16233a; font-size:0.75rem; margin:4px 0;\">Today's Gains – SV</div>""",
@@ -1032,6 +1094,12 @@ with sv_tab:
         st.plotly_chart(fig_sv, use_container_width=True, config={"displayModeBar": False})
 
 # ---------- US STOCKS TAB ----------
+
+with us_tab:
+    st.info("US Stocks tab coming next.")
+
+# ---------- INDIA MF TAB ----------
+
 
 with us_tab:
     st.info("US Stocks tab coming next.")
