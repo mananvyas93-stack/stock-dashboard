@@ -132,37 +132,6 @@ st.markdown(
         margin-top: 0.75rem;
     }
 
-    /* Sae Stocks metrics (light cards) */
-    .sv-metric-card {
-        background: #f5f6f7;
-        border: 1px solid #e5e7eb;
-        border-radius: 10px;
-        padding: 12px 14px;
-        box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
-        margin-bottom: 8px;
-        color: #0f172a;
-    }
-
-    .sv-metric-title {
-        font-size: 0.9rem;
-        font-weight: 600;
-        margin: 0 0 6px 0;
-        color: #0f172a;
-        letter-spacing: 0.01em;
-    }
-
-    .sv-metric-value {
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: #0b1222;
-    }
-
-    .sv-metric-secondary {
-        font-size: 0.95rem;
-        font-weight: 600;
-        color: #111827;
-    }
-
     .stTabs [data-baseweb="tab-list"] {
         display: flex;
         align-items: flex-end;
@@ -857,7 +826,7 @@ st.markdown(
 
 overview_tab, sv_tab, us_tab, mf_tab = st.tabs([
     "🪙 Overview",
-    "💷 Sae Stocks",
+    "💷 SV Stocks",
     "💵 US Stocks",
     "💴 India MF",
 ])
@@ -880,7 +849,7 @@ with overview_tab:
         render_kpi("Overall Return (%)", overall_pct_str)
 
     st.markdown(
-        '''<div style="font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#e6eaf0; font-size:0.75rem; margin:4px 0;">Today's Gains</div>''',
+        '''<div style="font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#16233a; font-size:0.75rem; margin:4px 0;">Today's Gains</div>''',
         unsafe_allow_html=True,
     )
 
@@ -957,14 +926,14 @@ with overview_tab:
 
         st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
-# ---------- SAE TAB (Sae Vyas portfolio detail) ----------
+# ---------- SV TAB (Sae Vyas portfolio detail) ----------
 
 with sv_tab:
 
     sv_positions = positions[positions["Owner"] == "SV"].copy()
 
     if sv_positions.empty:
-        st.info("No Sae Stocks positions found.")
+        st.info("No SV positions found.")
     else:
         # Recompute SV-only aggregates in AED
         sv_total_val_aed = sv_positions["ValueAED"].sum()
@@ -983,21 +952,12 @@ with sv_tab:
             sv_day_pl_aed / prev_total_val * 100.0
         ) if prev_total_val > 0 else 0.0
 
-        # String formats + colour coding for sign
-        def pl_color(value: float) -> str:
-            if value > 0:
-                return COLOR_SUCCESS
-            if value < 0:
-                return COLOR_DANGER
-            return "#111827"  # neutral dark text
-
+        # String formats
         sv_day_pl_aed_str = f"AED {sv_day_pl_aed:,.0f}"
         sv_day_pl_pct_str = f"{sv_day_pl_pct:+.2f}%"
-        sv_day_color = pl_color(sv_day_pl_aed)
 
         sv_total_pl_aed_str = f"AED {sv_total_pl_aed:,.0f}"
         sv_total_pl_pct_str = f"{sv_total_pl_pct:+.2f}%"
-        sv_total_color = pl_color(sv_total_pl_aed)
 
         sv_total_val_aed_str = f"AED {sv_total_val_aed:,.0f}"
         sv_total_val_inr_lacs_str = fmt_inr_lacs_from_aed(sv_total_val_aed, AED_TO_INR)
@@ -1005,9 +965,9 @@ with sv_tab:
         # ---- Card 1: Today's Profit ----
         st.markdown(
             f"""
-            <div class="sv-metric-card">
-                <div class="sv-metric-title">Today's Profit</div>
-                <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+            <div class="card mf-card" style="padding:12px 14px; margin-bottom:8px;">
+                <div class="page-title" style="margin-bottom:4px;">Today's Profit</div>
+                <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
                     <div>
                         <div class="kpi-value-main">{sv_day_pl_aed_str}</div>
                     </div>
@@ -1023,9 +983,9 @@ with sv_tab:
         # ---- Card 2: Total Profit ----
         st.markdown(
             f"""
-            <div class="sv-metric-card">
-                <div class="sv-metric-title">Total Profit</div>
-                <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+            <div class="card mf-card" style="padding:12px 14px; margin-bottom:8px;">
+                <div class="page-title" style="margin-bottom:4px;">Total Profit</div>
+                <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
                     <div>
                         <div class="kpi-value-main">{sv_total_pl_aed_str}</div>
                     </div>
@@ -1041,9 +1001,9 @@ with sv_tab:
         # ---- Card 3: Holding Value ----
         st.markdown(
             f"""
-            <div class="sv-metric-card">
-                <div class="sv-metric-title">Total Holding Value</div>
-                <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+            <div class="card mf-card" style="padding:12px 14px; margin-bottom:8px;">
+                <div class="page-title" style="margin-bottom:4px;">Total Holding Value</div>
+                <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
                     <div>
                         <div class="kpi-value-main">{sv_total_val_aed_str}</div>
                     </div>
@@ -1057,7 +1017,7 @@ with sv_tab:
         )
 
         st.markdown(
-            """<div style=\"font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#e6eaf0; font-size:0.75rem; margin:4px 0;\">Today's Gains – Sae</div>""",
+            """<div style=\"font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#16233a; font-size:0.75rem; margin:4px 0;\">Today's Gains – SV</div>""",
             unsafe_allow_html=True,
         )
 
