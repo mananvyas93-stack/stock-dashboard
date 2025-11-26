@@ -800,7 +800,7 @@ def render_kpi(label: str, value: str):
     st.markdown(
         f"""
         <div class="kpi-card">
-            <div class="kpi-label">{label}</div>
+            
             <div class="kpi-value-main">{value}</div>
         </div>
         """,
@@ -1171,11 +1171,11 @@ with mf_tab:
                 <div class="page-title" style="margin-bottom:4px;">Mutual Fund Holding</div>
                 <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
                     <div>
-                        <div class="kpi-label" style="margin-bottom:1px;">Total Value</div>
+                        
                         <div class="kpi-value-main">{total_value_str}</div>
                     </div>
                     <div style="text-align:right;">
-                        <div class="kpi-label" style="margin-bottom:1px;">XIRR</div>
+                        
                         <div class="kpi-value-main">{total_xirr_str}</div>
                     </div>
                 </div>
@@ -1208,11 +1208,11 @@ with mf_tab:
                     <div class="page-title" style="margin-bottom:4px;">{display_name}</div>
                     <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
                         <div>
-                            <div class="kpi-label" style="margin-bottom:1px;">Total Value</div>
+                            
                             <div class="kpi-value-main">{value_str}</div>
                         </div>
                         <div style="text-align:right;">
-                            <div class="kpi-label" style="margin-bottom:1px;">XIRR</div>
+                            
                             <div class="kpi-value-main">{xirr_str}</div>
                         </div>
                     </div>
