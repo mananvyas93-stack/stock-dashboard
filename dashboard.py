@@ -991,15 +991,15 @@ with sv_tab:
         # ---- Card 1: Today's Profit ----
         st.markdown(
             f"""
-            <div class="card" style="padding:10px 12px; margin-bottom:6px;">
+            <div class="card mf-card" style="padding:12px 14px; margin-bottom:8px;">
                 <div class="page-title" style="margin-bottom:4px;">Today's Profit</div>
                 <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
                     <div>
-                        <div class="kpi-label" style="margin-bottom:1px;">Today's Profit (AED)</div>
+                        <div class="kpi-label" style="margin-bottom:1px;">AED</div>
                         <div class="kpi-value-main">{sv_day_pl_aed_str}</div>
                     </div>
                     <div style="text-align:right;">
-                        <div class="kpi-label" style="margin-bottom:1px;">Today's Return (%)</div>
+                        <div class="kpi-label" style="margin-bottom:1px;">%</div>
                         <div class="kpi-value-main">{sv_day_pl_pct_str}</div>
                     </div>
                 </div>
@@ -1011,15 +1011,15 @@ with sv_tab:
         # ---- Card 2: Total Profit ----
         st.markdown(
             f"""
-            <div class="card" style="padding:10px 12px; margin-bottom:6px;">
+            <div class="card mf-card" style="padding:12px 14px; margin-bottom:8px;">
                 <div class="page-title" style="margin-bottom:4px;">Total Profit</div>
                 <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
                     <div>
-                        <div class="kpi-label" style="margin-bottom:1px;">Total Profit (AED)</div>
+                        <div class="kpi-label" style="margin-bottom:1px;">AED</div>
                         <div class="kpi-value-main">{sv_total_pl_aed_str}</div>
                     </div>
                     <div style="text-align:right;">
-                        <div class="kpi-label" style="margin-bottom:1px;">Total Return (%)</div>
+                        <div class="kpi-label" style="margin-bottom:1px;">%</div>
                         <div class="kpi-value-main">{sv_total_pl_pct_str}</div>
                     </div>
                 </div>
@@ -1031,15 +1031,15 @@ with sv_tab:
         # ---- Card 3: Holding Value ----
         st.markdown(
             f"""
-            <div class="card" style="padding:10px 12px; margin-bottom:8px;">
+            <div class="card mf-card" style="padding:12px 14px; margin-bottom:8px;">
                 <div class="page-title" style="margin-bottom:4px;">Total Holding Value</div>
                 <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
                     <div>
-                        <div class="kpi-label" style="margin-bottom:1px;">Holding Value (AED)</div>
+                        <div class="kpi-label" style="margin-bottom:1px;">AED</div>
                         <div class="kpi-value-main">{sv_total_val_aed_str}</div>
                     </div>
                     <div style="text-align:right;">
-                        <div class="kpi-label" style="margin-bottom:1px;">Holding Value (INR)</div>
+                        <div class="kpi-label" style="margin-bottom:1px;">INR</div>
                         <div class="kpi-value-main">{sv_total_val_inr_lacs_str}</div>
                     </div>
                 </div>
