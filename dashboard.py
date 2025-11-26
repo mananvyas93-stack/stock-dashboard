@@ -402,6 +402,70 @@ def load_mf_navs_from_yahoo() -> dict:
             continue
     return navs
 
+
+@st.cache_data(ttl=3600)
+def compute_india_mf_aggregate() -> dict:
+    """Compute aggregate Indian MF metrics including daily P&L.
+
+    Uses Yahoo history(period="7d") to obtain the two latest valid NAVs
+    for each mutual fund. Aggregates both total value and daily P&L.
+    """
+    mf_navs_full = {}
+
+    # Fetch last 7 days for each ticker
+    for entry in MF_CONFIG:
+        ticker = entry.get("Ticker") or ""
+        scheme = entry["Scheme"]
+        if not ticker:
+            continue
+        try:
+            tkr = yf.Ticker(ticker)
+            hist = tkr.history(period="7d", interval="1d")
+            if hist is None or hist.empty or "Close" not in hist.columns:
+                continue
+            closes = hist["Close"].dropna().tolist()
+            if len(closes) >= 2:
+                today_nav = float(closes[-1])
+                yesterday_nav = float(closes[-2])
+                mf_navs_full[scheme] = {
+                    "today": today_nav,
+                    "yesterday": yesterday_nav,
+                }
+        except Exception:
+            continue
+
+    total_value_inr = 0.0
+    total_daily_pl_inr = 0.0
+
+    for mf_entry in MF_CONFIG:
+        scheme = mf_entry["Scheme"]
+        units = float(mf_entry["Units"] or 0.0)
+        stored_value_inr = float(mf_entry["CurrentValueINR"] or 0.0)
+
+        nav_info = mf_navs_full.get(scheme)
+
+        if nav_info:
+            today_nav = nav_info["today"]
+            yesterday_nav = nav_info["yesterday"]
+            candidate_value = today_nav * units
+            # Consistency check with stored total
+            if stored_value_inr > 0:
+                ratio = candidate_value / stored_value_inr
+                value_inr = candidate_value if 0.8 <= ratio <= 1.2 else stored_value_inr
+            else:
+                value_inr = candidate_value
+
+            daily_pl = (today_nav - yesterday_nav) * units
+        else:
+            # fallback: no daily P&L
+            value_inr = stored_value_inr
+            daily_pl = 0.0
+
+        total_value_inr += value_inr
+        total_daily_pl_inr += daily_pl
+
+    return {"total_value_inr": total_value_inr, "daily_pl_inr": total_daily_pl_inr}
+
 # ---------- FX HELPERS ----------
 
 @st.cache_data(ttl=3600)
@@ -735,8 +799,37 @@ with overview_tab:
         st.info("No live price data. Showing static valuation only; heat map disabled.")
     else:
         hm = agg_for_heatmap.copy()
+        # Convert AED values to INR for sizing
         hm["DayPLINR"] = hm["DayPLAED"] * AED_TO_INR
-        hm["SizeForHeatmap"] = hm["DayPLINR"].abs() + 1e-6
+        hm["ValueINR"] = hm["ValueAED"] * AED_TO_INR
+
+        # Add aggregate Indian MF block as a single tile
+        mf_agg = compute_india_mf_aggregate()
+        ind_mf_val_inr = float(mf_agg.get("total_value_inr", 0.0) or 0.0)
+
+        if ind_mf_val_inr > 0:
+            ind_mf_row = {
+                "Name": "Indian MF",
+                "Ticker": "INDMF",
+                "Owner": "MF",
+                "Sector": "India MF",
+                "Units": 0.0,
+                "PriceUSD": 0.0,
+                "ValueAED": ind_mf_val_inr / AED_TO_INR,
+                "PurchaseAED": 0.0,
+                "DayPct": 0.0,
+                "DayPLAED": 0.0,
+                "TotalPct": 0.0,
+                "TotalPLAED": 0.0,
+                "WeightPct": 0.0,
+                "DayPLINR": 0.0,
+                "ValueINR": ind_mf_val_inr,
+            }
+
+            hm = pd.concat([hm, pd.DataFrame([ind_mf_row])], ignore_index=True)
+
+        # Size tiles by total INR value, color by daily P&L where available
+        hm["SizeForHeatmap"] = hm["ValueINR"].abs() + 1e-6
         hm["DayPLK"] = hm["DayPLINR"] / 1000.0
 
         def label_for_k(v: float) -> str:
