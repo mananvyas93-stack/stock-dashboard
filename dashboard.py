@@ -392,6 +392,32 @@ def load_mf_navs_from_yahoo() -> dict:
             continue
     return navs
 
+@st.cache_data(ttl=3600)
+def load_mf_navs_from_yahoo() -> dict:
+    """Fetch latest NAV for each MF that has a Yahoo ticker.
+
+    Returns a mapping {SchemeName: nav_in_inr}. If a ticker is missing or
+    data is unavailable, that scheme is simply omitted from the result.
+    """
+    navs: dict[str, float] = {}
+    for entry in MF_CONFIG:
+        ticker = entry.get("Ticker") or ""
+        scheme = entry["Scheme"]
+        if not ticker:
+            continue
+        try:
+            tkr = yf.Ticker(ticker)
+            hist = tkr.history(period="5d", interval="1d")
+            if hist is None or hist.empty:
+                continue
+            # Use the last available close as NAV
+            nav = float(hist["Close"].iloc[-1])
+            if nav > 0:
+                navs[scheme] = nav
+        except Exception:
+            continue
+    return navs
+
 
 def _load_india_mf_nav_history() -> dict:
     """Load stored Indian MF NAV history from a local JSON file.
@@ -774,7 +800,7 @@ def render_kpi(label: str, value: str):
     st.markdown(
         f"""
         <div class="kpi-card">
-            
+            <div class="kpi-label">{label}</div>
             <div class="kpi-value-main">{value}</div>
         </div>
         """,
@@ -965,15 +991,15 @@ with sv_tab:
         # ---- Card 1: Today's Profit ----
         st.markdown(
             f"""
-            <div class="card mf-card" style="padding:12px 14px; margin-bottom:8px;">
+            <div class="card" style="padding:10px 12px; margin-bottom:6px;">
                 <div class="page-title" style="margin-bottom:4px;">Today's Profit</div>
                 <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
                     <div>
-                        
+                        <div class="kpi-label" style="margin-bottom:1px;">Today's Profit (AED)</div>
                         <div class="kpi-value-main">{sv_day_pl_aed_str}</div>
                     </div>
                     <div style="text-align:right;">
-                        
+                        <div class="kpi-label" style="margin-bottom:1px;">Today's Return (%)</div>
                         <div class="kpi-value-main">{sv_day_pl_pct_str}</div>
                     </div>
                 </div>
@@ -985,15 +1011,15 @@ with sv_tab:
         # ---- Card 2: Total Profit ----
         st.markdown(
             f"""
-            <div class="card mf-card" style="padding:12px 14px; margin-bottom:8px;">
+            <div class="card" style="padding:10px 12px; margin-bottom:6px;">
                 <div class="page-title" style="margin-bottom:4px;">Total Profit</div>
                 <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
                     <div>
-                        
+                        <div class="kpi-label" style="margin-bottom:1px;">Total Profit (AED)</div>
                         <div class="kpi-value-main">{sv_total_pl_aed_str}</div>
                     </div>
                     <div style="text-align:right;">
-                        
+                        <div class="kpi-label" style="margin-bottom:1px;">Total Return (%)</div>
                         <div class="kpi-value-main">{sv_total_pl_pct_str}</div>
                     </div>
                 </div>
@@ -1005,15 +1031,15 @@ with sv_tab:
         # ---- Card 3: Holding Value ----
         st.markdown(
             f"""
-            <div class="card mf-card" style="padding:12px 14px; margin-bottom:8px;">
+            <div class="card" style="padding:10px 12px; margin-bottom:8px;">
                 <div class="page-title" style="margin-bottom:4px;">Total Holding Value</div>
                 <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
                     <div>
-                        
+                        <div class="kpi-label" style="margin-bottom:1px;">Holding Value (AED)</div>
                         <div class="kpi-value-main">{sv_total_val_aed_str}</div>
                     </div>
                     <div style="text-align:right;">
-                        
+                        <div class="kpi-label" style="margin-bottom:1px;">Holding Value (INR)</div>
                         <div class="kpi-value-main">{sv_total_val_inr_lacs_str}</div>
                     </div>
                 </div>
@@ -1073,6 +1099,13 @@ with us_tab:
     st.info("US Stocks tab coming next.")
 
 # ---------- INDIA MF TAB ----------
+
+
+with us_tab:
+    st.info("US Stocks tab coming next.")
+
+# ---------- INDIA MF TAB ----------
+
 
 with mf_tab:
     if not MF_CONFIG:
@@ -1138,11 +1171,11 @@ with mf_tab:
                 <div class="page-title" style="margin-bottom:4px;">Mutual Fund Holding</div>
                 <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
                     <div>
-                        
+                        <div class="kpi-label" style="margin-bottom:1px;">Total Value</div>
                         <div class="kpi-value-main">{total_value_str}</div>
                     </div>
                     <div style="text-align:right;">
-                        
+                        <div class="kpi-label" style="margin-bottom:1px;">XIRR</div>
                         <div class="kpi-value-main">{total_xirr_str}</div>
                     </div>
                 </div>
@@ -1175,11 +1208,11 @@ with mf_tab:
                     <div class="page-title" style="margin-bottom:4px;">{display_name}</div>
                     <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
                         <div>
-                            
+                            <div class="kpi-label" style="margin-bottom:1px;">Total Value</div>
                             <div class="kpi-value-main">{value_str}</div>
                         </div>
                         <div style="text-align:right;">
-                            
+                            <div class="kpi-label" style="margin-bottom:1px;">XIRR</div>
                             <div class="kpi-value-main">{xirr_str}</div>
                         </div>
                     </div>
