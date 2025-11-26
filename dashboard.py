@@ -392,32 +392,6 @@ def load_mf_navs_from_yahoo() -> dict:
             continue
     return navs
 
-@st.cache_data(ttl=3600)
-def load_mf_navs_from_yahoo() -> dict:
-    """Fetch latest NAV for each MF that has a Yahoo ticker.
-
-    Returns a mapping {SchemeName: nav_in_inr}. If a ticker is missing or
-    data is unavailable, that scheme is simply omitted from the result.
-    """
-    navs: dict[str, float] = {}
-    for entry in MF_CONFIG:
-        ticker = entry.get("Ticker") or ""
-        scheme = entry["Scheme"]
-        if not ticker:
-            continue
-        try:
-            tkr = yf.Ticker(ticker)
-            hist = tkr.history(period="5d", interval="1d")
-            if hist is None or hist.empty:
-                continue
-            # Use the last available close as NAV
-            nav = float(hist["Close"].iloc[-1])
-            if nav > 0:
-                navs[scheme] = nav
-        except Exception:
-            continue
-    return navs
-
 
 def _load_india_mf_nav_history() -> dict:
     """Load stored Indian MF NAV history from a local JSON file.
@@ -995,11 +969,9 @@ with sv_tab:
                 <div class="page-title" style="margin-bottom:4px;">Today's Profit</div>
                 <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
                     <div>
-                        <div class="kpi-label" style="margin-bottom:1px;">Today's Profit (AED)</div>
                         <div class="kpi-value-main">{sv_day_pl_aed_str}</div>
                     </div>
                     <div style="text-align:right;">
-                        <div class="kpi-label" style="margin-bottom:1px;">Today's Return (%)</div>
                         <div class="kpi-value-main">{sv_day_pl_pct_str}</div>
                     </div>
                 </div>
@@ -1015,11 +987,9 @@ with sv_tab:
                 <div class="page-title" style="margin-bottom:4px;">Total Profit</div>
                 <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
                     <div>
-                        <div class="kpi-label" style="margin-bottom:1px;">Total Profit (AED)</div>
                         <div class="kpi-value-main">{sv_total_pl_aed_str}</div>
                     </div>
                     <div style="text-align:right;">
-                        <div class="kpi-label" style="margin-bottom:1px;">Total Return (%)</div>
                         <div class="kpi-value-main">{sv_total_pl_pct_str}</div>
                     </div>
                 </div>
@@ -1035,11 +1005,9 @@ with sv_tab:
                 <div class="page-title" style="margin-bottom:4px;">Total Holding Value</div>
                 <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
                     <div>
-                        <div class="kpi-label" style="margin-bottom:1px;">Holding Value (AED)</div>
                         <div class="kpi-value-main">{sv_total_val_aed_str}</div>
                     </div>
                     <div style="text-align:right;">
-                        <div class="kpi-label" style="margin-bottom:1px;">Holding Value (INR)</div>
                         <div class="kpi-value-main">{sv_total_val_inr_lacs_str}</div>
                     </div>
                 </div>
