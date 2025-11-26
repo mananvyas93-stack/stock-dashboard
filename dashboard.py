@@ -392,32 +392,6 @@ def load_mf_navs_from_yahoo() -> dict:
             continue
     return navs
 
-@st.cache_data(ttl=3600)
-def load_mf_navs_from_yahoo() -> dict:
-    """Fetch latest NAV for each MF that has a Yahoo ticker.
-
-    Returns a mapping {SchemeName: nav_in_inr}. If a ticker is missing or
-    data is unavailable, that scheme is simply omitted from the result.
-    """
-    navs: dict[str, float] = {}
-    for entry in MF_CONFIG:
-        ticker = entry.get("Ticker") or ""
-        scheme = entry["Scheme"]
-        if not ticker:
-            continue
-        try:
-            tkr = yf.Ticker(ticker)
-            hist = tkr.history(period="5d", interval="1d")
-            if hist is None or hist.empty:
-                continue
-            # Use the last available close as NAV
-            nav = float(hist["Close"].iloc[-1])
-            if nav > 0:
-                navs[scheme] = nav
-        except Exception:
-            continue
-    return navs
-
 
 def _load_india_mf_nav_history() -> dict:
     """Load stored Indian MF NAV history from a local JSON file.
