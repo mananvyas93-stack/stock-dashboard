@@ -143,19 +143,33 @@ st.markdown(
 
     .stTabs [data-baseweb="tab"] {
         position: relative;
-        flex: 1 1 0 !important;
+        flex: 1 1 25% !important;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.2rem;
+        gap: 0.15rem;
         font-family: 'Space Grotesk', sans-serif !important;
         font-size: 0.7rem !important;
-        padding: 4px 2px 3px 2px !important;
+        padding: 4px 0 3px 0 !important;
         color: #16233a !important;
         background: transparent !important;
         border: none !important;
         cursor: pointer;
         white-space: nowrap;
+        box-sizing: border-box;
+    }
+
+    @media (max-width: 768px) {
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 0;
+        }
+        .stTabs [data-baseweb="tab"] {
+            font-size: 0.6rem !important;
+            padding: 4px 0 3px 0 !important;
+        }
+        .tab-icon {
+            margin-right: 0.2rem;
+        }
     }
 
     .stTabs [role="tab"] {
@@ -840,7 +854,7 @@ overview_tab, sv_tab, us_tab, mf_tab = st.tabs([
     "🪙 Overview",
     "💷 SV Stocks",
     "🏦 US Stocks",
-    "📜 India MF",
+    "💴 India MF",
 ])
 
 # ---------- HOME TAB (existing KPI + heatmap) ----------
@@ -1086,7 +1100,7 @@ with mf_tab:
         st.markdown(
             f"""
             <div class="card mf-card" style="padding:12px 14px; margin-bottom:8px;">
-                <div class="page-title" style="margin-bottom:4px;">Total Mutual Fund Holding</div>
+                <div class="page-title" style="margin-bottom:4px;">Mutual Fund Holding</div>
                 <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
                     <div>
                         <div class="kpi-label" style="margin-bottom:1px;">Total Value</div>
