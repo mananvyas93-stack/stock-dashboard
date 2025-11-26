@@ -1009,10 +1009,10 @@ with sv_tab:
                 <div class="sv-metric-title">Today's Profit</div>
                 <div style="display:flex; justify-content:space-between; align-items:flex-end;">
                     <div>
-                        <div class="sv-metric-value" style="color:{sv_day_color};">{sv_day_pl_aed_str}</div>
+                        <div class="kpi-value-main">{sv_day_pl_aed_str}</div>
                     </div>
                     <div style="text-align:right;">
-                        <div class="sv-metric-secondary" style="color:{sv_day_color};">{sv_day_pl_pct_str}</div>
+                        <div class="kpi-value-main">{sv_day_pl_pct_str}</div>
                     </div>
                 </div>
             </div>
@@ -1027,10 +1027,10 @@ with sv_tab:
                 <div class="sv-metric-title">Total Profit</div>
                 <div style="display:flex; justify-content:space-between; align-items:flex-end;">
                     <div>
-                        <div class="sv-metric-value" style="color:{sv_total_color};">{sv_total_pl_aed_str}</div>
+                        <div class="kpi-value-main">{sv_total_pl_aed_str}</div>
                     </div>
                     <div style="text-align:right;">
-                        <div class="sv-metric-secondary" style="color:{sv_total_color};">{sv_total_pl_pct_str}</div>
+                        <div class="kpi-value-main">{sv_total_pl_pct_str}</div>
                     </div>
                 </div>
             </div>
@@ -1045,10 +1045,10 @@ with sv_tab:
                 <div class="sv-metric-title">Total Holding Value</div>
                 <div style="display:flex; justify-content:space-between; align-items:flex-end;">
                     <div>
-                        <div class="sv-metric-value">{sv_total_val_aed_str}</div>
+                        <div class="kpi-value-main">{sv_total_val_aed_str}</div>
                     </div>
                     <div style="text-align:right;">
-                        <div class="sv-metric-secondary">{sv_total_val_inr_lacs_str}</div>
+                        <div class="kpi-value-main">{sv_total_val_inr_lacs_str}</div>
                     </div>
                 </div>
             </div>
