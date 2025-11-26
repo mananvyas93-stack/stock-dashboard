@@ -4,6 +4,8 @@ import pandas as pd
 import plotly.express as px
 from datetime import datetime, time
 from zoneinfo import ZoneInfo
+import json
+from pathlib import Path
 
 # ---------- PAGE CONFIG ----------
 st.set_page_config(
@@ -403,66 +405,134 @@ def load_mf_navs_from_yahoo() -> dict:
     return navs
 
 
-@st.cache_data(ttl=3600)
-def compute_india_mf_aggregate() -> dict:
-    """Compute aggregate Indian MF metrics including daily P&L.
+def _load_india_mf_nav_history() -> dict:
+    """Load stored Indian MF NAV history from a local JSON file.
 
-    Uses Yahoo history(period="7d") to obtain the two latest valid NAVs
-    for each mutual fund. Aggregates both total value and daily P&L.
+    Structure: { scheme_name: { "YYYY-MM-DD": nav_float, ... }, ... }
     """
-    mf_navs_full = {}
+    path = Path("india_mf_nav_history.json")
+    if not path.exists():
+        return {}
+    try:
+        with path.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
 
-    # Fetch last 7 days for each ticker
-    for entry in MF_CONFIG:
-        ticker = entry.get("Ticker") or ""
-        scheme = entry["Scheme"]
-        if not ticker:
-            continue
-        try:
-            tkr = yf.Ticker(ticker)
-            hist = tkr.history(period="7d", interval="1d")
-            if hist is None or hist.empty or "Close" not in hist.columns:
-                continue
-            closes = hist["Close"].dropna().tolist()
-            if len(closes) >= 2:
-                today_nav = float(closes[-1])
-                yesterday_nav = float(closes[-2])
-                mf_navs_full[scheme] = {
-                    "today": today_nav,
-                    "yesterday": yesterday_nav,
-                }
-        except Exception:
-            continue
+
+def _save_india_mf_nav_history(history: dict) -> None:
+    """Persist Indian MF NAV history to a local JSON file."""
+    path = Path("india_mf_nav_history.json")
+    try:
+        with path.open("w", encoding="utf-8") as f:
+            json.dump(history, f)
+    except Exception:
+        # If saving fails for any reason, just skip; app should still run.
+        pass
+
+
+def compute_india_mf_aggregate() -> dict:
+    """Compute aggregate Indian MF metrics using stored NAV history.
+
+    Logic:
+    - Fetch the latest available NAV for each MF from Yahoo ("today_nav").
+    - Look up the most recent *previous* stored NAV for that scheme in a local
+      JSON history file to act as "yesterday_nav".
+    - Daily P&L = (today_nav - yesterday_nav) * units (if a previous NAV
+      exists), else 0 for that scheme.
+    - Aggregate both total value and total daily P&L across all schemes.
+
+    This means Indian MF daily P&L becomes meaningful from the *second* day
+    onwards for each scheme, once at least one historical NAV is stored.
+    """
+
+    history = _load_india_mf_nav_history()
 
     total_value_inr = 0.0
     total_daily_pl_inr = 0.0
 
+    # Use the trading date returned by Yahoo as the key, but keep an
+    # India-centric timezone when we need "now".
     for mf_entry in MF_CONFIG:
         scheme = mf_entry["Scheme"]
+        ticker = mf_entry.get("Ticker") or ""
         units = float(mf_entry["Units"] or 0.0)
         stored_value_inr = float(mf_entry["CurrentValueINR"] or 0.0)
 
-        nav_info = mf_navs_full.get(scheme)
+        if not ticker or units <= 0:
+            continue
 
-        if nav_info:
-            today_nav = nav_info["today"]
-            yesterday_nav = nav_info["yesterday"]
+        # 1) Get today's/latest NAV from Yahoo
+        try:
+            tkr = yf.Ticker(ticker)
+            hist = tkr.history(period="5d", interval="1d")
+            if hist is None or hist.empty or "Close" not in hist.columns:
+                today_nav = None
+                trade_date_str = None
+            else:
+                closes = hist["Close"].dropna()
+                if closes.empty:
+                    today_nav = None
+                    trade_date_str = None
+                else:
+                    today_nav = float(closes.iloc[-1])
+                    last_idx = closes.index[-1]
+                    try:
+                        trade_date = last_idx.date()
+                    except AttributeError:
+                        # If index is already a date
+                        trade_date = last_idx
+                    trade_date_str = trade_date.isoformat()
+        except Exception:
+            today_nav = None
+            trade_date_str = None
+
+        # If we couldn't get a NAV at all, fall back purely to stored total
+        if today_nav is None or trade_date_str is None:
+            value_inr = stored_value_inr
+            daily_pl = 0.0
+        else:
+            # 2) Look up previous NAV for this scheme from local history
+            per_scheme_hist = history.get(scheme, {})
+            if not isinstance(per_scheme_hist, dict):
+                per_scheme_hist = {}
+
+            # Find most recent date < trade_date_str
+            prev_nav = None
+            if per_scheme_hist:
+                prev_dates = [d for d in per_scheme_hist.keys() if d < trade_date_str]
+                if prev_dates:
+                    last_date = max(prev_dates)
+                    try:
+                        prev_nav = float(per_scheme_hist[last_date])
+                    except Exception:
+                        prev_nav = None
+
+            # 3) Compute today's total value using NAV, with the same
+            # consistency check vs stored total
             candidate_value = today_nav * units
-            # Consistency check with stored total
             if stored_value_inr > 0:
                 ratio = candidate_value / stored_value_inr
                 value_inr = candidate_value if 0.8 <= ratio <= 1.2 else stored_value_inr
             else:
                 value_inr = candidate_value
 
-            daily_pl = (today_nav - yesterday_nav) * units
-        else:
-            # fallback: no daily P&L
-            value_inr = stored_value_inr
-            daily_pl = 0.0
+            # 4) Daily P&L only if we have a previous NAV
+            if prev_nav is not None and prev_nav > 0:
+                daily_pl = (today_nav - prev_nav) * units
+            else:
+                daily_pl = 0.0
+
+            # 5) Update history with today's NAV
+            per_scheme_hist[trade_date_str] = today_nav
+            history[scheme] = per_scheme_hist
 
         total_value_inr += value_inr
         total_daily_pl_inr += daily_pl
+
+    # Persist updated history
+    _save_india_mf_nav_history(history)
 
     return {"total_value_inr": total_value_inr, "daily_pl_inr": total_daily_pl_inr}
 
