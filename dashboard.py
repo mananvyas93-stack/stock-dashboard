@@ -799,15 +799,15 @@ with overview_tab:
         st.info("No live price data. Showing static valuation only; heat map disabled.")
     else:
         hm = agg_for_heatmap.copy()
-        # Convert AED values to INR for sizing
+        # Start from daily P&L in INR for stocks
         hm["DayPLINR"] = hm["DayPLAED"] * AED_TO_INR
-        hm["ValueINR"] = hm["ValueAED"] * AED_TO_INR
 
-        # Add aggregate Indian MF block as a single tile
+        # Add aggregate Indian MF block as a single tile, using DAILY P&L
         mf_agg = compute_india_mf_aggregate()
         ind_mf_val_inr = float(mf_agg.get("total_value_inr", 0.0) or 0.0)
+        ind_mf_daily_pl_inr = float(mf_agg.get("daily_pl_inr", 0.0) or 0.0)
 
-        if ind_mf_val_inr > 0:
+        if ind_mf_val_inr > 0 or ind_mf_daily_pl_inr != 0.0:
             ind_mf_row = {
                 "Name": "Indian MF",
                 "Ticker": "INDMF",
@@ -815,21 +815,21 @@ with overview_tab:
                 "Sector": "India MF",
                 "Units": 0.0,
                 "PriceUSD": 0.0,
-                "ValueAED": ind_mf_val_inr / AED_TO_INR,
+                # value fields are not used for sizing, but keep them logical
+                "ValueAED": ind_mf_val_inr / AED_TO_INR if ind_mf_val_inr > 0 else 0.0,
                 "PurchaseAED": 0.0,
+                # daily % not needed; daily P&L drives size & colour
                 "DayPct": 0.0,
-                "DayPLAED": 0.0,
+                "DayPLAED": ind_mf_daily_pl_inr / AED_TO_INR,
                 "TotalPct": 0.0,
                 "TotalPLAED": 0.0,
                 "WeightPct": 0.0,
-                "DayPLINR": 0.0,
-                "ValueINR": ind_mf_val_inr,
             }
 
             hm = pd.concat([hm, pd.DataFrame([ind_mf_row])], ignore_index=True)
 
-        # Size tiles by total INR value, color by daily P&L where available
-        hm["SizeForHeatmap"] = hm["ValueINR"].abs() + 1e-6
+        # Size tiles by ABSOLUTE DAILY P&L (profit/loss), colour by sign
+        hm["SizeForHeatmap"] = hm["DayPLINR"].abs() + 1e-6
         hm["DayPLK"] = hm["DayPLINR"] / 1000.0
 
         def label_for_k(v: float) -> str:
