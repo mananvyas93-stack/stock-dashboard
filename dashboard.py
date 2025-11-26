@@ -853,7 +853,7 @@ st.markdown(
 overview_tab, sv_tab, us_tab, mf_tab = st.tabs([
     "🪙 Overview",
     "💷 SV Stocks",
-    "🏦 US Stocks",
+    "💵 US Stocks",
     "💴 India MF",
 ])
 
