@@ -1068,6 +1068,41 @@ with mf_tab:
         # Sort by total value (descending)
         mf_rows.sort(key=lambda r: r["value_inr"], reverse=True)
 
+        # ---- Aggregate MF totals for portfolio-level card ----
+        total_value_inr = sum(r["value_inr"] for r in mf_rows)
+
+        weighted_xirr = None
+        # Use value-weighted XIRR across schemes that have an XIRR value
+        value_with_xirr = [r for r in mf_rows if r["xirr"] is not None]
+        denom = sum(r["value_inr"] for r in value_with_xirr)
+        if denom > 0:
+            num = sum(r["value_inr"] * r["xirr"] for r in value_with_xirr)
+            weighted_xirr = num / denom
+
+        total_value_str = fmt_inr_lacs(total_value_inr)
+        total_xirr_str = f"{weighted_xirr:.1f}%" if weighted_xirr is not None else "N/A"
+
+        # Portfolio-level MF card at the top
+        st.markdown(
+            f"""
+            <div class="card mf-card" style="padding:12px 14px; margin-bottom:8px;">
+                <div class="page-title" style="margin-bottom:4px;">Total Mutual Fund Holding</div>
+                <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
+                    <div>
+                        <div class="kpi-label" style="margin-bottom:1px;">Total Value</div>
+                        <div class="kpi-value-main">{total_value_str}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="kpi-label" style="margin-bottom:1px;">XIRR</div>
+                        <div class="kpi-value-main">{total_xirr_str}</div>
+                    </div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        # ---- Individual scheme cards ----
         for row in mf_rows:
             scheme = row["scheme"]
             value_inr = row["value_inr"]
