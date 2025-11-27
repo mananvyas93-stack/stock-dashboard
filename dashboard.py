@@ -940,6 +940,7 @@ with overview_tab:
                 "PurchaseAED": 0.0,
                 "DayPct": 0.0,
                 "DayPLAED": mf_day_pl_inr / AED_TO_INR,
+                "DayPLINR": mf_day_pl_inr, # <--- Added this line so it picks up the right color/size
                 "TotalPct": 0.0,
                 "TotalPLAED": 0.0,
                 "WeightPct": 0.0,
