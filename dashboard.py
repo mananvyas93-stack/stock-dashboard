@@ -2,10 +2,11 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 import plotly.express as px
-from datetime import datetime, time
+from datetime import datetime, time, date
 from zoneinfo import ZoneInfo
 import json
 from pathlib import Path
+import math
 
 # ---------- PAGE CONFIG ----------
 st.set_page_config(
@@ -264,96 +265,97 @@ portfolio_config = [
 ]
 
 # ---------- INDIA MF CONFIG ----------
+# Updated with data from: Live_Portfolio_29_11_2025.xlsx
 MF_CONFIG = [
     {
         "Scheme": "Axis Large and Mid Cap Fund Growth",
         "Category": "Large & Mid Cap",
         "Units": 55026.38,
         "CostINR": 1754912.25,
-        "CurrentValueINR": 1829626.97,
-        "XIRR": 8.66,
-        "Ticker": "0P0001EP9Q.BO",  # Axis Large & Midcap Reg Gr
+        "CurrentValueINR": 1853288.31,
+        "XIRR": 11.19,
+        "Ticker": "0P0001EP9Q.BO",
     },
     {
         "Scheme": "Franklin India ELSS Tax Saver Fund Growth 19360019",
         "Category": "ELSS",
         "Units": 286.62,
         "CostINR": 160000.00,
-        "CurrentValueINR": 430364.02,
-        "XIRR": 15.96,
-        "Ticker": "0P00005VDI.BO",  # Franklin India ELSS Tax Saver Reg Gr
+        "CurrentValueINR": 433606.67,
+        "XIRR": 16.07,
+        "Ticker": "0P00005VDI.BO",
     },
     {
         "Scheme": "Franklin India ELSS Tax Saver Fund Growth 30097040",
         "Category": "ELSS",
         "Units": 190.43,
         "CostINR": 95000.00,
-        "CurrentValueINR": 285933.35,
-        "XIRR": 13.79,
-        "Ticker": "0P00005VDI.BO",  # Same scheme/plan as above
+        "CurrentValueINR": 288087.76,
+        "XIRR": 13.88,
+        "Ticker": "0P00005VDI.BO",
     },
     {
-        "Scheme": "ICICI Prudential ELSS Tax Saver Fund Growth 7389918/81",
+        "Scheme": "ICICI Prudential ELSS Tax Saver Fund Growth",
         "Category": "ELSS",
         "Units": 267.83,
         "CostINR": 98000.00,
-        "CurrentValueINR": 257506.11,
-        "XIRR": 15.27,
-        "Ticker": "0P00005WD6.BO",  # ICICI Pru ELSS Tax Saver Reg Gr
+        "CurrentValueINR": 260058.54,
+        "XIRR": 15.42,
+        "Ticker": "0P00005WD6.BO",
     },
     {
-        "Scheme": "ICICI Prudential NASDAQ 100 Index Fund Growth 35135108/17",
+        "Scheme": "ICICI Prudential NASDAQ 100 Index Fund Growth",
         "Category": "US Index",
         "Units": 43574.66,
         "CostINR": 654967.25,
-        "CurrentValueINR": 825534.95,
-        "XIRR": 32.66,
-        "Ticker": "0P0001NCLS.BO",  # ICICI Pru NASDAQ 100 Index Reg Gr
+        "CurrentValueINR": 846603.30,
+        "XIRR": 36.18,
+        "Ticker": "0P0001NCLS.BO",
     },
     {
-        "Scheme": "Mirae Asset Large and Mid Cap Fund Growth 79975690352",
+        "Scheme": "Mirae Asset Large and Mid Cap Fund Growth",
         "Category": "Large & Mid Cap",
         "Units": 9054.85,
         "CostINR": 1327433.63,
-        "CurrentValueINR": 1412837.30,
-        "XIRR": 15.38,
-        "Ticker": "0P0000ON3O.BO",  # Mirae Asset Large & Midcap Reg Gr
+        "CurrentValueINR": 1429353.35,
+        "XIRR": 18.09,
+        "Ticker": "0P0000ON3O.BO",
     },
     {
-        "Scheme": "Nippon India Multi Cap Fund Growth 499355757325",
+        "Scheme": "Nippon India Multi Cap Fund Growth",
         "Category": "Multi Cap",
         "Units": 4813.52,
         "CostINR": 1404929.75,
-        "CurrentValueINR": 1447001.15,
-        "XIRR": 5.58,
-        "Ticker": "0P00005WDS.BO",  # Nippon India Multi Cap Reg Gr
+        "CurrentValueINR": 1460345.18,
+        "XIRR": 7.25,
+        "Ticker": "0P00005WDS.BO",
     },
     {
         "Scheme": "Parag Parikh Flexi Cap Fund Growth 15530560",
         "Category": "Flexi Cap",
         "Units": 25345.69,
         "CostINR": 2082395.88,
-        "CurrentValueINR": 2191061.05,
-        "XIRR": 9.66,
-        "Ticker": "0P0000YWL0.BO",  # PPFAS Flexi Cap Reg Gr (old LT Equity Reg Gr)
+        "CurrentValueINR": 2204332.05,
+        "XIRR": 10.64,
+        "Ticker": "0P0000YWL0.BO",
     },
     {
         "Scheme": "Parag Parikh Flexi Cap Fund Growth 15722429",
         "Category": "Flexi Cap",
         "Units": 6095.12,
         "CostINR": 499975.00,
-        "CurrentValueINR": 526905.71,
-        "XIRR": 4.60,
-        "Ticker": "0P0000YWL0.BO",  # Same scheme/plan as above
+        "CurrentValueINR": 530097.11,
+        "XIRR": 5.09,
+        "Ticker": "0P0000YWL0.BO",
     },
     {
-        "Scheme": "SBI Multicap Fund Growth 40501504",
+        "Scheme": "SBI Multicap Fund Growth",
         "Category": "Multi Cap",
         "Units": 83983.45,
         "CostINR": 1404929.75,
-        "CurrentValueINR": 1434941.30,
-        "XIRR": 3.97,
-        "Ticker": "0P0001OF6C.BO",  # SBI Multicap Reg Gr
+        "CurrentValueINR": 1446379.84,
+        "XIRR": 5.41,
+        "Ticker": "0P0001OF6C.BO",
     },
 ]
 
@@ -364,6 +366,62 @@ def fmt_inr_lacs(inr_value: float) -> str:
         return "₹0.0 L"
     lacs = inr_value / 100000.0
     return f"₹{lacs:,.1f} L"
+
+# ---------- EMBEDDED LOGIC: XIRR CALCULATION ----------
+# This function demonstrates the logic to calculate XIRR accurately.
+# It requires a full transaction history (date, amount).
+# Currently, we use the verified XIRR from the summary file, but this
+# function can be used if raw transaction data is provided in the future.
+
+def calculate_xirr(transactions):
+    """
+    Calculates the Extended Internal Rate of Return (XIRR).
+    
+    Args:
+        transactions: A list of tuples, where each tuple contains:
+                      (datetime object for date, float for amount).
+                      Investments should be negative, withdrawals/current value positive.
+    
+    Returns:
+        float: XIRR percentage (e.g., 12.5 for 12.5%)
+    """
+    if not transactions:
+        return 0.0
+
+    # Sort transactions by date
+    transactions.sort(key=lambda x: x[0])
+    
+    dates = [t[0] for t in transactions]
+    amounts = [t[1] for t in transactions]
+    
+    start_date = dates[0]
+    # Convert dates to fraction of years from start
+    years = [(d - start_date).days / 365.0 for d in dates]
+
+    # Net Present Value function
+    def xnpv(rate):
+        return sum([a / ((1 + rate) ** y) for a, y in zip(amounts, years)])
+
+    # Derivative of NPV for Newton-Raphson method
+    def xnpv_prime(rate):
+        return sum([-y * a / ((1 + rate) ** (y + 1)) for a, y in zip(amounts, years)])
+
+    # Newton-Raphson algorithm to find the rate where NPV = 0
+    try:
+        rate = 0.1 # Initial guess 10%
+        for _ in range(100):
+            f_val = xnpv(rate)
+            df_val = xnpv_prime(rate)
+            if df_val == 0:
+                break
+            new_rate = rate - f_val / df_val
+            if abs(new_rate - rate) < 1e-6:
+                rate = new_rate
+                break
+            rate = new_rate
+        return rate * 100.0
+    except Exception:
+        return 0.0
 
 
 @st.cache_data(ttl=3600)
@@ -768,19 +826,6 @@ def aggregate_for_heatmap(df: pd.DataFrame) -> pd.DataFrame:
     combined = pd.concat([mv, sv_row], ignore_index=True)
     return combined
 
-# ---------- UI HELPERS ----------
-
-def render_kpi(label: str, value: str):
-    st.markdown(
-        f"""
-        <div class="kpi-card">
-            <div class="kpi-label">{label}</div>
-            <div class="kpi-value-main">{value}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
 
 # ---------- DATA PIPELINE ----------
 
@@ -852,10 +897,37 @@ with overview_tab:
     mf_prev_val = mf_val_inr - mf_day_pl_inr
     mf_day_pct = (mf_day_pl_inr / mf_prev_val * 100.0) if mf_prev_val > 0 else 0.0
 
-    # MF Total Return %
-    mf_total_cost = sum(item["CostINR"] for item in MF_CONFIG)
-    mf_total_profit = mf_val_inr - mf_total_cost
-    mf_total_pct = (mf_total_profit / mf_total_cost * 100.0) if mf_total_cost > 0 else 0.0
+    # MF Weighted XIRR % (for Overview Card)
+    w_xirr_num = 0.0
+    w_xirr_den = 0.0
+    mf_navs_ov = load_mf_navs_from_yahoo()
+    
+    for item in MF_CONFIG:
+        sch = item["Scheme"]
+        units = float(item["Units"] or 0.0)
+        stored_val = float(item["CurrentValueINR"] or 0.0)
+        xirr = item["XIRR"]
+        
+        # Determine live value for this scheme
+        live_n = mf_navs_ov.get(sch)
+        if live_n and live_n > 0 and units > 0:
+            cand_val = live_n * units
+            if stored_val > 0:
+                ratio = cand_val / stored_val
+                val = cand_val if 0.8 <= ratio <= 1.2 else stored_val
+            else:
+                val = cand_val
+        else:
+            val = stored_val
+            
+        if xirr is not None:
+            w_xirr_num += val * xirr
+            w_xirr_den += val
+            
+    if w_xirr_den > 0:
+        mf_portfolio_xirr = w_xirr_num / w_xirr_den
+    else:
+        mf_portfolio_xirr = 0.0
 
     # --- 2. RENDER CARDS ---
     
@@ -910,7 +982,7 @@ with overview_tab:
         c4, 
         "Total Holding - India MF", 
         fmt_inr_lacs(mf_val_inr), 
-        f"{mf_total_pct:+.2f}%"
+        f"{mf_portfolio_xirr:.1f}%"  # Displaying XIRR here
     )
 
     # --- 3. RENDER HEATMAP ---
@@ -940,7 +1012,7 @@ with overview_tab:
                 "PurchaseAED": 0.0,
                 "DayPct": 0.0,
                 "DayPLAED": mf_day_pl_inr / AED_TO_INR,
-                "DayPLINR": mf_day_pl_inr, # <--- Added this line so it picks up the right color/size
+                "DayPLINR": mf_day_pl_inr, 
                 "TotalPct": 0.0,
                 "TotalPLAED": 0.0,
                 "WeightPct": 0.0,
