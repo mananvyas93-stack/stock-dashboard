@@ -1147,16 +1147,15 @@ with mf_tab:
             live_nav = mf_navs.get(scheme)
 
             # Calculate LIVE Value
+            # FIX: Only use live_nav if it's sensible. If Yahoo returns junk, fallback to config value.
             if live_nav is not None and live_nav > 0 and units > 0:
                 value_inr = live_nav * units
             else:
-                # Fallback to initial value if live fetch fails (optional)
-                # But here we just assume it stays
-                value_inr = cost_inr # or better: last known value from history?
-                # Actually, let's keep the logic simple: if no live price, value is 0 or cost?
-                # Previous logic had a ratio check. Let's simplify.
-                if cost_inr > 0:
-                     value_inr = cost_inr # Worst case fallback
+                # Fallback to the value from the uploaded file
+                value_inr = float(mf_entry.get("InitialValueINR", 0.0)) 
+                # If that is also 0, use cost
+                if value_inr == 0:
+                    value_inr = cost_inr
             
             # --- DYNAMIC XIRR CALCULATION (Per Fund) ---
             # 1. Calculate live profit
