@@ -264,19 +264,14 @@ portfolio_config = [
 ]
 
 # ---------- INDIA MF CONFIG ----------
-# CONSTANTS FOR DYNAMIC XIRR CALCULATION
-# These are the "Anchor" values from your uploaded file.
-PORTFOLIO_INITIAL_XIRR = 13.78
-PORTFOLIO_INITIAL_PROFIT = 1269608.61
-
+# Note: "InitialValueINR" acts as a fallback if Yahoo data fails, preventing "reduced value" errors.
 MF_CONFIG = [
     {
         "Scheme": "Axis Large and Mid Cap Fund Growth",
         "Category": "Equity",
         "Units": 55026.38,
         "CostINR": 1754912.25,
-        "InitialProfitINR": 98376.06,
-        "InitialXIRR": 11.19,
+        "InitialValueINR": 1853288.31,
         "Ticker": "0P0001EP9Q.BO"
     },
     {
@@ -284,8 +279,7 @@ MF_CONFIG = [
         "Category": "Equity",
         "Units": 286.62,
         "CostINR": 160000.0,
-        "InitialProfitINR": 273606.67,
-        "InitialXIRR": 16.07,
+        "InitialValueINR": 433606.67,
         "Ticker": "0P00005VDI.BO"
     },
     {
@@ -293,8 +287,7 @@ MF_CONFIG = [
         "Category": "Equity",
         "Units": 190.43,
         "CostINR": 95000.0,
-        "InitialProfitINR": 193087.76,
-        "InitialXIRR": 13.88,
+        "InitialValueINR": 288087.76,
         "Ticker": "0P00005VDI.BO"
     },
     {
@@ -302,8 +295,7 @@ MF_CONFIG = [
         "Category": "Equity",
         "Units": 267.83,
         "CostINR": 98000.0,
-        "InitialProfitINR": 162058.54,
-        "InitialXIRR": 15.42,
+        "InitialValueINR": 260058.54,
         "Ticker": "0P00005WD6.BO"
     },
     {
@@ -311,8 +303,7 @@ MF_CONFIG = [
         "Category": "Equity",
         "Units": 43574.66,
         "CostINR": 654967.25,
-        "InitialProfitINR": 191636.05,
-        "InitialXIRR": 36.18,
+        "InitialValueINR": 846603.3,
         "Ticker": "0P0001NCLS.BO"
     },
     {
@@ -320,8 +311,7 @@ MF_CONFIG = [
         "Category": "Equity",
         "Units": 9054.85,
         "CostINR": 1327433.63,
-        "InitialProfitINR": 101919.72,
-        "InitialXIRR": 18.09,
+        "InitialValueINR": 1429353.35,
         "Ticker": "0P0000ON3O.BO"
     },
     {
@@ -329,8 +319,7 @@ MF_CONFIG = [
         "Category": "Equity",
         "Units": 4813.52,
         "CostINR": 1404929.75,
-        "InitialProfitINR": 55415.43,
-        "InitialXIRR": 7.25,
+        "InitialValueINR": 1460345.18,
         "Ticker": "0P00005WDS.BO"
     },
     {
@@ -338,8 +327,7 @@ MF_CONFIG = [
         "Category": "Equity",
         "Units": 25345.69,
         "CostINR": 2082395.88,
-        "InitialProfitINR": 121936.17,
-        "InitialXIRR": 10.64,
+        "InitialValueINR": 2204332.05,
         "Ticker": "0P0000YWL0.BO"
     },
     {
@@ -347,8 +335,7 @@ MF_CONFIG = [
         "Category": "Equity",
         "Units": 6095.12,
         "CostINR": 499975.0,
-        "InitialProfitINR": 30122.11,
-        "InitialXIRR": 5.09,
+        "InitialValueINR": 530097.11,
         "Ticker": "0P0000YWL0.BO"
     },
     {
@@ -356,8 +343,7 @@ MF_CONFIG = [
         "Category": "Equity",
         "Units": 83983.45,
         "CostINR": 1404929.75,
-        "InitialProfitINR": 41450.09,
-        "InitialXIRR": 5.41,
+        "InitialValueINR": 1446379.84,
         "Ticker": "0P0001OF6C.BO"
     }
 ]
@@ -838,22 +824,11 @@ with overview_tab:
     mf_prev_val = mf_val_inr - mf_day_pl_inr
     mf_day_pct = (mf_day_pl_inr / mf_prev_val * 100.0) if mf_prev_val > 0 else 0.0
 
-    # MF Dynamic Portfolio XIRR (The "Smart Estimation")
-    # Logic: NewXIRR = InitialXIRR * (NewProfit / InitialProfit)
-    
-    # 1. Calculate live total cost
+    # Calculate Total Portfolio Cost for Absolute Return
     mf_total_cost = sum(item["CostINR"] for item in MF_CONFIG)
-    
-    # 2. Calculate live total profit
-    live_total_profit = mf_val_inr - mf_total_cost
-    
-    # 3. Apply the ratio
-    # Avoid division by zero
-    if PORTFOLIO_INITIAL_PROFIT > 0:
-        profit_ratio = live_total_profit / PORTFOLIO_INITIAL_PROFIT
-        mf_dynamic_xirr = PORTFOLIO_INITIAL_XIRR * profit_ratio
-    else:
-        mf_dynamic_xirr = PORTFOLIO_INITIAL_XIRR
+    mf_total_profit = mf_val_inr - mf_total_cost
+    # ABSOLUTE RETURN % (Weighted by Investment)
+    mf_abs_return_pct = (mf_total_profit / mf_total_cost * 100.0) if mf_total_cost > 0 else 0.0
 
     # --- 2. RENDER CARDS ---
     
@@ -908,7 +883,7 @@ with overview_tab:
         c4, 
         "Total Holding - India MF", 
         fmt_inr_lacs(mf_val_inr), 
-        f"{mf_dynamic_xirr:.2f}%"
+        f"{mf_abs_return_pct:.2f}%"  # Now shows Total Absolute Return
     )
 
     # --- 3. RENDER HEATMAP ---
@@ -1141,8 +1116,9 @@ with mf_tab:
             units = float(mf_entry["Units"] or 0.0)
             # Use fixed cost from file if available
             cost_inr = float(mf_entry["CostINR"] or 0.0)
-            initial_profit = float(mf_entry.get("InitialProfitINR", 0.0))
-            initial_xirr = float(mf_entry.get("InitialXIRR", 0.0))
+            
+            # NOTE: We switched from XIRR to Absolute Return logic here.
+            # No initial_profit/initial_xirr needed anymore for the simplified calculation.
 
             live_nav = mf_navs.get(scheme)
 
@@ -1157,22 +1133,18 @@ with mf_tab:
                 if value_inr == 0:
                     value_inr = cost_inr
             
-            # --- DYNAMIC XIRR CALCULATION (Per Fund) ---
-            # 1. Calculate live profit
-            live_profit = value_inr - cost_inr
-            
-            # 2. Scale XIRR
-            if initial_profit > 0:
-                profit_ratio = live_profit / initial_profit
-                live_xirr = initial_xirr * profit_ratio
+            # --- ABSOLUTE RETURN CALCULATION (Per Fund) ---
+            # Formula: (Current Value - Invested Amount) / Invested Amount * 100
+            if cost_inr > 0:
+                abs_return = (value_inr - cost_inr) / cost_inr * 100.0
             else:
-                live_xirr = initial_xirr
+                abs_return = 0.0
 
             mf_rows.append(
                 {
                     "scheme": scheme,
                     "value_inr": value_inr,
-                    "xirr": live_xirr, # Use the dynamic one
+                    "return_pct": abs_return, # Renamed key to clarify it's NOT XIRR
                 }
             )
 
@@ -1182,17 +1154,16 @@ with mf_tab:
         # ---- Aggregate MF totals for portfolio-level card ----
         total_value_inr = sum(r["value_inr"] for r in mf_rows)
 
-        # Calculate DYNAMIC PORTFOLIO XIRR again for this tab
+        # Calculate TOTAL PORTFOLIO ABSOLUTE RETURN again for this tab
         mf_total_cost = sum(item["CostINR"] for item in MF_CONFIG)
-        live_total_profit = total_value_inr - mf_total_cost
         
-        if PORTFOLIO_INITIAL_PROFIT > 0:
-            mf_dynamic_xirr_total = PORTFOLIO_INITIAL_XIRR * (live_total_profit / PORTFOLIO_INITIAL_PROFIT)
+        if mf_total_cost > 0:
+            total_abs_return_pct = (total_value_inr - mf_total_cost) / mf_total_cost * 100.0
         else:
-            mf_dynamic_xirr_total = PORTFOLIO_INITIAL_XIRR
+            total_abs_return_pct = 0.0
 
         total_value_str = fmt_inr_lacs(total_value_inr)
-        total_xirr_str = f"{mf_dynamic_xirr_total:.2f}%"
+        total_return_str = f"{total_abs_return_pct:.2f}%"
 
         # Portfolio-level MF card at the top
         st.markdown(
@@ -1205,8 +1176,8 @@ with mf_tab:
                         <div class="kpi-value-main">{total_value_str}</div>
                     </div>
                     <div style="text-align:right;">
-                        <div class="kpi-label" style="margin-bottom:1px;">XIRR</div>
-                        <div class="kpi-value-main">{total_xirr_str}</div>
+                        <div class="kpi-label" style="margin-bottom:1px;">Total Return</div>
+                        <div class="kpi-value-main">{total_return_str}</div>
                     </div>
                 </div>
             </div>
@@ -1218,7 +1189,7 @@ with mf_tab:
         for row in mf_rows:
             scheme = row["scheme"]
             value_inr = row["value_inr"]
-            xirr = row["xirr"]
+            ret_pct = row["return_pct"]
 
             # Shorten scheme name
             display_name = scheme
@@ -1229,7 +1200,7 @@ with mf_tab:
                 display_name = display_name.replace(" Fund Growth", "")
 
             value_str = fmt_inr_lacs(value_inr)
-            xirr_str = f"{xirr:.1f}%" if xirr is not None else "N/A"
+            ret_str = f"{ret_pct:.1f}%"
 
             st.markdown(
                 f"""
@@ -1241,8 +1212,8 @@ with mf_tab:
                             <div class="kpi-value-main">{value_str}</div>
                         </div>
                         <div style="text-align:right;">
-                            <div class="kpi-label" style="margin-bottom:1px;">XIRR</div>
-                            <div class="kpi-value-main">{xirr_str}</div>
+                            <div class="kpi-label" style="margin-bottom:1px;">Total Return</div>
+                            <div class="kpi-value-main">{ret_str}</div>
                         </div>
                     </div>
                 </div>
