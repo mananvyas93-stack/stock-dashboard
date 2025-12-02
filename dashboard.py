@@ -18,7 +18,7 @@ st.set_page_config(
 st.markdown(
     """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..24,400,1,0&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..24,400,1,0&display=swap');
 
     :root {
         --bg: #0f1a2b;
@@ -54,7 +54,7 @@ st.markdown(
         margin-bottom: 8px;
     }
 
-    /* Updated KPI Card Styling for Uniformity */
+    /* --- KPI CARD STYLING --- */
     .mf-card {
         background: #f4f6f8 !important;
         border-color: #e0e4ea !important;
@@ -62,31 +62,47 @@ st.markdown(
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        min-height: 100px; /* Forces equal height */
+        /* Fixed height to ensure alignment, Auto width */
+        height: 140px; 
+        padding: 12px 14px !important;
+        box-sizing: border-box;
     }
 
-    .mf-card .kpi-label-top {
+    /* UNIFIED LABEL STYLE: Used for Top Title, Status, and Bottom Category */
+    .kpi-label {
         font-family: 'Space Grotesk', sans-serif;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: #64748b; /* Slate grey for top label */
-        margin-bottom: 4px;
-    }
-
-    .mf-card .kpi-label-bottom {
-        font-family: 'Space Grotesk', sans-serif;
-        font-size: 0.65rem;
+        font-size: 0.7rem; 
+        font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: #94a3b8; /* Lighter grey for bottom label */
-        margin-top: auto;
+        color: #64748b; /* Slate grey */
+        line-height: 1.2;
     }
 
-    .mf-card .kpi-value-main {
-        color: #0f1a2b !important;
+    /* UNIFIED VALUE STYLE: Restored to larger size */
+    .kpi-value-big {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.5rem; /* Restored size */
+        font-weight: 700;
+        color: #0f1a2b;
+        letter-spacing: -0.02em;
+        line-height: 1.1;
+    }
+
+    .kpi-value-sub {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.1rem; 
         font-weight: 600;
-        font-size: 1.2rem;
+        color: #0f1a2b;
+    }
+
+    /* Container for the middle row of numbers */
+    .kpi-mid-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-top: auto;
+        margin-bottom: auto;
     }
 
     .page-title {
@@ -110,33 +126,6 @@ st.markdown(
         background: transparent !important;
     }
 
-    .material-symbols-rounded {
-        font-family: 'Material Symbols Rounded';
-        font-weight: normal;
-        font-style: normal;
-        font-size: 18px;
-        line-height: 1;
-        letter-spacing: normal;
-        text-transform: none;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        vertical-align: middle;
-        /* Recommended settings from Google */
-        font-variation-settings:
-          'FILL' 0,
-          'wght' 400,
-          'GRAD' 0,
-          'opsz' 24;
-    }
-
-    .tab-icon {
-        margin-right: 0.35rem;
-    }
-
-    .tab-label {
-        display: inline-block;
-    }
     .stTabs {
         margin-top: 0.75rem;
     }
@@ -176,16 +165,12 @@ st.markdown(
             font-size: 0.6rem !important;
             padding: 4px 0 3px 0 !important;
         }
-        .tab-icon {
-            margin-right: 0.2rem;
-        }
     }
 
     .stTabs [role="tab"] {
         min-width: 0 !important;
     }
 
-    /* disable raised card, keep tabs flat */
     .stTabs [data-baseweb="tab"]::before {
         content: "";
         position: absolute;
@@ -201,7 +186,6 @@ st.markdown(
         font-weight: 500 !important;
     }
 
-    /* navy underline equal to tab width */
     .stTabs [data-baseweb="tab"]::after {
         content: "";
         position: absolute;
@@ -215,7 +199,7 @@ st.markdown(
     }
 
     .stTabs [aria-selected="true"]::after {
-        background: #0b1530; /* navy indicator */
+        background: #0b1530; 
     }
 
     .stTabs [data-baseweb="tab-highlight"] {
@@ -518,19 +502,19 @@ def get_market_phase_and_prices():
     weekday = now_us.weekday()
     t = now_us.time()
     
-    # Define Strings based on Time
+    # Define Strings based on Time - NO SQUARE BRACKETS
     if weekday >= 5:
         # Weekend -> "Post Market" (Last State)
-        phase_str = "[Post Market]"
+        phase_str = "Post Market"
     else:
         # Weekday Logic
         if time(4,0) <= t < time(9,30):
-            phase_str = "[Pre-Market]"
+            phase_str = "Pre-Market"
         elif time(9,30) <= t < time(16,0):
-            phase_str = "[Live Market]"
+            phase_str = "Live Market"
         else:
             # Evenings/Nights -> "Post Market"
-            phase_str = "[Post Market]"
+            phase_str = "Post Market"
 
     base_close = load_prices_close()
     intraday = load_prices_intraday()
@@ -741,7 +725,7 @@ with overview_tab:
     mf_total_profit = mf_val_inr - mf_total_cost
     mf_abs_return_pct = (mf_total_profit / mf_total_cost * 100.0) if mf_total_cost > 0 else 0.0
 
-    # --- 2. RENDER CARDS (NEW 3-LAYER DESIGN) ---
+    # --- 2. RENDER CARDS (FIXED 3-LAYER DESIGN) ---
     
     c1, c2, c3, c4 = st.columns(4)
 
@@ -750,21 +734,26 @@ with overview_tab:
             st.markdown(
                 f"""
                 <div class="card mf-card">
-                    <div class="kpi-label-top">{top_label}</div>
-                    <div style="display:flex; justify-content:space-between; align-items:flex-end;">
-                        <div class="kpi-value-main">{main_value}</div>
-                        <div class="kpi-value-main" style="font-size:1.1rem;">{right_value}</div>
+                    <div class="kpi-label">{top_label}</div>
+                    
+                    <div class="kpi-mid-row">
+                        <div class="kpi-value-big">{main_value}</div>
+                        <div class="kpi-value-sub">{right_value}</div>
                     </div>
-                    <div class="kpi-label-bottom">{bottom_label}</div>
+                    
+                    <div class="kpi-label">{bottom_label}</div>
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
 
     # Card 1: Today's Profit | Market Status -> US Stocks
+    # No Brackets. "Market" status is separated by a pipe.
+    status_display = f"TODAY'S PROFIT <span style='opacity:0.5; margin:0 4px;'>|</span> {market_status_str.upper()}"
+    
     render_new_kpi_card(
         c1, 
-        f"TODAY'S PROFIT <span style='color:var(--muted); opacity:0.7;'>| {market_status_str}</span>", 
+        status_display, 
         f"₹{us_day_pl_inr:,.0f}", 
         f"{us_day_pct:+.2f}%",
         "US STOCKS"
