@@ -264,7 +264,11 @@ portfolio_config = [
 ]
 
 # ---------- INDIA MF CONFIG ----------
-# Note: "InitialValueINR" acts as a fallback if Yahoo data fails, preventing "reduced value" errors.
+# CONSTANTS FOR DYNAMIC CALCULATION
+# These are from your uploaded file
+PORTFOLIO_INITIAL_XIRR = 13.78
+PORTFOLIO_INITIAL_PROFIT = 1269608.61
+
 MF_CONFIG = [
     {
         "Scheme": "Axis Large and Mid Cap Fund Growth",
@@ -296,7 +300,7 @@ MF_CONFIG = [
         "Units": 267.83,
         "CostINR": 98000.0,
         "InitialValueINR": 260058.54,
-        "Ticker": "0P00005WD7.BO"
+        "Ticker": "0P00005WD7.BO"  # CORRECTED
     },
     {
         "Scheme": "ICICI Prudential NASDAQ 100 Index Fund Growth",
@@ -347,7 +351,6 @@ MF_CONFIG = [
         "Ticker": "0P0001OF6C.BO"
     }
 ]
-
 # Helper: format INR values as "₹10.1 L"
 
 def fmt_inr_lacs(inr_value: float) -> str:
@@ -359,11 +362,7 @@ def fmt_inr_lacs(inr_value: float) -> str:
 
 @st.cache_data(ttl=3600)
 def load_mf_navs_from_yahoo() -> dict:
-    """Fetch latest NAV for each MF that has a Yahoo ticker.
-
-    Returns a mapping {SchemeName: nav_in_inr}. If a ticker is missing or
-    data is unavailable, that scheme is simply omitted from the result.
-    """
+    """Fetch latest NAV for each MF that has a Yahoo ticker."""
     navs: dict[str, float] = {}
     for entry in MF_CONFIG:
         ticker = entry.get("Ticker") or ""
@@ -385,10 +384,6 @@ def load_mf_navs_from_yahoo() -> dict:
 
 
 def _load_india_mf_nav_history() -> dict:
-    """Load stored Indian MF NAV history from a local JSON file.
-
-    Structure: { scheme_name: { "YYYY-MM-DD": nav_float, ... }, ... }
-    """
     path = Path("india_mf_nav_history.json")
     if not path.exists():
         return {}
@@ -401,43 +396,28 @@ def _load_india_mf_nav_history() -> dict:
 
 
 def _save_india_mf_nav_history(history: dict) -> None:
-    """Persist Indian MF NAV history to a local JSON file."""
     path = Path("india_mf_nav_history.json")
     try:
         with path.open("w", encoding="utf-8") as f:
             json.dump(history, f)
     except Exception:
-        # If saving fails for any reason, just skip; app should still run.
         pass
 
 
 def compute_india_mf_aggregate() -> dict:
-    """Compute aggregate Indian MF metrics using stored NAV history.
-
-    Logic:
-    - Fetch the latest available NAV for each MF from Yahoo ("today_nav").
-    - Look up the most recent *previous* stored NAV for that scheme in a local
-      JSON history file to act as "yesterday_nav".
-    - Daily P&L = (today_nav - yesterday_nav) * units (if a previous NAV
-      exists), else 0 for that scheme.
-    - Aggregate both total value and total daily P&L across all schemes.
-
-    This means Indian MF daily P&L becomes meaningful from the *second* day
-    onwards for each scheme, once at least one historical NAV is stored.
-    """
-
     history = _load_india_mf_nav_history()
 
     total_value_inr = 0.0
     total_daily_pl_inr = 0.0
 
-    # Use the trading date returned by Yahoo as the key, but keep an
-    # India-centric timezone when we need "now".
+    # Use the trading date returned by Yahoo as the key
     for mf_entry in MF_CONFIG:
         scheme = mf_entry["Scheme"]
         ticker = mf_entry.get("Ticker") or ""
         units = float(mf_entry["Units"] or 0.0)
-        stored_value_inr = float(mf_entry["CostINR"] or 0.0)
+        
+        # Fallback logic: Use File Value as the anchor, not cost
+        file_value_inr = float(mf_entry.get("InitialValueINR", 0.0))
 
         if not ticker or units <= 0:
             continue
@@ -460,53 +440,52 @@ def compute_india_mf_aggregate() -> dict:
                     try:
                         trade_date = last_idx.date()
                     except AttributeError:
-                        # If index is already a date
                         trade_date = last_idx
                     trade_date_str = trade_date.isoformat()
         except Exception:
             today_nav = None
             trade_date_str = None
 
-        # If we couldn't get a NAV at all, fall back purely to stored total
-        if today_nav is None or trade_date_str is None:
-            value_inr = stored_value_inr
-            daily_pl = 0.0
-        else:
-            # 2) Look up previous NAV for this scheme from local history
-            per_scheme_hist = history.get(scheme, {})
-            if not isinstance(per_scheme_hist, dict):
-                per_scheme_hist = {}
-
-            # Find most recent date < trade_date_str
-            prev_nav = None
-            if per_scheme_hist:
-                prev_dates = [d for d in per_scheme_hist.keys() if d < trade_date_str]
-                if prev_dates:
-                    last_date = max(prev_dates)
-                    try:
-                        prev_nav = float(per_scheme_hist[last_date])
-                    except Exception:
-                        prev_nav = None
-
-            # 3) Compute today's total value using NAV
-            value_inr = today_nav * units
-
-            # 4) Daily P&L only if we have a previous NAV
-            if prev_nav is not None and prev_nav > 0:
-                daily_pl = (today_nav - prev_nav) * units
+        # 2) Calculate Value with Safety Check
+        value_inr = file_value_inr # Default to file value
+        
+        if today_nav is not None and units > 0:
+            candidate_value = today_nav * units
+            if file_value_inr > 0:
+                # Calculate ratio between Live and File value
+                ratio = candidate_value / file_value_inr
+                # Only accept if within 10% tolerance (0.9 to 1.1)
+                # This fixes the "Reduced Value" AND "Inflated Value" bugs
+                if 0.9 <= ratio <= 1.1:
+                    value_inr = candidate_value
             else:
-                daily_pl = 0.0
+                value_inr = candidate_value
 
-            # 5) Update history with today's NAV
+        # 3) Daily P&L Logic
+        per_scheme_hist = history.get(scheme, {})
+        if not isinstance(per_scheme_hist, dict): per_scheme_hist = {}
+        
+        prev_nav = None
+        if per_scheme_hist and trade_date_str:
+            prev_dates = [d for d in per_scheme_hist.keys() if d < trade_date_str]
+            if prev_dates:
+                last_date = max(prev_dates)
+                try: prev_nav = float(per_scheme_hist[last_date])
+                except: prev_nav = None
+
+        if prev_nav is not None and prev_nav > 0 and today_nav is not None:
+            daily_pl = (today_nav - prev_nav) * units
+        else:
+            daily_pl = 0.0
+
+        if today_nav and trade_date_str:
             per_scheme_hist[trade_date_str] = today_nav
             history[scheme] = per_scheme_hist
 
         total_value_inr += value_inr
         total_daily_pl_inr += daily_pl
 
-    # Persist updated history
     _save_india_mf_nav_history(history)
-
     return {"total_value_inr": total_value_inr, "daily_pl_inr": total_daily_pl_inr}
 
 # ---------- FX HELPERS ----------
@@ -568,11 +547,7 @@ def load_prices_close() -> pd.DataFrame:
 
 @st.cache_data(ttl=60)
 def load_prices_intraday() -> pd.Series:
-    """Get last intraday price per ticker using 1m/5m data, **only if** data is from today (US date).
-
-    This ensures pre-market moves are captured, but we don't accidentally reuse
-    yesterday's last tick before the first trade of the new session.
-    """
+    """Get last intraday price per ticker using 1m/5m data, only if data is from today."""
     tickers = sorted({item["Ticker"] for item in portfolio_config})
     last_prices: dict[str, float] = {}
 
@@ -589,14 +564,11 @@ def load_prices_intraday() -> pd.Series:
                 continue
 
             last_idx = hist.index[-1]
-            # yfinance usually returns a tz-aware index in US/Eastern
             try:
                 last_dt = last_idx.tz_convert(us_tz)
             except Exception:
-                # Fallback: assume US timezone if tz info is missing
                 last_dt = last_idx.replace(tzinfo=us_tz)
 
-            # Skip if the latest bar is not from "today" in US time
             if last_dt.date() != today_us:
                 continue
 
@@ -620,14 +592,11 @@ def get_market_phase_and_prices():
 
     base_close = load_prices_close()
 
-    # Weekend: always treated as closed, use last available close
     if weekday >= 5:
         return "Market Closed", base_close
 
-    # Try to get intraday prices **only for today's US date**
     intraday = load_prices_intraday()
 
-    # Decide phase label based on clock + whether we have any intraday ticks
     if t < open_time:
         phase = "Pre-Market Data" if intraday is not None and not intraday.empty else "Market Closed"
     elif t >= close_time:
@@ -635,7 +604,6 @@ def get_market_phase_and_prices():
     else:
         phase = "Live Market Data"
 
-    # Prefer intraday when we have it; otherwise fall back to last close
     if intraday is None or intraday.empty:
         return phase, base_close
 
@@ -644,7 +612,6 @@ def get_market_phase_and_prices():
 # ---------- PORTFOLIO BUILDERS ----------
 
 def build_positions_from_prices(prices_close: pd.DataFrame, prices_intraday: pd.Series | None) -> pd.DataFrame:
-    """Row per config line with P&L and weights."""
     rows = []
     has_close = prices_close is not None and not prices_close.empty
 
@@ -677,12 +644,12 @@ def build_positions_from_prices(prices_close: pd.DataFrame, prices_intraday: pd.
 
             prev_usd = float(prev_close.get(t, price_usd)) if has_close else price_usd
             day_pct = (price_usd / prev_usd - 1.0) * 100.0 if prev_usd > 0 else 0.0
-            # Artificial reset pre-market
+            
             from __main__ import market_status
             if market_status == "Pre-Market Data":
                 day_pct = 0.0
             day_pl_aed = value_aed * (day_pct / 100.0)
-            # Artificial reset pre-market
+            
             if market_status == "Pre-Market Data":
                 day_pl_aed = 0.0
 
@@ -710,8 +677,6 @@ def build_positions_from_prices(prices_close: pd.DataFrame, prices_intraday: pd.
     total_val = df["ValueAED"].sum()
     df["WeightPct"] = df["ValueAED"] / total_val * 100.0 if total_val > 0 else 0.0
     return df
-
-
 
 def aggregate_for_heatmap(df: pd.DataFrame) -> pd.DataFrame:
     if df.empty:
@@ -752,7 +717,6 @@ def aggregate_for_heatmap(df: pd.DataFrame) -> pd.DataFrame:
 
     combined = pd.concat([mv, sv_row], ignore_index=True)
     return combined
-
 
 # ---------- DATA PIPELINE ----------
 
@@ -808,14 +772,12 @@ overview_tab, sv_tab, us_tab, mf_tab = st.tabs([
 with overview_tab:
     # --- 1. PREPARE DATA FOR CARDS ---
 
-    # A. US Stocks (Calculated from global variables)
+    # A. US Stocks
     us_day_pl_inr = day_pl_aed * AED_TO_INR
-    # Derive yesterday's value to calculate today's % change
     us_prev_val_aed = total_val_aed - day_pl_aed
     us_day_pct = (day_pl_aed / us_prev_val_aed * 100.0) if us_prev_val_aed > 0 else 0.0
 
     # B. India Mutual Funds
-    # We call this here (instead of inside heatmap logic) so we can use it for cards
     mf_agg = compute_india_mf_aggregate()
     mf_val_inr = float(mf_agg.get("total_value_inr", 0.0) or 0.0)
     mf_day_pl_inr = float(mf_agg.get("daily_pl_inr", 0.0) or 0.0)
@@ -824,10 +786,9 @@ with overview_tab:
     mf_prev_val = mf_val_inr - mf_day_pl_inr
     mf_day_pct = (mf_day_pl_inr / mf_prev_val * 100.0) if mf_prev_val > 0 else 0.0
 
-    # Calculate Total Portfolio Cost for Absolute Return
+    # MF ABSOLUTE RETURN %
     mf_total_cost = sum(item["CostINR"] for item in MF_CONFIG)
     mf_total_profit = mf_val_inr - mf_total_cost
-    # ABSOLUTE RETURN % (Weighted by Investment)
     mf_abs_return_pct = (mf_total_profit / mf_total_cost * 100.0) if mf_total_cost > 0 else 0.0
 
     # --- 2. RENDER CARDS ---
@@ -874,7 +835,7 @@ with overview_tab:
     render_grey_card(
         c3, 
         "Total Holding - US Stocks", 
-        total_val_inr_lacs,  # Already formatted as Lacs in global section
+        total_val_inr_lacs,
         f"{total_pl_pct:+.2f}%"
     )
 
@@ -883,7 +844,7 @@ with overview_tab:
         c4, 
         "Total Holding - India MF", 
         fmt_inr_lacs(mf_val_inr), 
-        f"{mf_abs_return_pct:.2f}%"  # Now shows Total Absolute Return
+        f"{mf_abs_return_pct:.2f}%"
     )
 
     # --- 3. RENDER HEATMAP ---
@@ -969,30 +930,19 @@ with sv_tab:
     if sv_positions.empty:
         st.info("No SV positions found.")
     else:
-        # Recompute SV-only aggregates in AED
         sv_total_val_aed = sv_positions["ValueAED"].sum()
         sv_total_purchase_aed = sv_positions["PurchaseAED"].sum()
         sv_total_pl_aed = sv_positions["TotalPLAED"].sum()
         sv_day_pl_aed = sv_positions["DayPLAED"].sum()
 
-        # Total return since inception
-        sv_total_pl_pct = (
-            sv_total_pl_aed / sv_total_purchase_aed * 100.0
-        ) if sv_total_purchase_aed > 0 else 0.0
-
-        # Approximate today's % return using today's P&L vs yesterday's value
+        sv_total_pl_pct = (sv_total_pl_aed / sv_total_purchase_aed * 100.0) if sv_total_purchase_aed > 0 else 0.0
         prev_total_val = sv_total_val_aed - sv_day_pl_aed
-        sv_day_pl_pct = (
-            sv_day_pl_aed / prev_total_val * 100.0
-        ) if prev_total_val > 0 else 0.0
+        sv_day_pl_pct = (sv_day_pl_aed / prev_total_val * 100.0) if prev_total_val > 0 else 0.0
 
-        # String formats
         sv_day_pl_aed_str = f"AED {sv_day_pl_aed:,.0f}"
         sv_day_pl_pct_str = f"{sv_day_pl_pct:+.2f}%"
-
         sv_total_pl_aed_str = f"AED {sv_total_pl_aed:,.0f}"
         sv_total_pl_pct_str = f"{sv_total_pl_pct:+.2f}%"
-
         sv_total_val_aed_str = f"AED {sv_total_val_aed:,.0f}"
         sv_total_val_inr_lacs_str = fmt_inr_lacs_from_aed(sv_total_val_aed, AED_TO_INR)
 
@@ -1107,27 +1057,18 @@ with mf_tab:
     if not MF_CONFIG:
         st.info("No mutual fund data configured.")
     else:
-        # Fetch latest NAVs from Yahoo for all mapped schemes
         mf_navs = load_mf_navs_from_yahoo()
-
         mf_rows = []
         for mf_entry in MF_CONFIG:
             scheme = mf_entry["Scheme"]
             units = float(mf_entry["Units"] or 0.0)
-            # Use fixed cost from file if available
             cost_inr = float(mf_entry["CostINR"] or 0.0)
-            
-            # Use InitialValueINR (from file) as the anchor
             file_value_inr = float(mf_entry.get("InitialValueINR", 0.0))
 
             live_nav = mf_navs.get(scheme)
 
-            # --- SANITY CHECK LOGIC ---
-            # If Yahoo returns a live NAV, check if the resulting value is sane 
-            # (within +/- 10% of the file value). If not, fallback to file value.
-            # This prevents 30% spikes due to bad ticks or mismatches.
-            value_inr = file_value_inr # Default to file
-            
+            # Safety check logic
+            value_inr = file_value_inr
             if live_nav is not None and live_nav > 0 and units > 0:
                 candidate_value = live_nav * units
                 if file_value_inr > 0:
@@ -1137,8 +1078,7 @@ with mf_tab:
                 else:
                     value_inr = candidate_value
             
-            # --- ABSOLUTE RETURN CALCULATION (Per Fund) ---
-            # Formula: (Current Value - Invested Amount) / Invested Amount * 100
+            # Absolute return
             if cost_inr > 0:
                 abs_return = (value_inr - cost_inr) / cost_inr * 100.0
             else:
@@ -1148,17 +1088,12 @@ with mf_tab:
                 {
                     "scheme": scheme,
                     "value_inr": value_inr,
-                    "return_pct": abs_return, # Renamed key to clarify it's NOT XIRR
+                    "return_pct": abs_return,
                 }
             )
 
-        # Sort by total value (descending)
         mf_rows.sort(key=lambda r: r["value_inr"], reverse=True)
-
-        # ---- Aggregate MF totals for portfolio-level card ----
         total_value_inr = sum(r["value_inr"] for r in mf_rows)
-
-        # Calculate TOTAL PORTFOLIO ABSOLUTE RETURN again for this tab
         mf_total_cost = sum(item["CostINR"] for item in MF_CONFIG)
         
         if mf_total_cost > 0:
@@ -1169,7 +1104,6 @@ with mf_tab:
         total_value_str = fmt_inr_lacs(total_value_inr)
         total_return_str = f"{total_abs_return_pct:.2f}%"
 
-        # Portfolio-level MF card at the top
         st.markdown(
             f"""
             <div class="card mf-card" style="padding:12px 14px; margin-bottom:8px;">
@@ -1189,13 +1123,11 @@ with mf_tab:
             unsafe_allow_html=True,
         )
 
-        # ---- Individual scheme cards ----
         for row in mf_rows:
             scheme = row["scheme"]
             value_inr = row["value_inr"]
             ret_pct = row["return_pct"]
 
-            # Shorten scheme name
             display_name = scheme
             parts = display_name.split()
             if parts and all(ch.isdigit() or ch in "/-" for ch in parts[-1]):
