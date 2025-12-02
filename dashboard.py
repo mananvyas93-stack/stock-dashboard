@@ -264,11 +264,7 @@ portfolio_config = [
 ]
 
 # ---------- INDIA MF CONFIG ----------
-# CONSTANTS FOR DYNAMIC XIRR CALCULATION
-# These are the "Anchor" values from your uploaded file.
-PORTFOLIO_INITIAL_XIRR = 13.78
-PORTFOLIO_INITIAL_PROFIT = 1269608.61
-
+# Note: "InitialValueINR" acts as a fallback if Yahoo data fails, preventing "reduced value" errors.
 MF_CONFIG = [
     {
         "Scheme": "Axis Large and Mid Cap Fund Growth",
@@ -300,7 +296,7 @@ MF_CONFIG = [
         "Units": 267.83,
         "CostINR": 98000.0,
         "InitialValueINR": 260058.54,
-        "Ticker": "0P00005WD7.BO"  # CORRECTED TICKER
+        "Ticker": "0P00005WD7.BO"
     },
     {
         "Scheme": "ICICI Prudential NASDAQ 100 Index Fund Growth",
