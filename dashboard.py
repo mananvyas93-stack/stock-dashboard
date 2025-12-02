@@ -14,142 +14,234 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# ---------- THEME / CSS (Strict Hierarchy) ----------
+# ---------- THEME / CSS ----------
 st.markdown(
     """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..24,400,1,0&display=swap');
 
     :root {
-        --bg-dark: #0f1a2b;
-        --card-bg: #f8fafc;
-        --text-dark: #0f172a;
-        --text-muted: #64748b;
-        --success: #16a34a;
-        --danger: #dc2626;
-        --accent: #2563eb;
+        --bg: #0f1a2b;
+        --card: #16233a;
+        --border: #1f2d44;
+        --text: #e6eaf0;
+        --muted: #9ba7b8;
+        --accent: #4aa3ff;
+        --accent-soft: #7fc3ff;
+        --danger: #f27d72;
+        --success: #6bcf8f;
     }
 
-    /* Global Reset */
     html, body, [class*="css"] {
-        font-family: 'Space Grotesk', sans-serif;
-        background-color: var(--bg-dark);
-        color: #e2e8f0;
+        font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: var(--bg);
+        color: var(--text);
     }
 
     header {visibility: hidden;}
-    .block-container { padding-top: 1rem; padding-bottom: 3rem; max-width: 1200px; }
 
-    /* --- ENHANCED KPI CARD --- */
-    .kpi-container {
-        background-color: var(--card-bg);
-        border-radius: 12px;
-        padding: 14px 18px;
-        margin-bottom: 12px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        border: 1px solid #e2e8f0;
-        min-height: 100px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
+    .block-container {
+        padding: 0.8rem 0.9rem 2rem;
+        max-width: 900px;
     }
 
-    /* Top Row: Label + Status Tag */
-    .kpi-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 6px;
+    .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 6px 10px;
+        box-shadow: none;
+        margin-bottom: 8px;
     }
-    
-    .kpi-label {
+
+    .kpi-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 12px;
+        box-shadow: none;
+        margin-top: 4px;
+        margin-bottom: 4px;
+    }
+
+    .page-title {
+        font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-size: 1.0rem;
+        font-weight: 600;
+        margin: 0 0 2px 0;
+        color: var(--text);
+        letter-spacing: 0.01em;
+    }
+
+    .page-subtitle {
+        font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         font-size: 0.7rem;
-        font-weight: 700;
+        color: var(--muted);
+        margin: 0;
+        letter-spacing: 0.03em;
+    }
+
+    .kpi-label {
+        font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-size: 0.75rem;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: #64748b; /* Slate-500 */
+        color: var(--muted);
+        margin-bottom: 4px;
     }
 
-    .kpi-tag {
-        font-size: 0.65rem;
-        font-weight: 700;
-        padding: 2px 8px;
-        border-radius: 99px;
-        background: #e2e8f0;
-        color: #475569;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
+    .kpi-value-main {
+        font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--text);
     }
 
-    /* Middle: Value */
-    .kpi-value {
-        font-size: 1.6rem;
-        font-weight: 700;
-        color: #0f172a; /* Slate-900 */
-        line-height: 1.1;
-        letter-spacing: -0.02em;
+    .stPlotlyChart {
+        background: transparent !important;
     }
 
-    /* Bottom: Pct + Sub-label */
-    .kpi-footer {
+    .material-symbols-rounded {
+        font-family: 'Material Symbols Rounded';
+        font-weight: normal;
+        font-style: normal;
+        font-size: 18px;
+        line-height: 1;
+        letter-spacing: normal;
+        text-transform: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        vertical-align: middle;
+        /* Recommended settings from Google */
+        font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24;
+    }
+
+    .tab-icon {
+        margin-right: 0.35rem;
+    }
+
+    .tab-label {
+        display: inline-block;
+    }
+    .stTabs {
+        margin-top: 0.75rem;
+    }
+
+    .stTabs [data-baseweb="tab-list"] {
         display: flex;
-        align-items: baseline;
-        gap: 8px;
-        margin-top: 4px;
+        align-items: flex-end;
+        gap: 0rem;
+        width: 100%;
+        border-bottom: 1px solid var(--border);
+        background: transparent;
     }
 
-    .kpi-pct {
-        font-size: 0.95rem;
-        font-weight: 600;
-    }
-
-    .kpi-sub {
-        font-size: 0.75rem;
-        font-weight: 500;
-        color: #64748b;
-    }
-
-    /* Colors */
-    .txt-green { color: var(--success); }
-    .txt-red { color: var(--danger); }
-    .txt-blue { color: var(--accent); }
-
-    /* --- TABS --- */
-    .stTabs { margin-top: 1.5rem; }
-    .stTabs [data-baseweb="tab-list"] { border-bottom: 1px solid #1e293b; gap: 8px; }
     .stTabs [data-baseweb="tab"] {
-        background-color: transparent;
-        color: #94a3b8;
-        font-family: 'Space Grotesk', sans-serif;
-        font-size: 0.9rem;
-        padding: 8px 16px;
-        border-radius: 6px 6px 0 0;
-        border: none;
+        position: relative;
+        flex: 1 1 25% !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.15rem;
+        font-family: 'Space Grotesk', sans-serif !important;
+        font-size: 0.7rem !important;
+        padding: 4px 0 3px 0 !important;
+        color: #16233a !important;
+        background: transparent !important;
+        border: none !important;
+        cursor: pointer;
+        white-space: nowrap;
+        box-sizing: border-box;
     }
-    .stTabs [aria-selected="true"] {
-        color: #f8fafc;
-        background-color: #1e293b;
-        font-weight: 600;
-    }
-    .stTabs [data-baseweb="tab-highlight"] { display: none; }
 
-    /* Header Title */
-    .dashboard-header {
-        margin-bottom: 10px;
+    @media (max-width: 768px) {
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 0;
+        }
+        .stTabs [data-baseweb="tab"] {
+            font-size: 0.6rem !important;
+            padding: 4px 0 3px 0 !important;
+        }
+        .tab-icon {
+            margin-right: 0.2rem;
+        }
     }
-    .main-title { font-size: 1.5rem; font-weight: 700; color: #f1f5f9; margin: 0; }
-    .sub-title { font-size: 0.85rem; color: #94a3b8; margin: 0; }
+
+    .stTabs [role="tab"] {
+        min-width: 0 !important;
+    }
+
+    /* disable raised card, keep tabs flat */
+    .stTabs [data-baseweb="tab"]::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 0;
+        background: transparent;
+        border: none;
+        opacity: 0;
+    }
+
+    .stTabs [aria-selected="true"] {
+        color: #0f172a !important;
+        font-weight: 500 !important;
+    }
+
+    /* navy underline equal to tab width */
+    .stTabs [data-baseweb="tab"]::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -1px;
+        height: 2px;
+        border-radius: 999px;
+        background: transparent;
+        transition: background-color 140ms ease-out;
+    }
+
+    .stTabs [aria-selected="true"]::after {
+        background: #0b1530; /* navy indicator */
+    }
+
+    .stTabs [data-baseweb="tab-highlight"] {
+        background-color: transparent !important;
+    }
+
+    /* MF card styling */
+    .mf-card {
+        background: #f4f6f8 !important;
+        border-color: #e0e4ea !important;
+        color: #0f1a2b !important;
+    }
+    .mf-card .page-title {
+        color: #0f1a2b !important;
+    }
+    .mf-card .kpi-label {
+        color: #4b5563 !important;
+    }
+    .mf-card .kpi-value-main {
+        color: #0f1a2b !important;
+    }
 
 </style>
 """,
     unsafe_allow_html=True,
 )
 
-# ---------- CONFIGURATION ----------
+# ---------- CONSTANTS ----------
 USD_TO_AED = 3.6725
-PORTFOLIO_INITIAL_XIRR = 13.78
-PORTFOLIO_INITIAL_PROFIT = 1269608.61
+COLOR_PRIMARY = "#4aa3ff"
+COLOR_SUCCESS = "#6bcf8f"
+COLOR_DANGER = "#f27d72"
+COLOR_BG = "#0f1a2b"
 
+# ---------- PORTFOLIO CONFIG ----------
 portfolio_config = [
     {"Name": "Alphabet", "Ticker": "GOOGL", "Units": 51, "PurchaseValAED": 34128, "Owner": "MV", "Sector": "Tech"},
     {"Name": "Apple", "Ticker": "AAPL", "Units": 50, "PurchaseValAED": 37183, "Owner": "MV", "Sector": "Tech"},
@@ -171,368 +263,851 @@ portfolio_config = [
     {"Name": "MSFT [SV]", "Ticker": "MSFT", "Units": 4, "PurchaseValAED": 7476, "Owner": "SV", "Sector": "Tech"},
 ]
 
+# ---------- INDIA MF CONFIG ----------
+PORTFOLIO_INITIAL_XIRR = 13.78
+PORTFOLIO_INITIAL_PROFIT = 1269608.61
+
 MF_CONFIG = [
-    {"Scheme": "Axis Large and Mid Cap", "Units": 55026.38, "CostINR": 1754912.25, "InitialValueINR": 1853288.31, "Ticker": "0P0001EP9Q.BO"},
-    {"Scheme": "Franklin India ELSS Tax Saver", "Units": 286.62, "CostINR": 160000.0, "InitialValueINR": 433606.67, "Ticker": "0P00005VDI.BO"},
-    {"Scheme": "Franklin India ELSS Tax Saver", "Units": 190.43, "CostINR": 95000.0, "InitialValueINR": 288087.76, "Ticker": "0P00005VDI.BO"},
-    {"Scheme": "ICICI Prudential ELSS Tax Saver", "Units": 267.83, "CostINR": 98000.0, "InitialValueINR": 260058.54, "Ticker": "0P00005WD7.BO"},
-    {"Scheme": "ICICI Prudential NASDAQ 100", "Units": 43574.66, "CostINR": 654967.25, "InitialValueINR": 846603.3, "Ticker": "0P0001NCLS.BO"},
-    {"Scheme": "Mirae Asset Large and Mid Cap", "Units": 9054.85, "CostINR": 1327433.63, "InitialValueINR": 1429353.35, "Ticker": "0P0000ON3O.BO"},
-    {"Scheme": "Nippon India Multi Cap", "Units": 4813.52, "CostINR": 1404929.75, "InitialValueINR": 1460345.18, "Ticker": "0P00005WDS.BO"},
-    {"Scheme": "Parag Parikh Flexi Cap", "Units": 25345.69, "CostINR": 2082395.88, "InitialValueINR": 2204332.05, "Ticker": "0P0000YWL0.BO"},
-    {"Scheme": "Parag Parikh Flexi Cap", "Units": 6095.12, "CostINR": 499975.0, "InitialValueINR": 530097.11, "Ticker": "0P0000YWL0.BO"},
-    {"Scheme": "SBI Multicap Fund", "Units": 83983.45, "CostINR": 1404929.75, "InitialValueINR": 1446379.84, "Ticker": "0P0001OF6C.BO"}
+    {
+        "Scheme": "Axis Large and Mid Cap Fund Growth",
+        "Category": "Equity",
+        "Units": 55026.38,
+        "CostINR": 1754912.25,
+        "InitialValueINR": 1853288.31,
+        "Ticker": "0P0001EP9Q.BO"
+    },
+    {
+        "Scheme": "Franklin India ELSS Tax Saver Fund Growth 19360019",
+        "Category": "Equity",
+        "Units": 286.62,
+        "CostINR": 160000.0,
+        "InitialValueINR": 433606.67,
+        "Ticker": "0P00005VDI.BO"
+    },
+    {
+        "Scheme": "Franklin India ELSS Tax Saver Fund Growth 30097040",
+        "Category": "Equity",
+        "Units": 190.43,
+        "CostINR": 95000.0,
+        "InitialValueINR": 288087.76,
+        "Ticker": "0P00005VDI.BO"
+    },
+    {
+        "Scheme": "ICICI Prudential ELSS Tax Saver Fund Growth",
+        "Category": "Equity",
+        "Units": 267.83,
+        "CostINR": 98000.0,
+        "InitialValueINR": 260058.54,
+        "Ticker": "0P00005WD7.BO"
+    },
+    {
+        "Scheme": "ICICI Prudential NASDAQ 100 Index Fund Growth",
+        "Category": "Equity",
+        "Units": 43574.66,
+        "CostINR": 654967.25,
+        "InitialValueINR": 846603.3,
+        "Ticker": "0P0001NCLS.BO"
+    },
+    {
+        "Scheme": "Mirae Asset Large and Mid Cap Fund Growth",
+        "Category": "Equity",
+        "Units": 9054.85,
+        "CostINR": 1327433.63,
+        "InitialValueINR": 1429353.35,
+        "Ticker": "0P0000ON3O.BO"
+    },
+    {
+        "Scheme": "Nippon India Multi Cap Fund Growth",
+        "Category": "Equity",
+        "Units": 4813.52,
+        "CostINR": 1404929.75,
+        "InitialValueINR": 1460345.18,
+        "Ticker": "0P00005WDS.BO"
+    },
+    {
+        "Scheme": "Parag Parikh Flexi Cap Fund Growth 15530560",
+        "Category": "Equity",
+        "Units": 25345.69,
+        "CostINR": 2082395.88,
+        "InitialValueINR": 2204332.05,
+        "Ticker": "0P0000YWL0.BO"
+    },
+    {
+        "Scheme": "Parag Parikh Flexi Cap Fund Growth 15722429",
+        "Category": "Equity",
+        "Units": 6095.12,
+        "CostINR": 499975.0,
+        "InitialValueINR": 530097.11,
+        "Ticker": "0P0000YWL0.BO"
+    },
+    {
+        "Scheme": "SBI Multicap Fund Growth",
+        "Category": "Equity",
+        "Units": 83983.45,
+        "CostINR": 1404929.75,
+        "InitialValueINR": 1446379.84,
+        "Ticker": "0P0001OF6C.BO"
+    }
 ]
-# ---------- GLOBAL HELPERS ----------
-def render_card(col, label, tag, value, pct_str, sub_label):
-    color_cls = "txt-green" if "+" in pct_str else ("txt-red" if "-" in pct_str else "txt-blue")
-    with col:
-        st.markdown(f"""
-        <div class="kpi-container">
-            <div class="kpi-header">
-                <span class="kpi-label">{label}</span>
-                <span class="kpi-tag">{tag}</span>
-            </div>
-            <div class="kpi-value">{value}</div>
-            <div class="kpi-footer">
-                <span class="kpi-pct {color_cls}">{pct_str}</span>
-                <span class="kpi-sub">{sub_label}</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+# Helper: format INR values as "₹10.1 L"
 
-def fmt_inr_lacs(val):
-    if val is None or val != val: return "₹0.0 L"
-    return f"₹{val/100000:.1f} L"
+def fmt_inr_lacs(inr_value: float) -> str:
+    if inr_value is None or inr_value != inr_value:  # NaN check
+        return "₹0.0 L"
+    lacs = inr_value / 100000.0
+    return f"₹{lacs:,.1f} L"
 
-def fmt_inr_lacs_from_aed(val, rate):
-    return fmt_inr_lacs(val * rate)
 
-# ---------- DATA LOGIC ----------
 @st.cache_data(ttl=3600)
 def load_mf_navs_from_yahoo() -> dict:
-    navs = {}
+    """Fetch latest NAV for each MF that has a Yahoo ticker."""
+    navs: dict[str, float] = {}
     for entry in MF_CONFIG:
-        t = entry["Ticker"]
-        if not t: continue
+        ticker = entry.get("Ticker") or ""
+        scheme = entry["Scheme"]
+        if not ticker:
+            continue
         try:
-            tkr = yf.Ticker(t)
+            tkr = yf.Ticker(ticker)
+            # Fetch 5 days to handle weekends/holidays better
             hist = tkr.history(period="5d", interval="1d")
-            if not hist.empty:
-                navs[entry["Scheme"]] = float(hist["Close"].iloc[-1])
-        except: continue
+            if hist is None or hist.empty:
+                continue
+            nav = float(hist["Close"].iloc[-1])
+            if nav > 0:
+                navs[scheme] = nav
+        except Exception:
+            continue
     return navs
 
+
 def compute_india_mf_aggregate() -> dict:
-    total_val = 0.0; total_pl = 0.0; latest_dt = None
-    
-    for entry in MF_CONFIG:
-        t = entry["Ticker"]; u = entry["Units"]; file_v = entry["InitialValueINR"]
-        if not t or u <= 0:
-            total_val += file_v
+    """Computes aggregate Indian MF metrics with 1-Day Change Logic."""
+    total_value_inr = 0.0
+    total_daily_pl_inr = 0.0
+
+    for mf_entry in MF_CONFIG:
+        scheme = mf_entry["Scheme"]
+        ticker = mf_entry.get("Ticker") or ""
+        units = float(mf_entry["Units"] or 0.0)
+        file_value_inr = float(mf_entry.get("InitialValueINR", 0.0))
+
+        if not ticker or units <= 0:
+            total_value_inr += file_value_inr
             continue
-            
+
         try:
-            tkr = yf.Ticker(t)
+            tkr = yf.Ticker(ticker)
             hist = tkr.history(period="5d")
             
-            # Date
+            # --- 1. CALCULATE VALUE (With Safety Check) ---
             if not hist.empty:
-                dt = hist.index[-1].date()
-                if latest_dt is None or dt > latest_dt: latest_dt = dt
-            
-            # Value with Safety Check
-            val = file_v
-            if not hist.empty:
-                nav = float(hist["Close"].iloc[-1])
-                cand = nav * u
-                # If within 10%, trust Yahoo. Else trust File.
-                if file_v > 0 and 0.9 <= (cand/file_v) <= 1.1: val = cand
-                elif file_v == 0: val = cand
-            
-            # 1-Day Change
-            pl = 0.0
+                latest_nav = float(hist["Close"].iloc[-1])
+                candidate_value = latest_nav * units
+                
+                # Trust Yahoo only if within 10% of File Value
+                if file_value_inr > 0:
+                    ratio = candidate_value / file_value_inr
+                    if 0.9 <= ratio <= 1.1:
+                        value_inr = candidate_value
+                    else:
+                        value_inr = file_value_inr
+                else:
+                    value_inr = candidate_value
+            else:
+                value_inr = file_value_inr
+
+            # --- 2. CALCULATE 1-DAY CHANGE (P&L) ---
+            daily_pl = 0.0
             if len(hist) >= 2:
-                pl = (float(hist["Close"].iloc[-1]) - float(hist["Close"].iloc[-2])) * u
+                latest_nav = float(hist["Close"].iloc[-1])
+                prev_nav = float(hist["Close"].iloc[-2])
+                daily_pl = (latest_nav - prev_nav) * units
             
-        except:
-            val = file_v; pl = 0.0
-            
-        total_val += val
-        total_pl += pl
-        
-    date_str = latest_dt.strftime("%d %B") if latest_dt else "N/A"
-    if date_str.startswith("0"): date_str = date_str[1:]
-    
-    return {"val": total_val, "pl": total_pl, "date": date_str}
+        except Exception:
+            value_inr = file_value_inr
+            daily_pl = 0.0
 
-@st.cache_data(ttl=300)
-def load_prices_close() -> pd.DataFrame:
-    tickers = sorted({i["Ticker"] for i in portfolio_config})
-    d = yf.download(tickers, period="5d", interval="1d", auto_adjust=True, group_by="ticker", progress=False, threads=False)
-    if d is None or d.empty: return pd.DataFrame()
-    
-    if isinstance(d.columns, pd.MultiIndex):
-        lvl1 = d.columns.get_level_values(1)
-        if "Adj Close" in lvl1: c = d.xs("Adj Close", level=1, axis=1)
-        elif "Close" in lvl1: c = d.xs("Close", level=1, axis=1)
-        else: c = d.xs(lvl1[0], level=1, axis=1)
-        c.columns = c.columns.get_level_values(0)
-    else:
-        c = d["Adj Close"] if "Adj Close" in d.columns else d["Close"]
-        if isinstance(c, pd.Series): c = c.to_frame(name=tickers[0])
-    return c.dropna(how="all")
+        total_value_inr += value_inr
+        total_daily_pl_inr += daily_pl
 
-@st.cache_data(ttl=60)
-def load_prices_intraday() -> pd.Series:
-    tickers = sorted({i["Ticker"] for i in portfolio_config})
-    last_p = {}
-    for t in tickers:
-        try:
-            tkr = yf.Ticker(t)
-            h = tkr.history(period="5d", interval="1m", prepost=True)
-            if not h.empty: last_p[t] = float(h["Close"].iloc[-1])
-        except: continue
-    return pd.Series(last_p) if last_p else pd.Series(dtype=float)
+    return {"total_value_inr": total_value_inr, "daily_pl_inr": total_daily_pl_inr}
 
-def get_market_status():
-    us_tz = ZoneInfo("America/New_York")
-    now = datetime.now(us_tz)
-    t = now.time()
-    if now.weekday() >= 5: return "Post Market"
-    if time(4,0) <= t < time(9,30): return "Pre-Market"
-    if time(9,30) <= t < time(16,0): return "Live Market"
-    return "Post Market"
+# ---------- FX HELPERS ----------
 
+@st.cache_data(ttl=3600)
 def get_aed_inr_rate_from_yahoo() -> float:
     try:
         tkr = yf.Ticker("AEDINR=X")
         hist = tkr.history(period="5d")
-        if hist is None or hist.empty: return 22.50
+        if hist is None or hist.empty or "Close" not in hist.columns:
+            return 22.50
         return float(hist["Close"].iloc[-1])
-    except: return 22.50
+    except Exception:
+        return 22.50
 
-def build_us_positions(close_df, live_s):
-    rows = []
-    us_tz = ZoneInfo("America/New_York")
-    today = datetime.now(us_tz).date()
-    
-    for i in portfolio_config:
-        t = i["Ticker"]; u = i["Units"]; purch = i["PurchaseValAED"]
-        
-        lp = 0.0
-        if live_s is not None: lp = float(live_s.get(t, 0.0))
-        if lp == 0 and not close_df.empty: lp = float(close_df.iloc[-1].get(t, 0.0))
-        
-        # Prev Close
-        prev = 0.0
-        if not close_df.empty and t in close_df.columns:
-            s = close_df[t].dropna()
-            if len(s) >= 2:
-                prev = float(s.iloc[-2]) if s.index[-1].date() == today else float(s.iloc[-1])
-            elif len(s) == 1: prev = float(s.iloc[-1])
-            
-        if lp <= 0:
-            val_aed = purch; dpct = 0.0; dpl = 0.0
+
+def fmt_inr_lacs_from_aed(aed_value: float, aed_to_inr: float) -> str:
+    inr = aed_value * aed_to_inr
+    lacs = inr / 100000.0
+    return f"₹{lacs:,.2f} L"
+
+# ---------- PRICE FETCHING (REGULAR CLOSE) ----------
+
+@st.cache_data(ttl=300)
+def load_prices_close() -> pd.DataFrame:
+    tickers = sorted({item["Ticker"] for item in portfolio_config})
+    # Fetch 5 days to ensure we have previous close data even on weekends
+    data = yf.download(
+        tickers=tickers,
+        period="5d",
+        interval="1d",
+        auto_adjust=True,
+        group_by="ticker",
+        progress=False,
+        threads=False,
+    )
+    if data is None or data.empty:
+        return pd.DataFrame()
+    if isinstance(data.columns, pd.MultiIndex):
+        lvl1 = data.columns.get_level_values(1)
+        if "Adj Close" in lvl1:
+            close = data.xs("Adj Close", level=1, axis=1)
+        elif "Close" in lvl1:
+            close = data.xs("Close", level=1, axis=1)
         else:
-            p_usd = lp
-            val_aed = p_usd * 3.6725 * u
-            dpct = ((p_usd/prev)-1)*100 if prev > 0 else 0.0
-            dpl = val_aed * (dpct/100.0)
+            close = data.xs(lvl1[0], level=1, axis=1)
+        close.columns = close.columns.get_level_values(0)
+    else:
+        if "Adj Close" in data.columns:
+            close = data[["Adj Close"]]
+        elif "Close" in data.columns:
+            close = data[["Close"]]
+        else:
+            return pd.DataFrame()
+        close.columns = [tickers[0]]
+    close = close.dropna(how="all")
+    return close
+
+# ---------- PRICE FETCHING (INTRADAY) ----------
+
+@st.cache_data(ttl=60)
+def load_prices_intraday() -> pd.Series:
+    """Get last intraday price per ticker using 1m data with pre/post market enabled."""
+    tickers = sorted({item["Ticker"] for item in portfolio_config})
+    last_prices: dict[str, float] = {}
+
+    us_tz = ZoneInfo("America/New_York")
+    
+    # We don't filter by "Today" anymore, we just take the absolute latest tick available
+    # This ensures we see Post-Market data even if it is technically "tomorrow" or weekend
+    for t in tickers:
+        try:
+            tkr = yf.Ticker(t)
+            # Fetch 5 days to be safe on weekends
+            hist = tkr.history(period="5d", interval="1m", prepost=True)
+            if hist is None or hist.empty:
+                continue
             
-        rows.append({
-            "Name": i["Name"], "Ticker": t, "Owner": i["Owner"], "ValueAED": val_aed,
-            "DayPLAED": dpl, "PurchaseAED": purch, "DayPct": dpct
-        })
-    return pd.DataFrame(rows)
+            # The last row is the latest trade (Pre, Live, or Post)
+            last_prices[t] = float(hist["Close"].iloc[-1])
+        except Exception:
+            continue
+
+    if not last_prices:
+        return pd.Series(dtype=float)
+    return pd.Series(last_prices)
+
+# ---------- MARKET STATUS & DATA SOURCE ----------
+
+def get_market_phase_and_prices():
+    us_tz = ZoneInfo("America/New_York")
+    now_us = datetime.now(us_tz)
+    weekday = now_us.weekday()
+    t = now_us.time()
+    
+    # Define Strings based on Time
+    if weekday >= 5:
+        # Weekend -> "Post Market" (Last State)
+        phase_str = "[Post Market]"
+    else:
+        # Weekday Logic
+        if time(4,0) <= t < time(9,30):
+            phase_str = "[Pre-Market]"
+        elif time(9,30) <= t < time(16,0):
+            phase_str = "[Live Market]"
+        else:
+            # Evenings/Nights -> "Post Market"
+            phase_str = "[Post Market]"
+
+    base_close = load_prices_close()
+    intraday = load_prices_intraday()
+
+    # Always prefer intraday if available as it has pre/post info
+    if intraday is None or intraday.empty:
+        return phase_str, base_close
+
+    return phase_str, intraday
+
+# ---------- PORTFOLIO BUILDERS ----------
+
+def build_positions_from_prices(prices_close: pd.DataFrame, prices_intraday: pd.Series | None) -> pd.DataFrame:
+    rows = []
+    
+    # We need a robust "Previous Close" to calculate change against.
+    # prices_close has daily candles. 
+    # If today is trading, prices_close.iloc[-1] might be *today's* partial bar.
+    # We need Yesterday's close.
+    
+    for item in portfolio_config:
+        t = item["Ticker"]
+        units = float(item["Units"])
+        purchase = float(item["PurchaseValAED"])
+
+        # 1. Get Live Price
+        live_price = 0.0
+        if prices_intraday is not None:
+            live_price = float(prices_intraday.get(t, 0.0))
+        
+        # Fallback to close if no intraday
+        if live_price == 0 and not prices_close.empty:
+             live_price = float(prices_close.iloc[-1].get(t, 0.0))
+
+        # 2. Get Previous Close (Reference for P&L)
+        prev_close_price = 0.0
+        if not prices_close.empty:
+            # Logic: If the last date in prices_close is TODAY, take the row before it.
+            # If the last date is YESTERDAY, take the last row.
+            last_date = prices_close.index[-1].date()
+            us_tz = ZoneInfo("America/New_York")
+            today_date = datetime.now(us_tz).date()
+            
+            col_data = prices_close[t]
+            if len(col_data) >= 2:
+                if last_date == today_date:
+                    prev_close_price = float(col_data.iloc[-2])
+                else:
+                    prev_close_price = float(col_data.iloc[-1])
+            elif len(col_data) == 1:
+                prev_close_price = float(col_data.iloc[-1]) # Best guess if no history
+
+        if live_price <= 0:
+            value_aed = purchase
+            day_pct = 0.0
+            day_pl_aed = 0.0
+            total_pl_aed = 0.0
+            total_pct = 0.0
+            price_usd = 0.0
+        else:
+            price_usd = live_price
+            price_aed = price_usd * USD_TO_AED
+            value_aed = price_aed * units
+
+            # Day P&L vs Previous Close
+            if prev_close_price > 0:
+                day_pct = (price_usd / prev_close_price - 1.0) * 100.0
+            else:
+                day_pct = 0.0
+                
+            day_pl_aed = value_aed * (day_pct / 100.0)
+
+            total_pl_aed = value_aed - purchase
+            total_pct = (total_pl_aed / purchase) * 100.0 if purchase > 0 else 0.0
+
+        rows.append(
+            {
+                "Name": item["Name"],
+                "Ticker": t,
+                "Owner": item["Owner"],
+                "Sector": item["Sector"],
+                "Units": units,
+                "PriceUSD": price_usd,
+                "ValueAED": value_aed,
+                "PurchaseAED": purchase,
+                "DayPct": day_pct,
+                "DayPLAED": day_pl_aed,
+                "TotalPct": total_pct,
+                "TotalPLAED": total_pl_aed,
+            }
+        )
+
+    df = pd.DataFrame(rows)
+    total_val = df["ValueAED"].sum()
+    df["WeightPct"] = df["ValueAED"] / total_val * 100.0 if total_val > 0 else 0.0
+    return df
 
 def aggregate_for_heatmap(df: pd.DataFrame) -> pd.DataFrame:
-    if df.empty: return df
+    if df.empty:
+        return df
     mv = df[df["Owner"] == "MV"].copy()
     sv = df[df["Owner"] == "SV"].copy()
-    if sv.empty: return mv.reset_index(drop=True)
+    if sv.empty:
+        return mv.reset_index(drop=True)
 
-    # Summarize SV
-    sv_vals = {k: sv[k].sum() for k in ["ValueAED", "PurchaseAED", "DayPLAED", "Units"]}
-    sv_row = pd.DataFrame([{
-        "Name": "SV Portfolio", "Ticker": "SVPF", "Owner": "SV", "Sector": "Mixed",
-        "Units": sv_vals["Units"], "PriceUSD": 0.0, "ValueAED": sv_vals["ValueAED"], "PurchaseAED": sv_vals["PurchaseAED"],
-        "DayPct": (sv_vals["DayPLAED"] / sv_vals["ValueAED"] * 100.0) if sv_vals["ValueAED"] > 0 else 0.0,
-        "DayPLAED": sv_vals["DayPLAED"],
-        "WeightPct": 0.0
-    }])
-    
+    total_val_all = df["ValueAED"].sum()
+    sv_val = sv["ValueAED"].sum()
+    sv_purchase = sv["PurchaseAED"].sum()
+    sv_day_pl = sv["DayPLAED"].sum()
+    sv_total_pl = sv["TotalPLAED"].sum()
+
+    sv_row = pd.DataFrame(
+        [
+            {
+                "Name": "SV Portfolio",
+                "Ticker": "SVPF",
+                "Owner": "SV",
+                "Sector": "Mixed",
+                "Units": sv["Units"].sum(),
+                "PriceUSD": 0.0,
+                "ValueAED": sv_val,
+                "PurchaseAED": sv_purchase,
+                "DayPct": (sv_day_pl / sv_val * 100.0) if sv_val > 0 else 0.0,
+                "DayPLAED": sv_day_pl,
+                "TotalPct": (sv_total_pl / sv_purchase * 100.0) if sv_purchase > 0 else 0.0,
+                "TotalPLAED": sv_total_pl,
+                "WeightPct": (sv_val / total_val_all * 100.0) if total_val_all > 0 else 0.0,
+            }
+        ]
+    )
+
+    mv = mv.copy()
+    mv["WeightPct"] = mv["ValueAED"] / total_val_all * 100.0 if total_val_all > 0 else 0.0
+
     combined = pd.concat([mv, sv_row], ignore_index=True)
-    total_all = combined["ValueAED"].sum()
-    combined["WeightPct"] = combined["ValueAED"] / total_all * 100.0 if total_all > 0 else 0.0
     return combined
-    # ---------- EXECUTION & UI ----------
 
-# 1. Fetch Data
-m_status = get_market_status()
-p_close = load_prices_close()
-p_live = load_prices_intraday()
-us_df = build_us_positions(p_close, p_live)
-mf_data = compute_india_mf_aggregate()
-aed_rate = get_aed_inr_rate_from_yahoo()
+# ---------- DATA PIPELINE ----------
 
-# 2. Header
-st.markdown(f"""
-<div class="dashboard-header">
-  <div class="main-title">Stocks Dashboard</div>
-  <div class="sub-title">{m_status} • Currency: 1 AED = ₹{aed_rate:.2f}</div>
+market_status_str, price_source = get_market_phase_and_prices()
+prices_close = load_prices_close()
+
+if isinstance(price_source, pd.DataFrame):
+    positions = build_positions_from_prices(price_source, None)
+else:
+    positions = build_positions_from_prices(prices_close, price_source)
+
+agg_for_heatmap = aggregate_for_heatmap(positions) if not positions.empty else positions
+
+base_fx = get_aed_inr_rate_from_yahoo()
+AED_TO_INR = base_fx
+
+total_val_aed = positions["ValueAED"].sum()
+total_purchase_aed = positions["PurchaseAED"].sum()
+total_pl_aed = positions["TotalPLAED"].sum()
+day_pl_aed = positions["DayPLAED"].sum()
+
+total_pl_pct = (total_pl_aed / total_purchase_aed * 100.0) if total_purchase_aed > 0 else 0.0
+
+total_val_inr_lacs = fmt_inr_lacs_from_aed(total_val_aed, AED_TO_INR)
+total_pl_inr_lacs = fmt_inr_lacs_from_aed(total_pl_aed, AED_TO_INR)
+day_pl_inr_lacs = fmt_inr_lacs_from_aed(day_pl_aed, AED_TO_INR)
+
+overall_pct_str = f"{total_pl_pct:+.2f}%"
+
+# ---------- HEADER ----------
+
+st.markdown(
+    f"""
+<div class="card">
+  <div class="page-title">Stocks Dashboard</div>
+  <div class="page-subtitle">{market_status_str} Data</div>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
-# 3. Tabs
-tab1, tab2, tab3, tab4 = st.tabs(["Overview", "SV Stocks", "US Stocks", "India MF"])
+# ---------- TABS ----------
 
-with tab1:
-    # Aggregates
-    us_val_inr = us_df["ValueAED"].sum() * aed_rate
-    us_pl_inr = us_df["DayPLAED"].sum() * aed_rate
-    us_pct = (us_df["DayPLAED"].sum() / (us_df["ValueAED"].sum() - us_df["DayPLAED"].sum()) * 100) if us_df["ValueAED"].sum() > 0 else 0
+overview_tab, sv_tab, us_tab, mf_tab = st.tabs([
+    "🪙 Overview",
+    "💷 SV Stocks",
+    "💵 US Stocks",
+    "💴 India MF",
+])
+
+# ---------- HOME TAB ----------
+
+with overview_tab:
+    # --- 1. PREPARE DATA FOR CARDS ---
+
+    # A. US Stocks
+    us_day_pl_inr = day_pl_aed * AED_TO_INR
+    us_prev_val_aed = total_val_aed - day_pl_aed
+    us_day_pct = (day_pl_aed / us_prev_val_aed * 100.0) if us_prev_val_aed > 0 else 0.0
+
+    # B. India Mutual Funds
+    mf_agg = compute_india_mf_aggregate()
+    mf_val_inr = float(mf_agg.get("total_value_inr", 0.0) or 0.0)
+    mf_day_pl_inr = float(mf_agg.get("daily_pl_inr", 0.0) or 0.0)
     
-    mf_val = mf_data["val"]
-    mf_pl = mf_data["pl"]
-    mf_pct = (mf_pl / (mf_val - mf_pl) * 100) if (mf_val - mf_pl) > 0 else 0.0
+    # MF Change %
+    mf_prev_val = mf_val_inr - mf_day_pl_inr
+    mf_day_pct = (mf_day_pl_inr / mf_prev_val * 100.0) if mf_prev_val > 0 else 0.0
+
+    # MF ABSOLUTE RETURN %
+    mf_total_cost = sum(item["CostINR"] for item in MF_CONFIG)
+    mf_total_profit = mf_val_inr - mf_total_cost
+    mf_abs_return_pct = (mf_total_profit / mf_total_cost * 100.0) if mf_total_cost > 0 else 0.0
+
+    # --- 2. RENDER CARDS ---
     
-    # Calculate Total Portfolio Cost for Absolute Return (using config)
-    mf_tot_cost = sum(i["CostINR"] for i in MF_CONFIG)
-    mf_abs_ret = ((mf_val - mf_tot_cost)/mf_tot_cost*100) if mf_tot_cost > 0 else 0.0
-    
-    # Render 4 Cards
     c1, c2, c3, c4 = st.columns(4)
-    
-    # Card 1: US Profit (Dynamic Header)
-    render_card(c1, m_status, "TODAY", f"₹{us_pl_inr:,.0f}", f"{us_pct:+.2f}%", "US Stocks")
-    
-    # Card 2: MF Profit (Dynamic Date)
-    render_card(c2, mf_data["date"], "CHANGE", f"₹{mf_pl:,.0f}", f"{mf_pct:+.2f}%", "India MF")
-    
-    # Card 3 & 4: Holdings
-    us_tot_pct = (us_df["ValueAED"].sum() - us_df["PurchaseAED"].sum()) / us_df["PurchaseAED"].sum() * 100
-    
-    render_card(c3, "TOTAL HOLDING", "VALUE", fmt_inr_lacs(us_val_inr), f"{us_tot_pct:+.2f}%", "US Stocks")
-    render_card(c4, "TOTAL HOLDING", "VALUE", fmt_inr_lacs(mf_val), f"{mf_abs_ret:+.2f}%", "India MF")
 
-    # Heatmap
-    st.subheader("Asset Performance")
-    agg_df = aggregate_for_heatmap(us_df)
-    
-    if not agg_df.empty:
-        # Prep Heatmap Data
-        hm = agg_df.copy()
-        hm["ValueINR"] = hm["ValueAED"] * aed_rate
-        hm["PL_INR"] = hm["DayPLAED"] * aed_rate
-        
-        # Add MF Block
-        hm = pd.concat([hm, pd.DataFrame([{
-            "Name": "India MF", "Ticker": "IND", "ValueINR": mf_val, "PL_INR": mf_pl
-        }])], ignore_index=True)
-        
-        hm["ColorVal"] = hm["PL_INR"]
-        hm["Label"] = hm.apply(lambda x: f"{x['Name']}<br>₹{x['PL_INR']/1000:.0f}k", axis=1)
-        
-        fig = px.treemap(hm, path=["Name"], values="ValueINR", color="ColorVal",
-                         color_continuous_scale=[COLOR_DANGER, "#1e293b", COLOR_SUCCESS],
-                         color_continuous_midpoint=0)
-        fig.update_traces(textinfo="label", texttemplate="%{label}", textfont_size=14)
-        fig.update_layout(margin=dict(t=0,l=0,r=0,b=0), paper_bgcolor="rgba(0,0,0,0)")
-        st.plotly_chart(fig, use_container_width=True)
-
-with tab2:
-    # Re-calculate SV specific aggregates
-    sv_only = us_df[us_df["Owner"] == "SV"]
-    if sv_only.empty: st.info("No SV positions.")
-    else:
-        sv_val_aed = sv_only["ValueAED"].sum()
-        sv_pl_aed = sv_only["DayPLAED"].sum()
-        sv_cost_aed = sv_only["PurchaseAED"].sum()
-        
-        sv_day_pct = (sv_pl_aed / (sv_val_aed - sv_pl_aed) * 100) if (sv_val_aed - sv_pl_aed) > 0 else 0
-        sv_tot_pct = ((sv_val_aed - sv_cost_aed)/sv_cost_aed * 100) if sv_cost_aed > 0 else 0
-        
-        c1, c2, c3 = st.columns(3)
-        render_card(c1, "TODAY'S PROFIT", "AED", f"{sv_pl_aed:,.0f}", f"{sv_day_pct:+.2f}%", "SV Portfolio")
-        render_card(c2, "TOTAL PROFIT", "AED", f"{(sv_val_aed - sv_cost_aed):,.0f}", f"{sv_tot_pct:+.2f}%", "SV Portfolio")
-        render_card(c3, "TOTAL HOLDING", "AED", f"{sv_val_aed:,.0f}", "", fmt_inr_lacs_from_aed(sv_val_aed, aed_rate))
-
-        # SV Heatmap
-        fig_sv = px.treemap(sv_only, path=["Name"], values="ValueAED", color="DayPLAED",
-                            color_continuous_scale=[COLOR_DANGER, "#1e293b", COLOR_SUCCESS],
-                            color_continuous_midpoint=0)
-        fig_sv.update_layout(margin=dict(t=0,l=0,r=0,b=0), paper_bgcolor="rgba(0,0,0,0)")
-        st.plotly_chart(fig_sv, use_container_width=True)
-
-with tab3:
-    # Detailed US List
-    for _, row in us_df.iterrows():
-        nm = row['Name']; tk = row['Ticker']
-        val_inr = row['ValueAED'] * aed_rate
-        pct = row['DayPct']
-        
-        st.markdown(f"""
-        <div class="kpi-container" style="min-height: auto; padding: 12px; margin-bottom: 8px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <div style="font-weight: 700; font-size: 1.1rem; color: #0f172a;">{nm}</div>
-                    <div style="font-size: 0.8rem; color: #64748b;">{tk}</div>
+    # Helper function
+    def render_grey_card(col, title, value_left, value_right):
+        with col:
+            st.markdown(
+                f"""
+                <div class="card mf-card" style="padding:12px 14px; margin-bottom:8px;">
+                    <div class="page-title" style="margin-bottom:4px; font-size: 0.85rem;">{title}</div>
+                    <div style="margin-top:6px; display:flex; justify-content:space-between; align-items:flex-end;">
+                        <div>
+                            <div class="kpi-value-main" style="font-size:1.1rem;">{value_left}</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div class="kpi-value-main" style="font-size:1.1rem;">{value_right}</div>
+                        </div>
+                    </div>
                 </div>
-                <div style="text-align: right;">
-                    <div style="font-weight: 700; font-size: 1.1rem; color: #0f172a;">{fmt_inr_lacs(val_inr)}</div>
-                    <div style="font-weight: 600; color: {'#16a34a' if pct>=0 else '#dc2626'};">{pct:+.2f}%</div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+    # Card 1: Dynamic Label - US Stocks
+    render_grey_card(
+        c1, 
+        f"{market_status_str} Profit - US Stocks", 
+        f"₹{us_day_pl_inr:,.0f}", 
+        f"{us_day_pct:+.2f}%"
+    )
+
+    # Card 2: 1-Day Change - India MF
+    render_grey_card(
+        c2, 
+        "1-Day Change - India MF", 
+        f"₹{mf_day_pl_inr:,.0f}", 
+        f"{mf_day_pct:+.2f}%"
+    )
+
+    # Card 3: Total Holding - US Stocks
+    render_grey_card(
+        c3, 
+        "Total Holding - US Stocks", 
+        total_val_inr_lacs,
+        f"{total_pl_pct:+.2f}%"
+    )
+
+    # Card 4: Total Holding - India MF
+    render_grey_card(
+        c4, 
+        "Total Holding - India MF", 
+        fmt_inr_lacs(mf_val_inr), 
+        f"{mf_abs_return_pct:.2f}%"
+    )
+
+    # --- 3. RENDER HEATMAP ---
+
+    st.markdown(
+        '''<div style="font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#16233a; font-size:0.75rem; margin:10px 0 4px 0;">Today's Gains</div>''',
+        unsafe_allow_html=True,
+    )
+
+    if agg_for_heatmap is None or agg_for_heatmap.empty:
+        st.info("No live price data. Showing static valuation only; heat map disabled.")
+    else:
+        hm = agg_for_heatmap.copy()
+        hm["DayPLINR"] = hm["DayPLAED"] * AED_TO_INR
+
+        if mf_val_inr > 0 or mf_day_pl_inr != 0.0:
+            ind_mf_row = {
+                "Name": "Indian MF",
+                "Ticker": "INDMF",
+                "Owner": "MF",
+                "Sector": "India MF",
+                "Units": 0.0,
+                "PriceUSD": 0.0,
+                "ValueAED": mf_val_inr / AED_TO_INR if mf_val_inr > 0 else 0.0,
+                "PurchaseAED": 0.0,
+                "DayPct": 0.0,
+                "DayPLAED": mf_day_pl_inr / AED_TO_INR,
+                "DayPLINR": mf_day_pl_inr, 
+                "TotalPct": 0.0,
+                "TotalPLAED": 0.0,
+                "WeightPct": 0.0,
+            }
+            hm = pd.concat([hm, pd.DataFrame([ind_mf_row])], ignore_index=True)
+
+        hm["SizeForHeatmap"] = hm["DayPLINR"].abs() + 1e-6
+        hm["DayPLK"] = hm["DayPLINR"] / 1000.0
+
+        def label_for_k(v: float) -> str:
+            if v >= 0:
+                return f"₹{abs(v):,.0f}k"
+            else:
+                return f"[₹{abs(v):,.0f}k]"
+
+        hm["DayPLKLabel"] = hm["DayPLK"].apply(label_for_k)
+
+        fig = px.treemap(
+            hm,
+            path=["Name"],
+            values="SizeForHeatmap",
+            color="DayPLINR",
+            color_continuous_scale=[COLOR_DANGER, "#16233a", COLOR_SUCCESS],
+            color_continuous_midpoint=0,
+            custom_data=["DayPLINR", "Ticker", "DayPLKLabel"],
+        )
+
+        fig.update_traces(
+            hovertemplate="<b>%{label}</b><br>Ticker: %{customdata[1]}<br>Day P&L: ₹%{customdata[0]:,.0f}<extra></extra>",
+            texttemplate="%{label}<br>%{customdata[2]}",
+            textfont=dict(family="Space Grotesk, sans-serif", color="#e6eaf0", size=11),
+            marker=dict(line=dict(width=0)),
+            root_color=COLOR_BG,
+        )
+
+        fig.update_layout(
+            margin=dict(t=0, l=0, r=0, b=0),
+            paper_bgcolor=COLOR_BG,
+            plot_bgcolor=COLOR_BG,
+            coloraxis_showscale=False,
+            font=dict(family="Space Grotesk, sans-serif"),
+        )
+
+        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+
+# ---------- SV TAB (Sae Vyas portfolio detail) ----------
+
+with sv_tab:
+
+    sv_positions = positions[positions["Owner"] == "SV"].copy()
+
+    if sv_positions.empty:
+        st.info("No SV positions found.")
+    else:
+        sv_total_val_aed = sv_positions["ValueAED"].sum()
+        sv_total_purchase_aed = sv_positions["PurchaseAED"].sum()
+        sv_total_pl_aed = sv_positions["TotalPLAED"].sum()
+        sv_day_pl_aed = sv_positions["DayPLAED"].sum()
+
+        sv_total_pl_pct = (sv_total_pl_aed / sv_total_purchase_aed * 100.0) if sv_total_purchase_aed > 0 else 0.0
+        prev_total_val = sv_total_val_aed - sv_day_pl_aed
+        sv_day_pl_pct = (sv_day_pl_aed / prev_total_val * 100.0) if prev_total_val > 0 else 0.0
+
+        sv_day_pl_aed_str = f"AED {sv_day_pl_aed:,.0f}"
+        sv_day_pl_pct_str = f"{sv_day_pl_pct:+.2f}%"
+        sv_total_pl_aed_str = f"AED {sv_total_pl_aed:,.0f}"
+        sv_total_pl_pct_str = f"{sv_total_pl_pct:+.2f}%"
+        sv_total_val_aed_str = f"AED {sv_total_val_aed:,.0f}"
+        sv_total_val_inr_lacs_str = fmt_inr_lacs_from_aed(sv_total_val_aed, AED_TO_INR)
+
+        # ---- Card 1: Today's Profit ----
+        st.markdown(
+            f"""
+            <div class="card mf-card" style="padding:12px 14px; margin-bottom:8px;">
+                <div class="page-title" style="margin-bottom:4px;">Today's Profit</div>
+                <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
+                    <div>
+                        <div class="kpi-value-main">{sv_day_pl_aed_str}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="kpi-value-main">{sv_day_pl_pct_str}</div>
+                    </div>
                 </div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
+            """,
+            unsafe_allow_html=True,
+        )
 
-with tab4:
-    # Mutual Fund Detailed List
-    if not MF_CONFIG: st.info("No MF Config")
+        # ---- Card 2: Total Profit ----
+        st.markdown(
+            f"""
+            <div class="card mf-card" style="padding:12px 14px; margin-bottom:8px;">
+                <div class="page-title" style="margin-bottom:4px;">Total Profit</div>
+                <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
+                    <div>
+                        <div class="kpi-value-main">{sv_total_pl_aed_str}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="kpi-value-main">{sv_total_pl_pct_str}</div>
+                    </div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        # ---- Card 3: Holding Value ----
+        st.markdown(
+            f"""
+            <div class="card mf-card" style="padding:12px 14px; margin-bottom:8px;">
+                <div class="page-title" style="margin-bottom:4px;">Total Holding Value</div>
+                <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
+                    <div>
+                        <div class="kpi-value-main">{sv_total_val_aed_str}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="kpi-value-main">{sv_total_val_inr_lacs_str}</div>
+                    </div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        st.markdown(
+            """<div style="font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#16233a; font-size:0.75rem; margin:4px 0;">Today's Gains – SV</div>""",
+            unsafe_allow_html=True,
+        )
+
+        hm_sv = sv_positions.copy()
+        hm_sv["Name"] = hm_sv["Name"].str.replace(r"\s*\[SV\]", "", regex=True)
+        hm_sv["SizeForHeatmap"] = hm_sv["DayPLAED"].abs() + 1e-6
+
+        def label_for_sv(v: float) -> str:
+            if v >= 0:
+                return f"AED {v:,.0f}"
+            else:
+                return f"[AED {abs(v):,.0f}]"
+
+        hm_sv["DayPLLabel"] = hm_sv["DayPLAED"].apply(label_for_sv)
+
+        fig_sv = px.treemap(
+            hm_sv,
+            path=["Name"],
+            values="SizeForHeatmap",
+            color="DayPLAED",
+            color_continuous_scale=[COLOR_DANGER, "#16233a", COLOR_SUCCESS],
+            color_continuous_midpoint=0,
+            custom_data=["DayPLAED", "Ticker", "DayPLLabel"],
+        )
+
+        fig_sv.update_traces(
+            hovertemplate="<b>%{label}</b><br>Ticker: %{customdata[1]}<br>Day P&L: AED %{customdata[0]:,.0f}<extra></extra>",
+            texttemplate="%{label}<br>%{customdata[2]}",
+            textfont=dict(family="Space Grotesk, sans-serif", color="#e6eaf0", size=11),
+            marker=dict(line=dict(width=0)),
+            root_color=COLOR_BG,
+        )
+
+        fig_sv.update_layout(
+            margin=dict(t=0, l=0, r=0, b=0),
+            paper_bgcolor=COLOR_BG,
+            plot_bgcolor=COLOR_BG,
+            coloraxis_showscale=False,
+            font=dict(family="Space Grotesk, sans-serif"),
+        )
+
+        st.plotly_chart(fig_sv, use_container_width=True, config={"displayModeBar": False})
+
+# ---------- US STOCKS TAB ----------
+
+with us_tab:
+    st.info("US Stocks tab coming next.")
+
+# ---------- INDIA MF TAB ----------
+
+
+with mf_tab:
+    if not MF_CONFIG:
+        st.info("No mutual fund data configured.")
     else:
+        mf_navs = load_mf_navs_from_yahoo()
         mf_rows = []
-        mf_navs_list = load_mf_navs_from_yahoo()
-        for item in MF_CONFIG:
-            sch = item["Scheme"]; units = item["Units"]; cost = item["CostINR"]; file_val = item.get("InitialValueINR", 0.0)
-            ln = mf_navs_list.get(item["Ticker"])
-            val = file_val
-            # Safety Check
-            if ln and ln > 0:
-                cand = ln * units
-                if file_val > 0 and 0.9 <= (cand/file_val) <= 1.1: val = cand
-                elif file_val == 0: val = cand
-            
-            # Abs Return
-            ret = ((val - cost)/cost * 100.0) if cost > 0 else 0.0
-            mf_rows.append({"n": sch, "v": val, "r": ret})
-        
-        mf_rows.sort(key=lambda x: x["v"], reverse=True)
-        
-        # Total MF Header
-        tot_v = sum(r["v"] for r in mf_rows)
-        tot_r = ((tot_v - mf_tot_cost)/mf_tot_cost * 100.0) if mf_tot_cost > 0 else 0.0
-        
-        st.markdown(f"""
-        <div class="kpi-container" style="background: #e2e8f0; border: none;">
-            <div class="kpi-header"><span class="kpi-label">MF PORTFOLIO</span></div>
-            <div class="kpi-main-row">
-                <span class="kpi-value-big">{fmt_inr_lacs(tot_v)}</span>
-                <span class="kpi-value-secondary txt-blue">{tot_r:.2f}%</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        for mf_entry in MF_CONFIG:
+            scheme = mf_entry["Scheme"]
+            units = float(mf_entry["Units"] or 0.0)
+            cost_inr = float(mf_entry["CostINR"] or 0.0)
+            file_value_inr = float(mf_entry.get("InitialValueINR", 0.0))
 
-        for r in mf_rows:
-            disp_name = r["n"].replace(" Fund Growth", "").split("\n")[0]
-            st.markdown(f"""
-            <div class="kpi-container" style="min-height: auto; padding: 12px; margin-bottom: 6px;">
-                <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                    <div style="font-weight: 600; font-size: 0.95rem; color: #334155;">{disp_name}</div>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 4px;">
-                    <div style="font-weight: 700; font-size: 1.1rem; color: #0f172a;">{fmt_inr_lacs(r["v"])}</div>
-                    <div style="font-weight: 600; font-size: 0.95rem; color: #0f172a;">{r["r"]:.1f}%</div>
+            live_nav = mf_navs.get(scheme)
+
+            # Safety check logic
+            value_inr = file_value_inr
+            if live_nav is not None and live_nav > 0 and units > 0:
+                candidate_value = live_nav * units
+                if file_value_inr > 0:
+                    ratio = candidate_value / file_value_inr
+                    if 0.9 <= ratio <= 1.1:
+                        value_inr = candidate_value
+                else:
+                    value_inr = candidate_value
+            
+            # Absolute return
+            if cost_inr > 0:
+                abs_return = (value_inr - cost_inr) / cost_inr * 100.0
+            else:
+                abs_return = 0.0
+
+            mf_rows.append(
+                {
+                    "scheme": scheme,
+                    "value_inr": value_inr,
+                    "return_pct": abs_return,
+                }
+            )
+
+        mf_rows.sort(key=lambda r: r["value_inr"], reverse=True)
+        total_value_inr = sum(r["value_inr"] for r in mf_rows)
+        mf_total_cost = sum(item["CostINR"] for item in MF_CONFIG)
+        
+        if mf_total_cost > 0:
+            total_abs_return_pct = (total_value_inr - mf_total_cost) / mf_total_cost * 100.0
+        else:
+            total_abs_return_pct = 0.0
+
+        total_value_str = fmt_inr_lacs(total_value_inr)
+        total_return_str = f"{total_abs_return_pct:.2f}%"
+
+        st.markdown(
+            f"""
+            <div class="card mf-card" style="padding:12px 14px; margin-bottom:8px;">
+                <div class="page-title" style="margin-bottom:4px;">Mutual Fund Holding</div>
+                <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
+                    <div>
+                        <div class="kpi-label" style="margin-bottom:1px;">Total Value</div>
+                        <div class="kpi-value-main">{total_value_str}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="kpi-label" style="margin-bottom:1px;">Total Return</div>
+                        <div class="kpi-value-main">{total_return_str}</div>
+                    </div>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            """,
+            unsafe_allow_html=True,
+        )
+
+        for row in mf_rows:
+            scheme = row["scheme"]
+            value_inr = row["value_inr"]
+            ret_pct = row["return_pct"]
+
+            display_name = scheme
+            parts = display_name.split()
+            if parts and all(ch.isdigit() or ch in "/-" for ch in parts[-1]):
+                display_name = " ".join(parts[:-1])
+            if "Fund Growth" in display_name:
+                display_name = display_name.replace(" Fund Growth", "")
+
+            value_str = fmt_inr_lacs(value_inr)
+            ret_str = f"{ret_pct:.1f}%"
+
+            st.markdown(
+                f"""
+                <div class="card mf-card" style="padding:8px 10px; margin-bottom:6px;">
+                    <div class="page-title" style="margin-bottom:4px;">{display_name}</div>
+                    <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
+                        <div>
+                            <div class="kpi-label" style="margin-bottom:1px;">Total Value</div>
+                            <div class="kpi-value-main">{value_str}</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div class="kpi-label" style="margin-bottom:1px;">Total Return</div>
+                            <div class="kpi-value-main">{ret_str}</div>
+                        </div>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
