@@ -63,18 +63,40 @@ st.markdown(
         flex-direction: column;
         
         /* DISTRIBUTION LOGIC:
-           space-between pushes the top label up and bottom label down,
-           creating maximum uniform space between the lines. */
+           space-between pushes content to edges. 
+           Reducing height pulls them closer. */
         justify-content: space-between; 
         
-        /* Height set to 100px to allow breathing room between lines */
-        height: 100px; 
+        /* REDUCED HEIGHT: From 100px to 86px to tighten spacing */
+        height: 86px; 
         
-        /* REDUCED PADDING: Less empty space at top/bottom edges */
         padding: 10px 14px !important; 
-        
         box-sizing: border-box;
     }
+
+    /* --- COLOR CORRECTION FOR MUTUAL FUND TAB & WHITE CARDS --- */
+    /* Strict overrides to ensure text is dark on light backgrounds */
+
+    .mf-card .page-title {
+        color: #020617 !important; /* Almost Black for Fund Names */
+        font-weight: 600;
+    }
+
+    .mf-card .kpi-label {
+        color: #475569 !important; /* Dark Slate Grey for Labels */
+        font-weight: 500;
+    }
+
+    .mf-card .kpi-value-main {
+        color: #0f1a2b !important; /* Dark Navy for Values in MF List */
+        font-weight: 700;
+    }
+    
+    .mf-card .kpi-number {
+         color: #0f1a2b !important; /* Dark Navy for Values in KPI Cards */
+    }
+
+    /* --------------------------------------------------------- */
 
     /* UNIFIED LABEL STYLE: Top/Bottom Labels */
     .kpi-label {
@@ -83,7 +105,6 @@ st.markdown(
         font-weight: 400; /* Normal weight */
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: #64748b; /* Slate grey */
         line-height: 1.0;
         white-space: nowrap;
         margin: 0;
@@ -94,9 +115,15 @@ st.markdown(
         font-family: 'Space Grotesk', sans-serif;
         font-size: 1.1rem; 
         font-weight: 700;
-        color: #0f1a2b;
         letter-spacing: -0.02em;
         line-height: 1.0;
+    }
+    
+    .kpi-value-main {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.0rem;
+        font-weight: 700;
+        line-height: 1.1;
     }
 
     /* Container for the middle row of numbers */
@@ -105,7 +132,7 @@ st.markdown(
         justify-content: space-between;
         align-items: center;
         width: 100%;
-        margin: 0; /* Margin removed; handled by justify-content: space-between */
+        margin: 0; 
     }
 
     .page-title {
