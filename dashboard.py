@@ -62,33 +62,34 @@ st.markdown(
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        /* Fixed height to ensure alignment, Auto width */
+        /* Fixed height to ensure alignment */
         height: 140px; 
         padding: 12px 14px !important;
         box-sizing: border-box;
     }
 
-    /* UNIFIED LABEL STYLE: Used for Top Title, Status, and Bottom Category */
+    /* UNIFIED LABEL STYLE: Top/Bottom Labels - NOT BOLD */
     .kpi-label {
         font-family: 'Space Grotesk', sans-serif;
-        font-size: 0.7rem; 
-        font-weight: 600;
+        font-size: 0.75rem; 
+        font-weight: 500; /* Regular/Medium weight, not bold */
         text-transform: uppercase;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.05em;
         color: #64748b; /* Slate grey */
         line-height: 1.2;
     }
 
-    /* UNIFIED VALUE STYLE: Restored to larger size */
+    /* UNIFIED VALUE STYLE: Large & Bold */
     .kpi-value-big {
         font-family: 'Space Grotesk', sans-serif;
-        font-size: 1.5rem; /* Restored size */
+        font-size: 1.5rem; 
         font-weight: 700;
         color: #0f1a2b;
         letter-spacing: -0.02em;
         line-height: 1.1;
     }
 
+    /* SECONDARY VALUE STYLE (Percentage) */
     .kpi-value-sub {
         font-family: 'Space Grotesk', sans-serif;
         font-size: 1.1rem; 
@@ -725,30 +726,26 @@ with overview_tab:
     mf_total_profit = mf_val_inr - mf_total_cost
     mf_abs_return_pct = (mf_total_profit / mf_total_cost * 100.0) if mf_total_cost > 0 else 0.0
 
-    # --- 2. RENDER CARDS (FIXED 3-LAYER DESIGN) ---
+    # --- 2. RENDER CARDS (FIXED: NO INDENTATION) ---
     
     c1, c2, c3, c4 = st.columns(4)
 
     def render_new_kpi_card(col, top_label, main_value, right_value, bottom_label):
         with col:
-            st.markdown(
-                f"""
-                <div class="card mf-card">
-                    <div class="kpi-label">{top_label}</div>
-                    
-                    <div class="kpi-mid-row">
-                        <div class="kpi-value-big">{main_value}</div>
-                        <div class="kpi-value-sub">{right_value}</div>
-                    </div>
-                    
-                    <div class="kpi-label">{bottom_label}</div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+            # IMPORTANT: Indentation removed from HTML string to prevent 'code block' rendering
+            html_content = f"""
+<div class="card mf-card">
+<div class="kpi-label">{top_label}</div>
+<div class="kpi-mid-row">
+<div class="kpi-value-big">{main_value}</div>
+<div class="kpi-value-sub">{right_value}</div>
+</div>
+<div class="kpi-label">{bottom_label}</div>
+</div>
+"""
+            st.markdown(html_content, unsafe_allow_html=True)
 
     # Card 1: Today's Profit | Market Status -> US Stocks
-    # No Brackets. "Market" status is separated by a pipe.
     status_display = f"TODAY'S PROFIT <span style='opacity:0.5; margin:0 4px;'>|</span> {market_status_str.upper()}"
     
     render_new_kpi_card(
