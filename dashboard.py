@@ -264,7 +264,11 @@ portfolio_config = [
 ]
 
 # ---------- INDIA MF CONFIG ----------
-# Note: "InitialValueINR" acts as a fallback if Yahoo data fails, preventing "reduced value" errors.
+# CONSTANTS FOR DYNAMIC XIRR CALCULATION
+# These are the "Anchor" values from your uploaded file.
+PORTFOLIO_INITIAL_XIRR = 13.78
+PORTFOLIO_INITIAL_PROFIT = 1269608.61
+
 MF_CONFIG = [
     {
         "Scheme": "Axis Large and Mid Cap Fund Growth",
@@ -296,7 +300,7 @@ MF_CONFIG = [
         "Units": 267.83,
         "CostINR": 98000.0,
         "InitialValueINR": 260058.54,
-        "Ticker": "0P00005WD6.BO"
+        "Ticker": "0P00005WD7.BO"  # CORRECTED TICKER
     },
     {
         "Scheme": "ICICI Prudential NASDAQ 100 Index Fund Growth",
@@ -1117,21 +1121,25 @@ with mf_tab:
             # Use fixed cost from file if available
             cost_inr = float(mf_entry["CostINR"] or 0.0)
             
-            # NOTE: We switched from XIRR to Absolute Return logic here.
-            # No initial_profit/initial_xirr needed anymore for the simplified calculation.
+            # Use InitialValueINR (from file) as the anchor
+            file_value_inr = float(mf_entry.get("InitialValueINR", 0.0))
 
             live_nav = mf_navs.get(scheme)
 
-            # Calculate LIVE Value
-            # FIX: Only use live_nav if it's sensible. If Yahoo returns junk, fallback to config value.
+            # --- SANITY CHECK LOGIC ---
+            # If Yahoo returns a live NAV, check if the resulting value is sane 
+            # (within +/- 10% of the file value). If not, fallback to file value.
+            # This prevents 30% spikes due to bad ticks or mismatches.
+            value_inr = file_value_inr # Default to file
+            
             if live_nav is not None and live_nav > 0 and units > 0:
-                value_inr = live_nav * units
-            else:
-                # Fallback to the value from the uploaded file
-                value_inr = float(mf_entry.get("InitialValueINR", 0.0)) 
-                # If that is also 0, use cost
-                if value_inr == 0:
-                    value_inr = cost_inr
+                candidate_value = live_nav * units
+                if file_value_inr > 0:
+                    ratio = candidate_value / file_value_inr
+                    if 0.9 <= ratio <= 1.1:
+                        value_inr = candidate_value
+                else:
+                    value_inr = candidate_value
             
             # --- ABSOLUTE RETURN CALCULATION (Per Fund) ---
             # Formula: (Current Value - Invested Amount) / Invested Amount * 100
