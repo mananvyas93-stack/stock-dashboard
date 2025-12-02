@@ -54,18 +54,26 @@ st.markdown(
         margin-bottom: 8px;
     }
 
-    /* --- KPI CARD STYLING --- */
+    /* --- KPI CARD STYLING (UPDATED) --- */
     .mf-card {
         background: #f4f6f8 !important;
         border-color: #e0e4ea !important;
         color: #0f1a2b !important;
         display: flex;
         flex-direction: column;
-        justify-content: center; /* Center content vertically */
-        height: 90px; /* Reduced height to remove empty space */
-        padding: 8px 12px !important;
+        
+        /* DISTRIBUTION LOGIC:
+           space-between pushes the top label up and bottom label down,
+           creating maximum uniform space between the lines. */
+        justify-content: space-between; 
+        
+        /* Height set to 100px to allow breathing room between lines */
+        height: 100px; 
+        
+        /* REDUCED PADDING: Less empty space at top/bottom edges */
+        padding: 10px 14px !important; 
+        
         box-sizing: border-box;
-        gap: 2px; /* Small gap between rows */
     }
 
     /* UNIFIED LABEL STYLE: Top/Bottom Labels */
@@ -96,7 +104,8 @@ st.markdown(
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin: 4px 0; /* Tight margin */
+        width: 100%;
+        margin: 0; /* Margin removed; handled by justify-content: space-between */
     }
 
     .page-title {
