@@ -61,14 +61,14 @@ st.markdown(
         color: #0f1a2b !important;
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
-        height: 110px; /* Slightly reduced height since fonts are smaller */
-        padding: 10px 12px !important;
+        justify-content: center; /* Center content vertically */
+        height: 90px; /* Reduced height to remove empty space */
+        padding: 8px 12px !important;
         box-sizing: border-box;
+        gap: 2px; /* Small gap between rows */
     }
 
     /* UNIFIED LABEL STYLE: Top/Bottom Labels */
-    /* UPDATED: No Bold (400), Smaller Size to fix overflow */
     .kpi-label {
         font-family: 'Space Grotesk', sans-serif;
         font-size: 0.6rem; 
@@ -76,15 +76,15 @@ st.markdown(
         text-transform: uppercase;
         letter-spacing: 0.05em;
         color: #64748b; /* Slate grey */
-        line-height: 1.1;
-        white-space: nowrap; /* Tries to keep on one line, font size handles the rest */
+        line-height: 1.0;
+        white-space: nowrap;
+        margin: 0;
     }
 
     /* UNIFIED NUMBER STYLE: Value & Percentage */
-    /* UPDATED: Both same size, smaller than before */
     .kpi-number {
         font-family: 'Space Grotesk', sans-serif;
-        font-size: 1.1rem; /* Reduced from 1.5rem */
+        font-size: 1.1rem; 
         font-weight: 700;
         color: #0f1a2b;
         letter-spacing: -0.02em;
@@ -95,9 +95,8 @@ st.markdown(
     .kpi-mid-row {
         display: flex;
         justify-content: space-between;
-        align-items: center; /* Center aligned vertical */
-        margin-top: auto;
-        margin-bottom: auto;
+        align-items: center;
+        margin: 4px 0; /* Tight margin */
     }
 
     .page-title {
@@ -111,7 +110,7 @@ st.markdown(
 
     .page-subtitle {
         font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        font-size: 0.7rem;
+        font-size: 0.75rem;
         color: var(--muted);
         margin: 0;
         letter-spacing: 0.03em;
@@ -520,6 +519,96 @@ def get_market_phase_and_prices():
 
     return phase_str, intraday
 
+@st.cache_data(ttl=60)
+def get_market_indices_change(phase_str: str) -> str:
+    """
+    Fetches Nifty 50 and Nasdaq 100 changes.
+    Uses 'QMI' (Pre) and 'QIV' (Post) if available, falling back to QQQ.
+    """
+    
+    # 1. NIFTY 50
+    nifty_str = "Nifty 0.0%"
+    try:
+        nifty = yf.Ticker("^NSEI")
+        hist = nifty.history(period="2d")
+        if len(hist) >= 1:
+            # Nifty is mostly closed when US is active, so we just take last close diff
+            close_now = hist["Close"].iloc[-1]
+            if len(hist) >= 2:
+                prev_close = hist["Close"].iloc[-2]
+                pct = (close_now / prev_close - 1) * 100
+                val_str = f"{pct:.1f}%"
+                if pct < 0:
+                    val_str = f"[{abs(pct):.1f}%]"
+                nifty_str = f"Nifty {val_str}"
+    except:
+        pass
+
+    # 2. NASDAQ 100
+    nasdaq_str = "Nasdaq 0.0%"
+    
+    # Determine which ticker to TRY first based on phase
+    target_ticker = "QQQ" # Default
+    status_label = ""
+    
+    if "Pre" in phase_str:
+        target_ticker = "^QMI" # Try the specific indicator
+        status_label = "(Pre-market)"
+    elif "Post" in phase_str:
+        target_ticker = "^QIV" # Try the specific indicator
+        status_label = "(Post-market)"
+    
+    try:
+        # Try fetching the target (QMI/QIV or QQQ)
+        tkr = yf.Ticker(target_ticker)
+        # We need prepost=True to see QMI/QIV data if it exists, or QQQ ext hours
+        hist = tkr.history(period="1d", interval="1m", prepost=True)
+        
+        # If QMI/QIV fails (empty), FALLBACK to QQQ
+        if hist.empty and target_ticker in ["^QMI", "^QIV"]:
+             tkr = yf.Ticker("QQQ")
+             hist = tkr.history(period="1d", interval="1m", prepost=True)
+        
+        if not hist.empty:
+            curr = hist["Close"].iloc[-1]
+            # We need a reference price. 
+            # Ideally previous day close.
+            prev_close = 0.0
+            
+            # Fetch daily history for close
+            daily = tkr.history(period="5d")
+            if len(daily) >= 1:
+                # If we are in pre-market today, compare vs Yesterday Close
+                # If we are in post-market today, compare vs Today Close (usually)
+                # Simpler: Just compare vs the last available 'regular' close
+                prev_close = daily["Close"].iloc[-1]
+                # If the 1m data is 'newer' than the daily close, use daily close as ref
+                # If 1m data timestamp is same day as daily close, we might need T-1 close
+                
+                # Robust fallback: use T-1 close if available
+                if len(daily) >= 2:
+                     # Check dates
+                     last_day_date = daily.index[-1].date()
+                     now_date = datetime.now(ZoneInfo("America/New_York")).date()
+                     if last_day_date == now_date:
+                         # Today's daily bar exists (maybe live or closed)
+                         prev_close = daily["Close"].iloc[-2]
+                     else:
+                         prev_close = daily["Close"].iloc[-1]
+            
+            if prev_close > 0:
+                pct = (curr / prev_close - 1) * 100
+                val_str = f"{pct:.1f}%"
+                if pct < 0:
+                     val_str = f"[{abs(pct):.1f}%]"
+                nasdaq_str = f"Nasdaq {status_label} {val_str}"
+
+    except:
+        pass
+
+    return f"{nifty_str} <span style='opacity:0.4; margin:0 6px;'>|</span> {nasdaq_str}"
+
+
 # ---------- PORTFOLIO BUILDERS ----------
 
 def build_positions_from_prices(prices_close: pd.DataFrame, prices_intraday: pd.Series | None) -> pd.DataFrame:
@@ -651,6 +740,7 @@ def aggregate_for_heatmap(df: pd.DataFrame) -> pd.DataFrame:
 
 market_status_str, price_source = get_market_phase_and_prices()
 prices_close = load_prices_close()
+header_metrics_str = get_market_indices_change(market_status_str)
 
 if isinstance(price_source, pd.DataFrame):
     positions = build_positions_from_prices(price_source, None)
@@ -681,7 +771,7 @@ st.markdown(
     f"""
 <div class="card">
   <div class="page-title">Stocks Dashboard</div>
-  <div class="page-subtitle">{market_status_str} Data</div>
+  <div class="page-subtitle">{header_metrics_str}</div>
 </div>
 """,
     unsafe_allow_html=True,
