@@ -18,7 +18,7 @@ st.set_page_config(
 st.markdown(
     """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..24,400,1,0&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..24,400,1,0&display=swap');
 
     :root {
         --bg: #0f1a2b;
@@ -62,46 +62,40 @@ st.markdown(
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        /* Fixed height to ensure alignment */
-        height: 140px; 
-        padding: 12px 14px !important;
+        height: 110px; /* Slightly reduced height since fonts are smaller */
+        padding: 10px 12px !important;
         box-sizing: border-box;
     }
 
-    /* UNIFIED LABEL STYLE: Top/Bottom Labels - NOT BOLD */
+    /* UNIFIED LABEL STYLE: Top/Bottom Labels */
+    /* UPDATED: No Bold (400), Smaller Size to fix overflow */
     .kpi-label {
         font-family: 'Space Grotesk', sans-serif;
-        font-size: 0.75rem; 
-        font-weight: 500; /* Regular/Medium weight, not bold */
+        font-size: 0.6rem; 
+        font-weight: 400; /* Normal weight */
         text-transform: uppercase;
         letter-spacing: 0.05em;
         color: #64748b; /* Slate grey */
-        line-height: 1.2;
+        line-height: 1.1;
+        white-space: nowrap; /* Tries to keep on one line, font size handles the rest */
     }
 
-    /* UNIFIED VALUE STYLE: Large & Bold */
-    .kpi-value-big {
+    /* UNIFIED NUMBER STYLE: Value & Percentage */
+    /* UPDATED: Both same size, smaller than before */
+    .kpi-number {
         font-family: 'Space Grotesk', sans-serif;
-        font-size: 1.5rem; 
+        font-size: 1.1rem; /* Reduced from 1.5rem */
         font-weight: 700;
         color: #0f1a2b;
         letter-spacing: -0.02em;
-        line-height: 1.1;
-    }
-
-    /* SECONDARY VALUE STYLE (Percentage) */
-    .kpi-value-sub {
-        font-family: 'Space Grotesk', sans-serif;
-        font-size: 1.1rem; 
-        font-weight: 600;
-        color: #0f1a2b;
+        line-height: 1.0;
     }
 
     /* Container for the middle row of numbers */
     .kpi-mid-row {
         display: flex;
         justify-content: space-between;
-        align-items: baseline;
+        align-items: center; /* Center aligned vertical */
         margin-top: auto;
         margin-bottom: auto;
     }
@@ -726,19 +720,19 @@ with overview_tab:
     mf_total_profit = mf_val_inr - mf_total_cost
     mf_abs_return_pct = (mf_total_profit / mf_total_cost * 100.0) if mf_total_cost > 0 else 0.0
 
-    # --- 2. RENDER CARDS (FIXED: NO INDENTATION) ---
+    # --- 2. RENDER CARDS (FIXED: NO INDENTATION, UNIFIED FONTS) ---
     
     c1, c2, c3, c4 = st.columns(4)
 
     def render_new_kpi_card(col, top_label, main_value, right_value, bottom_label):
         with col:
-            # IMPORTANT: Indentation removed from HTML string to prevent 'code block' rendering
+            # HTML content must be flush left to avoid code block rendering
             html_content = f"""
 <div class="card mf-card">
 <div class="kpi-label">{top_label}</div>
 <div class="kpi-mid-row">
-<div class="kpi-value-big">{main_value}</div>
-<div class="kpi-value-sub">{right_value}</div>
+<div class="kpi-number">{main_value}</div>
+<div class="kpi-number">{right_value}</div>
 </div>
 <div class="kpi-label">{bottom_label}</div>
 </div>
