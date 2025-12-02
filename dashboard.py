@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# ---------- THEME / CSS ----------
+# ---------- THEME / CSS (New Hierarchy) ----------
 st.markdown(
     """
 <style>
@@ -45,37 +45,30 @@ st.markdown(
         max-width: 900px;
     }
 
-    .card {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        padding: 6px 10px;
-        box-shadow: none;
-        margin-bottom: 8px;
-    }
-
     /* --- NEW ENHANCED KPI CARD CSS --- */
     .mf-card {
         background: #f4f6f8 !important;
-        border-color: #e0e4ea !important;
-        color: #0f1a2b !important;
+        border: 1px solid #e0e4ea !important;
+        border-radius: 8px;
         padding: 12px 14px !important;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        min-height: 100px; 
+        min-height: 90px;
+        margin-bottom: 8px;
     }
 
+    /* Top Row: Left Label + Right Label */
     .kpi-top-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 6px;
+        margin-bottom: 4px;
     }
 
     .kpi-sub-left {
         font-family: 'Space Grotesk', sans-serif;
-        font-size: 0.7rem;
+        font-size: 0.75rem; /* 12px */
         font-weight: 600;
         text-transform: uppercase;
         color: #64748b; /* Slate-500 */
@@ -84,44 +77,48 @@ st.markdown(
 
     .kpi-sub-right {
         font-family: 'Space Grotesk', sans-serif;
-        font-size: 0.7rem;
+        font-size: 0.75rem; /* 12px */
+        font-weight: 500;
         color: #94a3b8; /* Slate-400 */
         text-align: right;
     }
 
+    /* Main Row: Big Value + Pct */
     .kpi-main-row {
         display: flex;
         justify-content: space-between;
-        align-items: baseline;
+        align-items: flex-end;
     }
 
     .kpi-value-big {
         font-family: 'Space Grotesk', sans-serif;
-        font-size: 1.4rem;
+        font-size: 1.5rem; /* 24px */
         font-weight: 700;
         color: #0f172a; /* Slate-900 */
         line-height: 1.1;
+        letter-spacing: -0.02em;
     }
 
     .kpi-value-secondary {
         font-family: 'Space Grotesk', sans-serif;
-        font-size: 1.0rem;
+        font-size: 1.1rem;
         font-weight: 600;
-        margin-left: 8px;
+        margin-bottom: 2px;
     }
 
+    /* Bottom Row: Main Category Label */
     .kpi-bottom-label {
         font-family: 'Space Grotesk', sans-serif;
-        font-size: 0.75rem;
-        font-weight: 500;
-        color: #475569; /* Slate-600 */
-        margin-top: 4px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #334155; /* Slate-700 */
+        margin-top: 6px;
     }
 
     /* Color Utilities */
-    .text-green { color: #16a34a; }
-    .text-red { color: #dc2626; }
-    .text-blue { color: #0f172a; }
+    .text-green { color: #16a34a !important; }
+    .text-red { color: #dc2626 !important; }
+    .text-blue { color: #0f172a !important; }
 
     /* --- TAB STYLING --- */
     .stTabs { margin-top: 0.75rem; }
@@ -145,6 +142,17 @@ st.markdown(
 
     /* Heatmap Container */
     .stPlotlyChart { background: transparent !important; }
+    
+    /* Header Card */
+    .header-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 6px 10px;
+        margin-bottom: 8px;
+    }
+    .page-title { color: #e6eaf0; font-size: 1.0rem; font-weight: 600; margin: 0; }
+    .page-subtitle { color: #9ba7b8; font-size: 0.7rem; margin: 0; }
 
 </style>
 """,
@@ -215,7 +223,7 @@ MF_CONFIG = [
         "Units": 267.83,
         "CostINR": 98000.0,
         "InitialValueINR": 260058.54,
-        "Ticker": "0P00005WD7.BO"
+        "Ticker": "0P00005WD7.BO" 
     },
     {
         "Scheme": "ICICI Prudential NASDAQ 100 Index Fund Growth",
@@ -266,7 +274,6 @@ MF_CONFIG = [
         "Ticker": "0P0001OF6C.BO"
     }
 ]
-
 # Helper: format INR values as "₹10.1 L"
 def fmt_inr_lacs(inr_value: float) -> str:
     if inr_value is None or inr_value != inr_value: return "₹0.0 L"
@@ -289,19 +296,7 @@ def load_mf_navs_from_yahoo() -> dict:
         except Exception: continue
     return navs
 
-def _load_india_mf_nav_history() -> dict:
-    path = Path("india_mf_nav_history.json")
-    if not path.exists(): return {}
-    try:
-        with path.open("r", encoding="utf-8") as f: return json.load(f)
-    except Exception: return {}
-
-def _save_india_mf_nav_history(history: dict) -> None:
-    path = Path("india_mf_nav_history.json")
-    try:
-        with path.open("w", encoding="utf-8") as f: json.dump(history, f)
-    except Exception: pass
-        def compute_india_mf_aggregate() -> dict:
+def compute_india_mf_aggregate() -> dict:
     """
     Computes aggregate Indian MF metrics with 1-Day Change Logic.
     Also returns the 'latest_date_str' formatted as '7 December'.
@@ -327,7 +322,6 @@ def _save_india_mf_nav_history(history: dict) -> None:
             # --- 1. CAPTURE DATE ---
             if not hist.empty:
                 last_idx = hist.index[-1]
-                # Convert to simple date object for comparison
                 current_dt_obj = last_idx.date()
                 if latest_dt_obj is None or current_dt_obj > latest_dt_obj:
                     latest_dt_obj = current_dt_obj
@@ -365,10 +359,7 @@ def _save_india_mf_nav_history(history: dict) -> None:
 
     # Format the date string (e.g., "7 December")
     if latest_dt_obj:
-        # %d (Day) %B (Month Name) -> "07 December" -> Strip leading zero if needed
-        # Simple approach:
         date_str = latest_dt_obj.strftime("%d %B")
-        # Optional: remove leading zero from day (e.g. 07 -> 7)
         if date_str.startswith("0"):
             date_str = date_str[1:]
     else:
@@ -437,8 +428,9 @@ def get_market_phase_and_prices():
     weekday = now_us.weekday()
     t = now_us.time()
     
+    # NEW DYNAMIC LABELS
     if weekday >= 5:
-        phase_str = "Post Market" # Simple string for display logic
+        phase_str = "Post Market" 
     else:
         if time(4,0) <= t < time(9,30): phase_str = "Pre-Market"
         elif time(9,30) <= t < time(16,0): phase_str = "Live Market"
@@ -457,13 +449,11 @@ def build_positions_from_prices(prices_close: pd.DataFrame, prices_intraday: pd.
         units = float(item["Units"])
         purchase = float(item["PurchaseValAED"])
 
-        # Live Price
         live_price = 0.0
         if prices_intraday is not None: live_price = float(prices_intraday.get(t, 0.0))
         if live_price == 0 and not prices_close.empty:
              live_price = float(prices_close.iloc[-1].get(t, 0.0))
 
-        # Prev Close (Robust)
         prev_close_price = 0.0
         if not prices_close.empty and t in prices_close.columns:
             col_data = prices_close[t].dropna()
@@ -471,7 +461,6 @@ def build_positions_from_prices(prices_close: pd.DataFrame, prices_intraday: pd.
             today_date = datetime.now(us_tz).date()
             if len(col_data) >= 2:
                 last_dt = col_data.index[-1].date()
-                # If the last candle is TODAY, prev close is -2. If yesterday, prev close is -1.
                 if last_dt == today_date: prev_close_price = float(col_data.iloc[-2])
                 else: prev_close_price = float(col_data.iloc[-1])
             elif len(col_data) == 1:
@@ -485,9 +474,12 @@ def build_positions_from_prices(prices_close: pd.DataFrame, prices_intraday: pd.
             price_aed = price_usd * USD_TO_AED
             value_aed = price_aed * units
             
-            day_pct = (price_usd / prev_close_price - 1.0) * 100.0 if prev_close_price > 0 else 0.0
-            day_pl_aed = value_aed * (day_pct / 100.0)
+            # Simple P&L vs Prev Close
+            if prev_close_price > 0:
+                day_pct = (price_usd / prev_close_price - 1.0) * 100.0
+            else: day_pct = 0.0
             
+            day_pl_aed = value_aed * (day_pct / 100.0)
             total_pl_aed = value_aed - purchase
             total_pct = (total_pl_aed / purchase) * 100.0 if purchase > 0 else 0.0
 
@@ -508,7 +500,6 @@ def aggregate_for_heatmap(df: pd.DataFrame) -> pd.DataFrame:
     sv = df[df["Owner"] == "SV"].copy()
     if sv.empty: return mv.reset_index(drop=True)
 
-    # Summarize SV
     sv_vals = {k: sv[k].sum() for k in ["ValueAED", "PurchaseAED", "DayPLAED", "TotalPLAED", "Units"]}
     sv_row = pd.DataFrame([{
         "Name": "SV Portfolio", "Ticker": "SVPF", "Owner": "SV", "Sector": "Mixed",
@@ -517,15 +508,14 @@ def aggregate_for_heatmap(df: pd.DataFrame) -> pd.DataFrame:
         "DayPLAED": sv_vals["DayPLAED"],
         "TotalPct": (sv_vals["TotalPLAED"] / sv_vals["PurchaseAED"] * 100.0) if sv_vals["PurchaseAED"] > 0 else 0.0,
         "TotalPLAED": sv_vals["TotalPLAED"],
-        "WeightPct": 0.0 # Re-calculated later
+        "WeightPct": 0.0
     }])
     
     combined = pd.concat([mv, sv_row], ignore_index=True)
     total_all = combined["ValueAED"].sum()
     combined["WeightPct"] = combined["ValueAED"] / total_all * 100.0 if total_all > 0 else 0.0
     return combined
-
-# ---------- UI & EXECUTION ----------
+    # ---------- UI & EXECUTION ----------
 
 market_status_str, price_source = get_market_phase_and_prices()
 prices_close = load_prices_close()
@@ -545,9 +535,9 @@ total_pl_pct = (total_pl_aed / total_purchase_aed * 100.0) if total_purchase_aed
 
 total_val_inr_lacs = fmt_inr_lacs_from_aed(total_val_aed, AED_TO_INR)
 
-# UI Layout
+# Header
 st.markdown(f"""
-<div class="card">
+<div class="header-card">
   <div class="page-title">Stocks Dashboard</div>
   <div class="page-subtitle">{market_status_str} Data</div>
 </div>
@@ -577,11 +567,10 @@ with overview_tab:
     c1, c2, c3, c4 = st.columns(4)
 
     def render_enhanced_card(col, top_left, top_right, main_val, sec_val, bottom_label):
-        # Determine color for secondary value
         sec_color = "text-green" if "+" in sec_val else ("text-red" if "-" in sec_val else "text-blue")
         with col:
             st.markdown(f"""
-            <div class="card mf-card">
+            <div class="mf-card">
                 <div class="kpi-top-row">
                     <span class="kpi-sub-left">{top_left}</span>
                     <span class="kpi-sub-right">{top_right}</span>
@@ -594,12 +583,10 @@ with overview_tab:
             </div>
             """, unsafe_allow_html=True)
 
-    # Card 1: US Profit
-    # Left: [Market Status], Right: Today's Profit
+    # Card 1: Dynamic US
     render_enhanced_card(c1, market_status_str, "Today's Profit", f"₹{us_day_pl_inr:,.0f}", f"{us_day_pct:+.2f}%", "US Stocks")
 
-    # Card 2: MF Profit
-    # Left: Latest Profit, Right: Date (e.g. 7 December)
+    # Card 2: India MF with Date
     render_enhanced_card(c2, "Latest Profit", mf_date_str, f"₹{mf_day_pl_inr:,.0f}", f"{mf_day_pct:+.2f}%", "India MF")
 
     # Card 3: US Holding
@@ -643,51 +630,70 @@ with overview_tab:
         fig.update_layout(margin=dict(t=0,l=0,r=0,b=0), paper_bgcolor=COLOR_BG, plot_bgcolor=COLOR_BG, coloraxis_showscale=False)
         st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
-# --- OTHER TABS (Placeholder Logic preserved) ---
+# --- OTHER TABS (Restored Full Logic) ---
 with sv_tab:
     if sv_positions.empty: st.info("No SV positions.")
     else:
-        # Just rendering the map for brevity in this Part 2
+        # Full SV Cards
+        sv_total_val_aed = sv_positions["ValueAED"].sum()
+        sv_total_pl_aed = sv_positions["TotalPLAED"].sum()
+        sv_day_pl_aed = sv_positions["DayPLAED"].sum()
+        sv_total_pl_pct = (sv_total_pl_aed / sv_positions["PurchaseAED"].sum() * 100.0) if sv_positions["PurchaseAED"].sum() > 0 else 0.0
+        sv_day_pl_pct = (sv_day_pl_aed / (sv_total_val_aed - sv_day_pl_aed) * 100.0) if (sv_total_val_aed - sv_day_pl_aed) > 0 else 0.0
+
+        c1, c2, c3 = st.columns(3)
+        render_enhanced_card(c1, "SV Portfolio", "Today's Profit", f"AED {sv_day_pl_aed:,.0f}", f"{sv_day_pl_pct:+.2f}%", "Realized + Unrealized")
+        render_enhanced_card(c2, "SV Portfolio", "Total Profit", f"AED {sv_total_pl_aed:,.0f}", f"{sv_total_pl_pct:+.2f}%", "Since Inception")
+        render_enhanced_card(c3, "SV Portfolio", "Total Holding", f"AED {sv_total_val_aed:,.0f}", "", fmt_inr_lacs_from_aed(sv_total_val_aed, AED_TO_INR))
+
         hm_sv = sv_positions.copy()
         hm_sv["Name"] = hm_sv["Name"].str.replace(r"\s*\[SV\]", "", regex=True)
         hm_sv["SizeForHeatmap"] = hm_sv["DayPLAED"].abs() + 1e-6
-        
-        fig_sv = px.treemap(hm_sv, path=["Name"], values="SizeForHeatmap", color="DayPLAED",
-            color_continuous_scale=[COLOR_DANGER, "#16233a", COLOR_SUCCESS], color_continuous_midpoint=0)
+        hm_sv["DayPLLabel"] = hm_sv["DayPLAED"].apply(lambda v: f"AED {v:,.0f}" if v>=0 else f"[AED {abs(v):,.0f}]")
+
+        fig_sv = px.treemap(
+            hm_sv, path=["Name"], values="SizeForHeatmap", color="DayPLAED",
+            color_continuous_scale=[COLOR_DANGER, "#16233a", COLOR_SUCCESS],
+            color_continuous_midpoint=0, custom_data=["DayPLAED", "Ticker", "DayPLLabel"]
+        )
+        fig_sv.update_traces(
+            hovertemplate="<b>%{label}</b><br>%{customdata[2]}<extra></extra>",
+            texttemplate="%{label}<br>%{customdata[2]}",
+            textfont=dict(family="Space Grotesk", color="#e6eaf0", size=11),
+            marker=dict(line=dict(width=0)), root_color=COLOR_BG
+        )
         fig_sv.update_layout(margin=dict(t=0,l=0,r=0,b=0), paper_bgcolor=COLOR_BG, plot_bgcolor=COLOR_BG, coloraxis_showscale=False)
         st.plotly_chart(fig_sv, use_container_width=True)
 
-with us_tab: st.info("US Stocks Details")
+with us_tab:
+    st.info("US Stocks Details")
 
 with mf_tab:
     if not MF_CONFIG: st.info("No MF Config")
     else:
-        # Same enhanced card style for MF List
         mf_rows = []
         mf_navs_list = load_mf_navs_from_yahoo()
         for item in MF_CONFIG:
             sch = item["Scheme"]; units = item["Units"]; cost = item["CostINR"]; file_val = item.get("InitialValueINR", 0.0)
             ln = mf_navs_list.get(sch)
             val = file_val
+            # Safety Check
             if ln and ln > 0:
                 cand = ln * units
                 if file_val > 0 and 0.9 <= (cand/file_val) <= 1.1: val = cand
                 elif file_val == 0: val = cand
+            
+            # Abs Return
             ret = ((val - cost)/cost * 100.0) if cost > 0 else 0.0
             mf_rows.append({"n": sch, "v": val, "r": ret})
         
         mf_rows.sort(key=lambda x: x["v"], reverse=True)
         
-        # Portfolio Header
+        # Header Card
         tot_v = sum(r["v"] for r in mf_rows); tot_c = sum(i["CostINR"] for i in MF_CONFIG)
         tot_r = ((tot_v - tot_c)/tot_c * 100.0) if tot_c > 0 else 0.0
         
-        st.markdown(f"""
-        <div class="card mf-card">
-            <div class="kpi-top-row"><span class="kpi-sub-left">Mutual Fund Portfolio</span></div>
-            <div class="kpi-main-row"><span class="kpi-value-big">{fmt_inr_lacs(tot_v)}</span><span class="kpi-value-secondary text-blue">{tot_r:.2f}%</span></div>
-        </div>
-        """, unsafe_allow_html=True)
+        render_enhanced_card(st, "Mutual Fund Portfolio", "Total Value", fmt_inr_lacs(tot_v), f"{tot_r:.2f}%", "Weighted Return")
 
         for r in mf_rows:
             disp_name = r["n"].replace(" Fund Growth", "").split("\n")[0]
