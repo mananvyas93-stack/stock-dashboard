@@ -54,14 +54,39 @@ st.markdown(
         margin-bottom: 8px;
     }
 
-    .kpi-card {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        padding: 10px 12px;
-        box-shadow: none;
-        margin-top: 4px;
+    /* Updated KPI Card Styling for Uniformity */
+    .mf-card {
+        background: #f4f6f8 !important;
+        border-color: #e0e4ea !important;
+        color: #0f1a2b !important;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 100px; /* Forces equal height */
+    }
+
+    .mf-card .kpi-label-top {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #64748b; /* Slate grey for top label */
         margin-bottom: 4px;
+    }
+
+    .mf-card .kpi-label-bottom {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #94a3b8; /* Lighter grey for bottom label */
+        margin-top: auto;
+    }
+
+    .mf-card .kpi-value-main {
+        color: #0f1a2b !important;
+        font-weight: 600;
+        font-size: 1.2rem;
     }
 
     .page-title {
@@ -79,22 +104,6 @@ st.markdown(
         color: var(--muted);
         margin: 0;
         letter-spacing: 0.03em;
-    }
-
-    .kpi-label {
-        font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--muted);
-        margin-bottom: 4px;
-    }
-
-    .kpi-value-main {
-        font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: var(--text);
     }
 
     .stPlotlyChart {
@@ -211,22 +220,6 @@ st.markdown(
 
     .stTabs [data-baseweb="tab-highlight"] {
         background-color: transparent !important;
-    }
-
-    /* MF card styling */
-    .mf-card {
-        background: #f4f6f8 !important;
-        border-color: #e0e4ea !important;
-        color: #0f1a2b !important;
-    }
-    .mf-card .page-title {
-        color: #0f1a2b !important;
-    }
-    .mf-card .kpi-label {
-        color: #4b5563 !important;
-    }
-    .mf-card .kpi-value-main {
-        color: #0f1a2b !important;
     }
 
 </style>
@@ -441,10 +434,10 @@ def get_aed_inr_rate_from_yahoo() -> float:
         tkr = yf.Ticker("AEDINR=X")
         hist = tkr.history(period="5d")
         if hist is None or hist.empty or "Close" not in hist.columns:
-            return 22.50
+            return 24.50
         return float(hist["Close"].iloc[-1])
     except Exception:
-        return 22.50
+        return 24.50
 
 
 def fmt_inr_lacs_from_aed(aed_value: float, aed_to_inr: float) -> str:
@@ -517,8 +510,7 @@ def load_prices_intraday() -> pd.Series:
     if not last_prices:
         return pd.Series(dtype=float)
     return pd.Series(last_prices)
-
-# ---------- MARKET STATUS & DATA SOURCE ----------
+    # ---------- MARKET STATUS & DATA SOURCE ----------
 
 def get_market_phase_and_prices():
     us_tz = ZoneInfo("America/New_York")
@@ -749,60 +741,60 @@ with overview_tab:
     mf_total_profit = mf_val_inr - mf_total_cost
     mf_abs_return_pct = (mf_total_profit / mf_total_cost * 100.0) if mf_total_cost > 0 else 0.0
 
-    # --- 2. RENDER CARDS ---
+    # --- 2. RENDER CARDS (NEW 3-LAYER DESIGN) ---
     
     c1, c2, c3, c4 = st.columns(4)
 
-    # Helper function
-    def render_grey_card(col, title, value_left, value_right):
+    def render_new_kpi_card(col, top_label, main_value, right_value, bottom_label):
         with col:
             st.markdown(
                 f"""
-                <div class="card mf-card" style="padding:12px 14px; margin-bottom:8px;">
-                    <div class="page-title" style="margin-bottom:4px; font-size: 0.85rem;">{title}</div>
-                    <div style="margin-top:6px; display:flex; justify-content:space-between; align-items:flex-end;">
-                        <div>
-                            <div class="kpi-value-main" style="font-size:1.1rem;">{value_left}</div>
-                        </div>
-                        <div style="text-align:right;">
-                            <div class="kpi-value-main" style="font-size:1.1rem;">{value_right}</div>
-                        </div>
+                <div class="card mf-card">
+                    <div class="kpi-label-top">{top_label}</div>
+                    <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                        <div class="kpi-value-main">{main_value}</div>
+                        <div class="kpi-value-main" style="font-size:1.1rem;">{right_value}</div>
                     </div>
+                    <div class="kpi-label-bottom">{bottom_label}</div>
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
 
-    # Card 1: Dynamic Label - US Stocks
-    render_grey_card(
+    # Card 1: Today's Profit | Market Status -> US Stocks
+    render_new_kpi_card(
         c1, 
-        f"{market_status_str} Profit - US Stocks", 
+        f"TODAY'S PROFIT <span style='color:var(--muted); opacity:0.7;'>| {market_status_str}</span>", 
         f"₹{us_day_pl_inr:,.0f}", 
-        f"{us_day_pct:+.2f}%"
+        f"{us_day_pct:+.2f}%",
+        "US STOCKS"
     )
 
-    # Card 2: 1-Day Change - India MF
-    render_grey_card(
+    # Card 2: Today's Profit -> India MF
+    render_new_kpi_card(
         c2, 
-        "1-Day Change - India MF", 
+        "TODAY'S PROFIT", 
         f"₹{mf_day_pl_inr:,.0f}", 
-        f"{mf_day_pct:+.2f}%"
+        f"{mf_day_pct:+.2f}%",
+        "INDIA MF"
     )
 
-    # Card 3: Total Holding - US Stocks
-    render_grey_card(
+    # Card 3: Total Holding -> US Stocks
+    render_new_kpi_card(
         c3, 
-        "Total Holding - US Stocks", 
+        "TOTAL HOLDING", 
         total_val_inr_lacs,
-        f"{total_pl_pct:+.2f}%"
+        f"{total_pl_pct:+.2f}%",
+        "US STOCKS"
     )
 
-    # Card 4: Total Holding - India MF
-    render_grey_card(
+    # Card 4: Total Holding -> India MF
+    render_new_kpi_card(
         c4, 
-        "Total Holding - India MF", 
+        "TOTAL HOLDING", 
         fmt_inr_lacs(mf_val_inr), 
-        f"{mf_abs_return_pct:.2f}%"
+        f"{mf_abs_return_pct:.2f}%",
+        "INDIA MF"
     )
 
     # --- 3. RENDER HEATMAP ---
