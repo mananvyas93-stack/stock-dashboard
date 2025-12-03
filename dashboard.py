@@ -61,30 +61,35 @@ st.markdown(
         color: #0f1a2b !important;
         display: flex;
         flex-direction: column;
+        
+        /* DISTRIBUTION LOGIC: space-between pushes content to edges. */
         justify-content: space-between; 
-        height: 92px; /* Matched to Overview Tab */
+        
+        /* HEIGHT: 92px for consistent look */
+        height: 92px; 
+        
         padding: 8px 14px !important; 
         box-sizing: border-box;
     }
 
     /* --- COLOR CORRECTION FOR MUTUAL FUND TAB & WHITE CARDS --- */
     .mf-card .page-title {
-        color: #020617 !important; 
+        color: #020617 !important; /* Almost Black for Fund Names */
         font-weight: 600;
     }
 
     .mf-card .kpi-label {
-        color: #475569 !important; 
+        color: #475569 !important; /* Dark Slate Grey for Labels */
         font-weight: 500;
     }
 
     .mf-card .kpi-value-main {
-        color: #0f1a2b !important; 
+        color: #0f1a2b !important; /* Dark Navy for Values in MF List */
         font-weight: 700;
     }
     
     .mf-card .kpi-number {
-         color: #0f1a2b !important; 
+         color: #0f1a2b !important; /* Dark Navy for Values in KPI Cards */
     }
 
     /* --------------------------------------------------------- */
@@ -93,7 +98,7 @@ st.markdown(
     .kpi-label {
         font-family: 'Space Grotesk', sans-serif;
         font-size: 0.6rem; 
-        font-weight: 400; 
+        font-weight: 400; /* Normal weight */
         text-transform: uppercase;
         letter-spacing: 0.05em;
         line-height: 1.0;
@@ -124,6 +129,13 @@ st.markdown(
         align-items: center;
         width: 100%;
         margin: 0; 
+    }
+
+    /* Helper for Top Row Split (Value Left, Return Right) */
+    .kpi-top-row {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
     }
 
     .page-title {
@@ -1013,47 +1025,59 @@ with sv_tab:
         sv_total_val_aed_str = f"AED {sv_total_val_aed:,.0f}"
         sv_total_val_inr_lacs_str = fmt_inr_lacs_from_aed(sv_total_val_aed, AED_TO_INR)
 
-        # Layout: 3 columns for 3 cards
-        c1, c2, c3 = st.columns(3)
-
-        # Card 1: Today's Profit
-        with c1:
-            st.markdown(f"""
-            <div class="card mf-card">
-                <div class="kpi-label">TODAY'S PROFIT</div>
-                <div class="kpi-mid-row">
-                    <div class="kpi-number">{sv_day_pl_aed_str}</div>
-                    <div class="kpi-number">{sv_day_pl_pct_str}</div>
+        # ---- Card 1: Today's Profit ----
+        st.markdown(
+            f"""
+            <div class="card mf-card" style="padding:12px 14px; margin-bottom:8px;">
+                <div class="page-title" style="margin-bottom:4px;">Today's Profit</div>
+                <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
+                    <div>
+                        <div class="kpi-value-main">{sv_day_pl_aed_str}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="kpi-value-main">{sv_day_pl_pct_str}</div>
+                    </div>
                 </div>
-                <div class="kpi-label">US STOCKS</div>
             </div>
-            """, unsafe_allow_html=True)
+            """,
+            unsafe_allow_html=True,
+        )
 
-        # Card 2: Total Profit
-        with c2:
-            st.markdown(f"""
-            <div class="card mf-card">
-                <div class="kpi-label">TOTAL PROFIT</div>
-                <div class="kpi-mid-row">
-                    <div class="kpi-number">{sv_total_pl_aed_str}</div>
-                    <div class="kpi-number">{sv_total_pl_pct_str}</div>
+        # ---- Card 2: Total Profit ----
+        st.markdown(
+            f"""
+            <div class="card mf-card" style="padding:12px 14px; margin-bottom:8px;">
+                <div class="page-title" style="margin-bottom:4px;">Total Profit</div>
+                <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
+                    <div>
+                        <div class="kpi-value-main">{sv_total_pl_aed_str}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="kpi-value-main">{sv_total_pl_pct_str}</div>
+                    </div>
                 </div>
-                <div class="kpi-label">US STOCKS</div>
             </div>
-            """, unsafe_allow_html=True)
+            """,
+            unsafe_allow_html=True,
+        )
 
-        # Card 3: Total Holding Value
-        with c3:
-            st.markdown(f"""
-            <div class="card mf-card">
-                <div class="kpi-label">TOTAL HOLDING</div>
-                <div class="kpi-mid-row">
-                    <div class="kpi-number">{sv_total_val_aed_str}</div>
-                    <div class="kpi-number">{sv_total_val_inr_lacs_str}</div>
+        # ---- Card 3: Holding Value ----
+        st.markdown(
+            f"""
+            <div class="card mf-card" style="padding:12px 14px; margin-bottom:8px;">
+                <div class="page-title" style="margin-bottom:4px;">Total Holding Value</div>
+                <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
+                    <div>
+                        <div class="kpi-value-main">{sv_total_val_aed_str}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="kpi-value-main">{sv_total_val_inr_lacs_str}</div>
+                    </div>
                 </div>
-                <div class="kpi-label">US STOCKS</div>
             </div>
-            """, unsafe_allow_html=True)
+            """,
+            unsafe_allow_html=True,
+        )
 
         st.markdown(
             """<div style="font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#16233a; font-size:0.75rem; margin:4px 0;">Today's Gains – SV</div>""",
@@ -1161,18 +1185,16 @@ with mf_tab:
 
         st.markdown(
             f"""
-            <div class="card mf-card" style="padding:12px 14px; margin-bottom:8px;">
-                <div class="page-title" style="margin-bottom:4px;">Mutual Fund Holding</div>
-                <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
-                    <div>
-                        <div class="kpi-label" style="margin-bottom:1px;">Total Value</div>
-                        <div class="kpi-value-main">{total_value_str}</div>
-                    </div>
-                    <div style="text-align:right;">
-                        <div class="kpi-label" style="margin-bottom:1px;">Total Return</div>
-                        <div class="kpi-value-main">{total_return_str}</div>
-                    </div>
+            <div class="card mf-card">
+                <div class="kpi-top-row">
+                    <div class="kpi-label">TOTAL VALUE</div>
+                    <div class="kpi-label">TOTAL RETURN</div>
                 </div>
+                <div class="kpi-mid-row">
+                    <div class="kpi-number">{total_value_str}</div>
+                    <div class="kpi-number">{total_return_str}</div>
+                </div>
+                <div class="kpi-label">PORTFOLIO AGGREGATE</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -1195,18 +1217,16 @@ with mf_tab:
 
             st.markdown(
                 f"""
-                <div class="card mf-card" style="padding:8px 10px; margin-bottom:6px;">
-                    <div class="page-title" style="margin-bottom:4px;">{display_name}</div>
-                    <div style="margin-top:2px; display:flex; justify-content:space-between; align-items:flex-end;">
-                        <div>
-                            <div class="kpi-label" style="margin-bottom:1px;">Total Value</div>
-                            <div class="kpi-value-main">{value_str}</div>
-                        </div>
-                        <div style="text-align:right;">
-                            <div class="kpi-label" style="margin-bottom:1px;">Total Return</div>
-                            <div class="kpi-value-main">{ret_str}</div>
-                        </div>
+                <div class="card mf-card">
+                    <div class="kpi-top-row">
+                        <div class="kpi-label">TOTAL VALUE</div>
+                        <div class="kpi-label">TOTAL RETURN</div>
                     </div>
+                    <div class="kpi-mid-row">
+                        <div class="kpi-number">{value_str}</div>
+                        <div class="kpi-number">{ret_str}</div>
+                    </div>
+                    <div class="kpi-label">{display_name}</div>
                 </div>
                 """,
                 unsafe_allow_html=True,
