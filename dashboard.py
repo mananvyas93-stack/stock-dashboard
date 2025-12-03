@@ -67,19 +67,24 @@ st.markdown(
         box-sizing: border-box;
     }
 
-    /* --- NEW ROW STYLE FOR MUTUAL FUND LIST ITEMS --- */
+    /* --- NEW ROW STYLE FOR MUTUAL FUND LIST ITEMS (REVISED) --- */
     .mf-card-row {
         background: #f4f6f8 !important;
         border: 1px solid #e0e4ea !important;
-        border-radius: 8px; /* Slightly rounded */
+        border-radius: 8px; 
         color: #0f1a2b !important;
         display: flex;
-        flex-direction: row; /* Horizontal layout */
-        align-items: center; /* Vertically center */
-        justify-content: space-between; /* Push Name Left, Metrics Right */
+        flex-direction: row; 
+        align-items: center; /* Vertically center content */
+        justify-content: space-between; 
         padding: 12px 16px !important;
         margin-bottom: 6px;
-        min-height: 60px;
+        
+        /* Enforce robust height so 1-line and 2-line names look same size */
+        min-height: 72px; 
+        
+        /* Gap between name and numbers */
+        gap: 16px; 
     }
 
     /* Name in the row card */
@@ -87,39 +92,33 @@ st.markdown(
         font-family: 'Space Grotesk', sans-serif;
         font-size: 0.9rem;
         font-weight: 600;
-        color: #020617 !important; /* Almost Black */
-        line-height: 1.2;
+        color: #020617 !important; 
+        line-height: 1.3;
+        
+        /* Layout logic to handle wrapping */
+        flex: 1; /* Take up all remaining space */
+        min-width: 0; /* Allow flex child to shrink/wrap */
+        white-space: normal; /* Allow text to wrap to next line */
+        overflow-wrap: break-word;
     }
 
     /* Metric Box (Right Side) */
     .mf-metric-group {
         display: flex;
-        gap: 24px; /* Space between Value and Return columns */
+        gap: 32px; /* Generous space between the two numbers */
         text-align: right;
-    }
-
-    .mf-metric-box {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-
-    /* Labels inside the row (Value, Return %) */
-    .mf-row-label {
-        font-family: 'Space Grotesk', sans-serif;
-        font-size: 0.65rem;
-        font-weight: 500;
-        text-transform: uppercase;
-        color: #64748b !important; /* Slate Grey */
-        margin-bottom: 2px;
+        align-items: center;
+        
+        /* Prevent numbers from shrinking when name is long */
+        flex-shrink: 0; 
     }
 
     /* Values inside the row */
     .mf-row-value {
         font-family: 'Space Grotesk', sans-serif;
-        font-size: 1.0rem;
+        font-size: 1.1rem; /* Increased size slightly */
         font-weight: 700;
-        color: #0f1a2b !important; /* Dark Navy */
+        color: #0f1a2b !important; 
         line-height: 1.0;
     }
 
@@ -1236,20 +1235,13 @@ with mf_tab:
             value_str = fmt_inr_lacs(value_inr)
             ret_str = f"{ret_pct:.1f}%"
 
-            # NEW: Horizontal Card Layout
             st.markdown(
                 f"""
                 <div class="card mf-card-row">
                     <div class="mf-name-text">{display_name}</div>
                     <div class="mf-metric-group">
-                        <div class="mf-metric-box">
-                            <div class="mf-row-label">Value</div>
-                            <div class="mf-row-value">{value_str}</div>
-                        </div>
-                        <div class="mf-metric-box">
-                            <div class="mf-row-label">Return</div>
-                            <div class="mf-row-value">{ret_str}</div>
-                        </div>
+                        <div class="mf-row-value">{value_str}</div>
+                        <div class="mf-row-value">{ret_str}</div>
                     </div>
                 </div>
                 """,
