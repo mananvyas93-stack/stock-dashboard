@@ -54,54 +54,153 @@ st.markdown(
         margin-bottom: 8px;
     }
 
-    /* --- KPI CARD STYLING (REFINED SPACING) --- */
+    /* --- KPI CARD STYLING --- */
     .mf-card {
         background: #f4f6f8 !important;
         border-color: #e0e4ea !important;
         color: #0f1a2b !important;
         display: flex;
         flex-direction: column;
-        
-        /* Pushes content to edges, but padding constrains it */
         justify-content: space-between; 
-        
-        /* Height adjusted for balance */
         height: 96px; 
-        
-        /* INCREASED PADDING: Pushes top/bottom text away from border
-           This also forces the lines closer together internally. */
         padding: 12px 16px !important; 
-        
         box-sizing: border-box;
     }
 
-    /* --- COLOR CORRECTION FOR MUTUAL FUND TAB & WHITE CARDS --- */
-    .mf-card .page-title {
-        color: #020617 !important; 
-        font-weight: 600;
+    /* --- NEW ROW STYLE FOR US STOCKS (5 DATA POINTS) --- */
+    .us-card-row {
+        background: #f4f6f8 !important;
+        border: 1px solid #e0e4ea !important;
+        border-radius: 8px; 
+        color: #0f1a2b !important;
+        display: flex;
+        flex-direction: row; 
+        align-items: center; 
+        justify-content: space-between; 
+        padding: 12px 16px !important;
+        margin-bottom: 6px;
+        min-height: 76px; /* Slightly taller to accommodate units */
+        gap: 12px;
     }
 
-    .mf-card .kpi-label {
-        color: #475569 !important; 
-        font-weight: 500;
+    /* Left Group: Name + Units */
+    .us-identity-group {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        flex: 1;
     }
 
-    .mf-card .kpi-value-main {
-        color: #0f1a2b !important; 
+    .us-name-text {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.0rem;
         font-weight: 700;
-    }
-    
-    .mf-card .kpi-number {
-         color: #0f1a2b !important; 
+        color: #020617 !important; 
+        line-height: 1.2;
+        margin-bottom: 2px;
     }
 
-    /* --------------------------------------------------------- */
+    .us-units-text {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 0.7rem;
+        font-weight: 500;
+        color: #64748b !important; /* Grey for units */
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* Right Group: Holding + Profit */
+    .us-metric-group {
+        display: flex;
+        gap: 24px; /* Space between Holding Col and Profit Col */
+        text-align: right;
+        align-items: center;
+        flex-shrink: 0; 
+    }
+
+    .us-metric-box {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-end;
+    }
+
+    .us-row-label {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 0.6rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        color: #64748b !important; 
+        margin-bottom: 2px;
+    }
+
+    .us-row-value {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #0f1a2b !important; 
+        line-height: 1.1;
+    }
+
+    /* Profit Colors */
+    .profit-pos { color: #16a34a !important; } /* Green */
+    .profit-neg { color: #dc2626 !important; } /* Red */
+
+    /* --- MF ROW STYLE --- */
+    .mf-card-row {
+        background: #f4f6f8 !important;
+        border: 1px solid #e0e4ea !important;
+        border-radius: 8px; 
+        color: #0f1a2b !important;
+        display: flex;
+        flex-direction: row; 
+        align-items: center; 
+        justify-content: space-between; 
+        padding: 12px 16px !important;
+        margin-bottom: 6px;
+        min-height: 72px; 
+        gap: 16px; 
+    }
+
+    .mf-name-text {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #020617 !important; 
+        line-height: 1.3;
+        flex: 1; 
+        min-width: 0; 
+        white-space: normal; 
+        overflow-wrap: break-word;
+    }
+
+    .mf-metric-group {
+        display: flex;
+        gap: 32px; 
+        text-align: right;
+        align-items: center;
+        flex-shrink: 0; 
+    }
+
+    .mf-row-value {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.1rem; 
+        font-weight: 700;
+        color: #0f1a2b !important; 
+        line-height: 1.0;
+    }
+
+    /* --- SHARED STYLES --- */
+    .mf-card .page-title { color: #020617 !important; font-weight: 600; }
+    .mf-card .kpi-label { color: #475569 !important; font-weight: 500; }
+    .mf-card .kpi-value-main { color: #0f1a2b !important; font-weight: 700; }
+    .mf-card .kpi-number { color: #0f1a2b !important; }
 
     /* UNIFIED LABEL STYLE: Top/Bottom Labels */
     .kpi-label {
         font-family: 'Space Grotesk', sans-serif;
         font-size: 0.6rem; 
-        font-weight: 400; /* Normal weight */
+        font-weight: 400; 
         text-transform: uppercase;
         letter-spacing: 0.05em;
         line-height: 1.0;
@@ -109,7 +208,7 @@ st.markdown(
         margin: 0;
     }
 
-    /* UNIFIED NUMBER STYLE: Value & Percentage */
+    /* UNIFIED NUMBER STYLE */
     .kpi-number {
         font-family: 'Space Grotesk', sans-serif;
         font-size: 1.1rem; 
@@ -125,7 +224,6 @@ st.markdown(
         line-height: 1.1;
     }
 
-    /* Container for the middle row of numbers */
     .kpi-mid-row {
         display: flex;
         justify-content: space-between;
@@ -134,7 +232,6 @@ st.markdown(
         margin: 0; 
     }
 
-    /* Helper for Top Row Split (Value Left, Return Right) */
     .kpi-top-row {
         display: flex;
         justify-content: space-between;
@@ -1118,7 +1215,115 @@ with sv_tab:
 # ---------- US STOCKS TAB ----------
 
 with us_tab:
-    st.info("US Stocks tab coming next.")
+    # 1. Prepare data for US Stocks tab (Owner = MV)
+    us_positions = positions[positions["Owner"] == "MV"].copy()
+    us_positions = us_positions.sort_values(by="ValueAED", ascending=False)
+
+    if us_positions.empty:
+        st.info("No US positions found.")
+    else:
+        # Calculate Totals
+        us_total_val_aed = us_positions["ValueAED"].sum()
+        us_total_purchase_aed = us_positions["PurchaseAED"].sum()
+        us_total_pl_aed = us_positions["TotalPLAED"].sum()
+        us_day_pl_aed = us_positions["DayPLAED"].sum()
+
+        us_total_pl_pct = (us_total_pl_aed / us_total_purchase_aed * 100.0) if us_total_purchase_aed > 0 else 0.0
+        prev_total_val = us_total_val_aed - us_day_pl_aed
+        us_day_pl_pct = (us_day_pl_aed / prev_total_val * 100.0) if prev_total_val > 0 else 0.0
+
+        # Formatted Strings
+        us_day_pl_aed_str = f"AED {us_day_pl_aed:,.0f}"
+        us_day_pl_pct_str = f"{us_day_pl_pct:+.2f}%"
+        us_total_pl_aed_str = f"AED {us_total_pl_aed:,.0f}"
+        us_total_pl_pct_str = f"{us_total_pl_pct:+.2f}%"
+        us_total_val_aed_str = f"AED {us_total_val_aed:,.0f}"
+        us_total_val_inr_lacs_str = fmt_inr_lacs_from_aed(us_total_val_aed, AED_TO_INR)
+
+        # Layout: 3 columns for 3 cards
+        c1, c2, c3 = st.columns(3)
+
+        # Card 1: Today's Profit
+        with c1:
+            st.markdown(f"""
+            <div class="card mf-card">
+                <div class="kpi-label">TODAY'S PROFIT</div>
+                <div class="kpi-mid-row">
+                    <div class="kpi-number">{us_day_pl_aed_str}</div>
+                    <div class="kpi-number">{us_day_pl_pct_str}</div>
+                </div>
+                <div class="kpi-label">US STOCKS</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        # Card 2: Total Profit
+        with c2:
+            st.markdown(f"""
+            <div class="card mf-card">
+                <div class="kpi-label">TOTAL PROFIT</div>
+                <div class="kpi-mid-row">
+                    <div class="kpi-number">{us_total_pl_aed_str}</div>
+                    <div class="kpi-number">{us_total_pl_pct_str}</div>
+                </div>
+                <div class="kpi-label">US STOCKS</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        # Card 3: Total Holding Value
+        with c3:
+            st.markdown(f"""
+            <div class="card mf-card">
+                <div class="kpi-label">TOTAL HOLDING</div>
+                <div class="kpi-mid-row">
+                    <div class="kpi-number">{us_total_val_aed_str}</div>
+                    <div class="kpi-number">{us_total_val_inr_lacs_str}</div>
+                </div>
+                <div class="kpi-label">US STOCKS</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        # Render List of US Stock Cards
+        st.markdown(
+            """<div style="font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#16233a; font-size:0.75rem; margin:10px 0 4px 0;">Your Holdings</div>""",
+            unsafe_allow_html=True,
+        )
+
+        for _, row in us_positions.iterrows():
+            name = row["Name"]
+            units = row["Units"]
+            val_aed = row["ValueAED"]
+            profit_aed = row["TotalPLAED"]
+            profit_pct = row["TotalPct"]
+
+            val_str = f"AED {val_aed:,.0f}"
+            
+            # Profit String with Color Logic
+            profit_sign = "+" if profit_aed >= 0 else ""
+            profit_color_class = "profit-pos" if profit_aed >= 0 else "profit-neg"
+            profit_str = f"{profit_sign} AED {profit_aed:,.0f} ({profit_sign}{profit_pct:.1f}%)"
+
+            st.markdown(
+                f"""
+                <div class="card us-card-row">
+                    <div class="us-identity-group">
+                        <div class="us-name-text">{name}</div>
+                        <div class="us-units-text">{units:.0f} UNITS</div>
+                    </div>
+                    
+                    <div class="us-metric-group">
+                        <div class="us-metric-box">
+                            <div class="us-row-label">Value</div>
+                            <div class="us-row-value">{val_str}</div>
+                        </div>
+                        <div class="us-metric-box">
+                            <div class="us-row-label">Total Profit</div>
+                            <div class="us-row-value {profit_color_class}">{profit_str}</div>
+                        </div>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
 # ---------- INDIA MF TAB ----------
 
@@ -1208,16 +1413,12 @@ with mf_tab:
 
             st.markdown(
                 f"""
-                <div class="card mf-card">
-                    <div class="kpi-top-row">
-                        <div class="kpi-label">VALUE</div>
-                        <div class="kpi-label">RETURN</div>
+                <div class="card mf-card-row">
+                    <div class="mf-name-text">{display_name}</div>
+                    <div class="mf-metric-group">
+                        <div class="mf-row-value">{value_str}</div>
+                        <div class="mf-row-value">{ret_str}</div>
                     </div>
-                    <div class="kpi-mid-row">
-                        <div class="kpi-number">{value_str}</div>
-                        <div class="kpi-number">{ret_str}</div>
-                    </div>
-                    <div class="kpi-label">{display_name}</div>
                 </div>
                 """,
                 unsafe_allow_html=True,
