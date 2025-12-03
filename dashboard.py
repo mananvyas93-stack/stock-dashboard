@@ -1125,7 +1125,7 @@ with sv_tab:
         sv_total_val_aed_str = f"AED {sv_total_val_aed:,.0f}"
         sv_total_val_inr_lacs_str = fmt_inr_lacs_from_aed(sv_total_val_aed, AED_TO_INR)
 
-        # Layout: 3 columns for 3 cards (RESTORED)
+        # Layout: 3 columns for 3 cards
         c1, c2, c3 = st.columns(3)
 
         # Card 1: Today's Profit
@@ -1168,7 +1168,7 @@ with sv_tab:
             """, unsafe_allow_html=True)
 
         st.markdown(
-            """<div style="font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#16233a; font-size:0.75rem; margin:4px 0;">Today's Gains – SV</div>""",
+            """<div style="font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#16233a; font-size:0.75rem; margin:10px 0 4px 0;">Today's Gains – SV</div>""",
             unsafe_allow_html=True,
         )
 
