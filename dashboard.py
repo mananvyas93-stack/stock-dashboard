@@ -62,12 +62,10 @@ st.markdown(
         display: flex;
         flex-direction: column;
         
-        /* DISTRIBUTION LOGIC:
-           space-between pushes content to edges. 
-           Reducing height pulls them closer. */
+        /* DISTRIBUTION LOGIC: space-between pushes content to edges. */
         justify-content: space-between; 
         
-        /* REDUCED HEIGHT: From 100px to 86px to tighten spacing */
+        /* HEIGHT: 86px for tight spacing */
         height: 86px; 
         
         padding: 10px 14px !important; 
@@ -75,8 +73,6 @@ st.markdown(
     }
 
     /* --- COLOR CORRECTION FOR MUTUAL FUND TAB & WHITE CARDS --- */
-    /* Strict overrides to ensure text is dark on light backgrounds */
-
     .mf-card .page-title {
         color: #020617 !important; /* Almost Black for Fund Names */
         font-weight: 600;
@@ -573,10 +569,8 @@ def get_market_indices_change(phase_str: str) -> str:
             if len(hist) >= 2:
                 prev_close = hist["Close"].iloc[-2]
                 pct = (close_now / prev_close - 1) * 100
-                val_str = f"{pct:.1f}%"
-                if pct < 0:
-                    val_str = f"[{abs(pct):.1f}%]"
-                nifty_str = f"Nifty {val_str}"
+                # STRICT FORMAT: +5% or -5% (using Python + specifier)
+                nifty_str = f"Nifty {pct:+.1f}%"
     except:
         pass
 
@@ -589,10 +583,10 @@ def get_market_indices_change(phase_str: str) -> str:
     
     if "Pre" in phase_str:
         target_ticker = "^QMI" # Try the specific indicator
-        status_label = "(Pre-market)"
+        status_label = "Pre Market" # Removed brackets
     elif "Post" in phase_str:
         target_ticker = "^QIV" # Try the specific indicator
-        status_label = "(Post-market)"
+        status_label = "Post Market" # Removed brackets
     
     try:
         # Try fetching the target (QMI/QIV or QQQ)
@@ -634,10 +628,8 @@ def get_market_indices_change(phase_str: str) -> str:
             
             if prev_close > 0:
                 pct = (curr / prev_close - 1) * 100
-                val_str = f"{pct:.1f}%"
-                if pct < 0:
-                     val_str = f"[{abs(pct):.1f}%]"
-                nasdaq_str = f"Nasdaq {status_label} {val_str}"
+                # STRICT FORMAT: +5% or -5%
+                nasdaq_str = f"Nasdaq {status_label} {pct:+.1f}%"
 
     except:
         pass
@@ -890,7 +882,7 @@ with overview_tab:
         c3, 
         "TOTAL HOLDING", 
         total_val_inr_lacs,
-        f"{total_pl_pct:+.2f}%",
+        f"{total_pl_pct:+.2f}%",  # Added + sign
         "US STOCKS"
     )
 
@@ -899,7 +891,7 @@ with overview_tab:
         c4, 
         "TOTAL HOLDING", 
         fmt_inr_lacs(mf_val_inr), 
-        f"{mf_abs_return_pct:.2f}%",
+        f"{mf_abs_return_pct:+.2f}%", # Added + sign
         "INDIA MF"
     )
 
