@@ -54,54 +54,86 @@ st.markdown(
         margin-bottom: 8px;
     }
 
-    /* --- KPI CARD STYLING (REFINED SPACING) --- */
+    /* --- STANDARD KPI CARD STYLING (For Top Stats) --- */
     .mf-card {
         background: #f4f6f8 !important;
         border-color: #e0e4ea !important;
         color: #0f1a2b !important;
         display: flex;
         flex-direction: column;
-        
-        /* Pushes content to edges, but padding constrains it */
         justify-content: space-between; 
-        
-        /* Height adjusted for balance */
         height: 96px; 
-        
-        /* INCREASED PADDING: Pushes top/bottom text away from border
-           This also forces the lines closer together internally. */
         padding: 12px 16px !important; 
-        
         box-sizing: border-box;
     }
 
-    /* --- COLOR CORRECTION FOR MUTUAL FUND TAB & WHITE CARDS --- */
-    .mf-card .page-title {
-        color: #020617 !important; 
+    /* --- NEW ROW STYLE FOR MUTUAL FUND LIST ITEMS --- */
+    .mf-card-row {
+        background: #f4f6f8 !important;
+        border: 1px solid #e0e4ea !important;
+        border-radius: 8px; /* Slightly rounded */
+        color: #0f1a2b !important;
+        display: flex;
+        flex-direction: row; /* Horizontal layout */
+        align-items: center; /* Vertically center */
+        justify-content: space-between; /* Push Name Left, Metrics Right */
+        padding: 12px 16px !important;
+        margin-bottom: 6px;
+        min-height: 60px;
+    }
+
+    /* Name in the row card */
+    .mf-name-text {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 0.9rem;
         font-weight: 600;
+        color: #020617 !important; /* Almost Black */
+        line-height: 1.2;
     }
 
-    .mf-card .kpi-label {
-        color: #475569 !important; 
+    /* Metric Box (Right Side) */
+    .mf-metric-group {
+        display: flex;
+        gap: 24px; /* Space between Value and Return columns */
+        text-align: right;
+    }
+
+    .mf-metric-box {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    /* Labels inside the row (Value, Return %) */
+    .mf-row-label {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 0.65rem;
         font-weight: 500;
+        text-transform: uppercase;
+        color: #64748b !important; /* Slate Grey */
+        margin-bottom: 2px;
     }
 
-    .mf-card .kpi-value-main {
-        color: #0f1a2b !important; 
+    /* Values inside the row */
+    .mf-row-value {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.0rem;
         font-weight: 700;
-    }
-    
-    .mf-card .kpi-number {
-         color: #0f1a2b !important; 
+        color: #0f1a2b !important; /* Dark Navy */
+        line-height: 1.0;
     }
 
-    /* --------------------------------------------------------- */
+    /* --- SHARED STYLES --- */
+    .mf-card .page-title { color: #020617 !important; font-weight: 600; }
+    .mf-card .kpi-label { color: #475569 !important; font-weight: 500; }
+    .mf-card .kpi-value-main { color: #0f1a2b !important; font-weight: 700; }
+    .mf-card .kpi-number { color: #0f1a2b !important; }
 
     /* UNIFIED LABEL STYLE: Top/Bottom Labels */
     .kpi-label {
         font-family: 'Space Grotesk', sans-serif;
         font-size: 0.6rem; 
-        font-weight: 400; /* Normal weight */
+        font-weight: 400; 
         text-transform: uppercase;
         letter-spacing: 0.05em;
         line-height: 1.0;
@@ -109,7 +141,7 @@ st.markdown(
         margin: 0;
     }
 
-    /* UNIFIED NUMBER STYLE: Value & Percentage */
+    /* UNIFIED NUMBER STYLE */
     .kpi-number {
         font-family: 'Space Grotesk', sans-serif;
         font-size: 1.1rem; 
@@ -125,7 +157,6 @@ st.markdown(
         line-height: 1.1;
     }
 
-    /* Container for the middle row of numbers */
     .kpi-mid-row {
         display: flex;
         justify-content: space-between;
@@ -134,7 +165,6 @@ st.markdown(
         margin: 0; 
     }
 
-    /* Helper for Top Row Split (Value Left, Return Right) */
     .kpi-top-row {
         display: flex;
         justify-content: space-between;
@@ -1028,7 +1058,7 @@ with sv_tab:
         sv_total_val_aed_str = f"AED {sv_total_val_aed:,.0f}"
         sv_total_val_inr_lacs_str = fmt_inr_lacs_from_aed(sv_total_val_aed, AED_TO_INR)
 
-        # Layout: 3 columns for 3 cards (RESTORED)
+        # Layout: 3 columns for 3 cards
         c1, c2, c3 = st.columns(3)
 
         # Card 1: Today's Profit
@@ -1206,18 +1236,21 @@ with mf_tab:
             value_str = fmt_inr_lacs(value_inr)
             ret_str = f"{ret_pct:.1f}%"
 
+            # NEW: Horizontal Card Layout
             st.markdown(
                 f"""
-                <div class="card mf-card">
-                    <div class="kpi-top-row">
-                        <div class="kpi-label">VALUE</div>
-                        <div class="kpi-label">RETURN</div>
+                <div class="card mf-card-row">
+                    <div class="mf-name-text">{display_name}</div>
+                    <div class="mf-metric-group">
+                        <div class="mf-metric-box">
+                            <div class="mf-row-label">Value</div>
+                            <div class="mf-row-value">{value_str}</div>
+                        </div>
+                        <div class="mf-metric-box">
+                            <div class="mf-row-label">Return</div>
+                            <div class="mf-row-value">{ret_str}</div>
+                        </div>
                     </div>
-                    <div class="kpi-mid-row">
-                        <div class="kpi-number">{value_str}</div>
-                        <div class="kpi-number">{ret_str}</div>
-                    </div>
-                    <div class="kpi-label">{display_name}</div>
                 </div>
                 """,
                 unsafe_allow_html=True,
