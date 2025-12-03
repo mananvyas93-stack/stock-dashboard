@@ -54,85 +54,54 @@ st.markdown(
         margin-bottom: 8px;
     }
 
-    /* --- STANDARD KPI CARD STYLING (For Top Stats) --- */
+    /* --- KPI CARD STYLING (REFINED SPACING) --- */
     .mf-card {
         background: #f4f6f8 !important;
         border-color: #e0e4ea !important;
         color: #0f1a2b !important;
         display: flex;
         flex-direction: column;
+        
+        /* Pushes content to edges, but padding constrains it */
         justify-content: space-between; 
+        
+        /* Height adjusted for balance */
         height: 96px; 
+        
+        /* INCREASED PADDING: Pushes top/bottom text away from border
+           This also forces the lines closer together internally. */
         padding: 12px 16px !important; 
+        
         box-sizing: border-box;
     }
 
-    /* --- NEW ROW STYLE FOR MUTUAL FUND LIST ITEMS (REVISED) --- */
-    .mf-card-row {
-        background: #f4f6f8 !important;
-        border: 1px solid #e0e4ea !important;
-        border-radius: 8px; 
-        color: #0f1a2b !important;
-        display: flex;
-        flex-direction: row; 
-        align-items: center; /* Vertically center content */
-        justify-content: space-between; 
-        padding: 12px 16px !important;
-        margin-bottom: 6px;
-        
-        /* Enforce robust height so 1-line and 2-line names look same size */
-        min-height: 72px; 
-        
-        /* Gap between name and numbers */
-        gap: 16px; 
-    }
-
-    /* Name in the row card */
-    .mf-name-text {
-        font-family: 'Space Grotesk', sans-serif;
-        font-size: 0.9rem;
-        font-weight: 600;
+    /* --- COLOR CORRECTION FOR MUTUAL FUND TAB & WHITE CARDS --- */
+    .mf-card .page-title {
         color: #020617 !important; 
-        line-height: 1.3;
-        
-        /* Layout logic to handle wrapping */
-        flex: 1; /* Take up all remaining space */
-        min-width: 0; /* Allow flex child to shrink/wrap */
-        white-space: normal; /* Allow text to wrap to next line */
-        overflow-wrap: break-word;
+        font-weight: 600;
     }
 
-    /* Metric Box (Right Side) */
-    .mf-metric-group {
-        display: flex;
-        gap: 32px; /* Generous space between the two numbers */
-        text-align: right;
-        align-items: center;
-        
-        /* Prevent numbers from shrinking when name is long */
-        flex-shrink: 0; 
+    .mf-card .kpi-label {
+        color: #475569 !important; 
+        font-weight: 500;
     }
 
-    /* Values inside the row */
-    .mf-row-value {
-        font-family: 'Space Grotesk', sans-serif;
-        font-size: 1.1rem; /* Increased size slightly */
-        font-weight: 700;
+    .mf-card .kpi-value-main {
         color: #0f1a2b !important; 
-        line-height: 1.0;
+        font-weight: 700;
+    }
+    
+    .mf-card .kpi-number {
+         color: #0f1a2b !important; 
     }
 
-    /* --- SHARED STYLES --- */
-    .mf-card .page-title { color: #020617 !important; font-weight: 600; }
-    .mf-card .kpi-label { color: #475569 !important; font-weight: 500; }
-    .mf-card .kpi-value-main { color: #0f1a2b !important; font-weight: 700; }
-    .mf-card .kpi-number { color: #0f1a2b !important; }
+    /* --------------------------------------------------------- */
 
     /* UNIFIED LABEL STYLE: Top/Bottom Labels */
     .kpi-label {
         font-family: 'Space Grotesk', sans-serif;
         font-size: 0.6rem; 
-        font-weight: 400; 
+        font-weight: 400; /* Normal weight */
         text-transform: uppercase;
         letter-spacing: 0.05em;
         line-height: 1.0;
@@ -140,7 +109,7 @@ st.markdown(
         margin: 0;
     }
 
-    /* UNIFIED NUMBER STYLE */
+    /* UNIFIED NUMBER STYLE: Value & Percentage */
     .kpi-number {
         font-family: 'Space Grotesk', sans-serif;
         font-size: 1.1rem; 
@@ -156,6 +125,7 @@ st.markdown(
         line-height: 1.1;
     }
 
+    /* Container for the middle row of numbers */
     .kpi-mid-row {
         display: flex;
         justify-content: space-between;
@@ -164,6 +134,7 @@ st.markdown(
         margin: 0; 
     }
 
+    /* Helper for Top Row Split (Value Left, Return Right) */
     .kpi-top-row {
         display: flex;
         justify-content: space-between;
@@ -1057,7 +1028,7 @@ with sv_tab:
         sv_total_val_aed_str = f"AED {sv_total_val_aed:,.0f}"
         sv_total_val_inr_lacs_str = fmt_inr_lacs_from_aed(sv_total_val_aed, AED_TO_INR)
 
-        # Layout: 3 columns for 3 cards
+        # Layout: 3 columns for 3 cards (RESTORED)
         c1, c2, c3 = st.columns(3)
 
         # Card 1: Today's Profit
@@ -1237,12 +1208,16 @@ with mf_tab:
 
             st.markdown(
                 f"""
-                <div class="card mf-card-row">
-                    <div class="mf-name-text">{display_name}</div>
-                    <div class="mf-metric-group">
-                        <div class="mf-row-value">{value_str}</div>
-                        <div class="mf-row-value">{ret_str}</div>
+                <div class="card mf-card">
+                    <div class="kpi-top-row">
+                        <div class="kpi-label">VALUE</div>
+                        <div class="kpi-label">RETURN</div>
                     </div>
+                    <div class="kpi-mid-row">
+                        <div class="kpi-number">{value_str}</div>
+                        <div class="kpi-number">{ret_str}</div>
+                    </div>
+                    <div class="kpi-label">{display_name}</div>
                 </div>
                 """,
                 unsafe_allow_html=True,
