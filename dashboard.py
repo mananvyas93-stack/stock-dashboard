@@ -54,7 +54,7 @@ st.markdown(
         margin-bottom: 8px;
     }
 
-    /* --- KPI CARD STYLING (UPDATED) --- */
+    /* --- KPI CARD STYLING --- */
     .mf-card {
         background: #f4f6f8 !important;
         border-color: #e0e4ea !important;
@@ -245,25 +245,29 @@ COLOR_DANGER = "#f27d72"
 COLOR_BG = "#0f1a2b"
 
 # ---------- PORTFOLIO CONFIG ----------
+# UPDATED WITH NEW HOLDINGS AND RECALCULATED AED VALUES (USD * 3.6725)
 portfolio_config = [
-    {"Name": "Alphabet", "Ticker": "GOOGL", "Units": 51, "PurchaseValAED": 34128, "Owner": "MV", "Sector": "Tech"},
-    {"Name": "Apple", "Ticker": "AAPL", "Units": 50, "PurchaseValAED": 37183, "Owner": "MV", "Sector": "Tech"},
-    {"Name": "Tesla", "Ticker": "TSLA", "Units": 30, "PurchaseValAED": 33116, "Owner": "MV", "Sector": "Auto"},
-    {"Name": "Nasdaq 100", "Ticker": "QQQM", "Units": 180, "PurchaseValAED": 150894, "Owner": "MV", "Sector": "ETF"},
-    {"Name": "AMD", "Ticker": "AMD", "Units": 27, "PurchaseValAED": 16075, "Owner": "MV", "Sector": "Semi"},
-    {"Name": "Broadcom", "Ticker": "AVGO", "Units": 13, "PurchaseValAED": 13578, "Owner": "MV", "Sector": "Semi"},
-    {"Name": "Nvidia", "Ticker": "NVDA", "Units": 78, "PurchaseValAED": 49707, "Owner": "MV", "Sector": "Semi"},
-    {"Name": "Amazon", "Ticker": "AMZN", "Units": 59, "PurchaseValAED": 47720, "Owner": "MV", "Sector": "Retail"},
-    {"Name": "MSFT", "Ticker": "MSFT", "Units": 26, "PurchaseValAED": 49949, "Owner": "MV", "Sector": "Tech"},
-    {"Name": "Meta", "Ticker": "META", "Units": 18, "PurchaseValAED": 48744, "Owner": "MV", "Sector": "Tech"},
-    {"Name": "Broadcom [SV]", "Ticker": "AVGO", "Units": 2, "PurchaseValAED": 2122, "Owner": "SV", "Sector": "Semi"},
-    {"Name": "Apple [SV]", "Ticker": "AAPL", "Units": 2, "PurchaseValAED": 1486, "Owner": "SV", "Sector": "Tech"},
-    {"Name": "Nasdaq [SV]", "Ticker": "QQQ", "Units": 1, "PurchaseValAED": 2095, "Owner": "SV", "Sector": "ETF"},
-    {"Name": "Nvidia [SV]", "Ticker": "NVDA", "Units": 2, "PurchaseValAED": 1286, "Owner": "SV", "Sector": "Semi"},
-    {"Name": "Amazon [SV]", "Ticker": "AMZN", "Units": 4, "PurchaseValAED": 3179, "Owner": "SV", "Sector": "Retail"},
+    # --- MV PORTFOLIO ---
+    {"Name": "Alphabet", "Ticker": "GOOGL", "Units": 51, "PurchaseValAED": 34152, "Owner": "MV", "Sector": "Tech"},
+    {"Name": "Nasdaq 100", "Ticker": "QQQM", "Units": 180, "PurchaseValAED": 150997, "Owner": "MV", "Sector": "ETF"},
+    {"Name": "Apple", "Ticker": "AAPL", "Units": 50, "PurchaseValAED": 37208, "Owner": "MV", "Sector": "Tech"},
+    {"Name": "Tesla", "Ticker": "TSLA", "Units": 30, "PurchaseValAED": 33138, "Owner": "MV", "Sector": "Auto"},
+    {"Name": "AMD", "Ticker": "AMD", "Units": 27, "PurchaseValAED": 16086, "Owner": "MV", "Sector": "Semi"},
+    {"Name": "Broadcom", "Ticker": "AVGO", "Units": 13, "PurchaseValAED": 13587, "Owner": "MV", "Sector": "Semi"},
+    {"Name": "Amazon", "Ticker": "AMZN", "Units": 59, "PurchaseValAED": 47751, "Owner": "MV", "Sector": "Retail"},
+    {"Name": "Nvidia", "Ticker": "NVDA", "Units": 80, "PurchaseValAED": 51051, "Owner": "MV", "Sector": "Semi"},
+    {"Name": "Meta", "Ticker": "META", "Units": 24, "PurchaseValAED": 60991, "Owner": "MV", "Sector": "Tech"},
+    {"Name": "MSFT", "Ticker": "MSFT", "Units": 26, "PurchaseValAED": 49983, "Owner": "MV", "Sector": "Tech"},
+    
+    # --- SV PORTFOLIO ---
+    {"Name": "Apple [SV]", "Ticker": "AAPL", "Units": 2, "PurchaseValAED": 1487, "Owner": "SV", "Sector": "Tech"},
+    {"Name": "Broadcom [SV]", "Ticker": "AVGO", "Units": 2, "PurchaseValAED": 2123, "Owner": "SV", "Sector": "Semi"},
+    {"Name": "Nasdaq 100 [SV]", "Ticker": "QQQM", "Units": 14, "PurchaseValAED": 12728, "Owner": "SV", "Sector": "ETF"},
+    {"Name": "Amazon [SV]", "Ticker": "AMZN", "Units": 4, "PurchaseValAED": 3181, "Owner": "SV", "Sector": "Retail"},
+    {"Name": "Nasdaq [SV]", "Ticker": "QQQ", "Units": 1, "PurchaseValAED": 2096, "Owner": "SV", "Sector": "ETF"},
+    {"Name": "Nvidia [SV]", "Ticker": "NVDA", "Units": 3, "PurchaseValAED": 1971, "Owner": "SV", "Sector": "Semi"},
     {"Name": "Novo [SV]", "Ticker": "NVO", "Units": 4, "PurchaseValAED": 714, "Owner": "SV", "Sector": "Health"},
-    {"Name": "Nasdaq 100 [SV]", "Ticker": "QQQM", "Units": 10, "PurchaseValAED": 8989, "Owner": "SV", "Sector": "ETF"},
-    {"Name": "MSFT [SV]", "Ticker": "MSFT", "Units": 4, "PurchaseValAED": 7476, "Owner": "SV", "Sector": "Tech"},
+    {"Name": "MSFT [SV]", "Ticker": "MSFT", "Units": 6, "PurchaseValAED": 11128, "Owner": "SV", "Sector": "Tech"},
 ]
 
 # ---------- INDIA MF CONFIG ----------
