@@ -54,7 +54,7 @@ st.markdown(
         margin-bottom: 8px;
     }
 
-    /* --- KPI CARD STYLING --- */
+    /* --- KPI CARD STYLING (UPDATED) --- */
     .mf-card {
         background: #f4f6f8 !important;
         border-color: #e0e4ea !important;
@@ -65,10 +65,11 @@ st.markdown(
         /* DISTRIBUTION LOGIC: space-between pushes content to edges. */
         justify-content: space-between; 
         
-        /* HEIGHT: 86px for tight spacing */
-        height: 86px; 
+        /* HEIGHT: Increased slightly to give breathing room between lines */
+        height: 92px; 
         
-        padding: 10px 14px !important; 
+        /* PADDING: Reduced top/bottom to minimize wasted edge space */
+        padding: 8px 14px !important; 
         box-sizing: border-box;
     }
 
@@ -237,8 +238,11 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ---------- CONSTANTS ----------
-USD_TO_AED = 3.6725
+# ---------- CONSTANTS & FALLBACKS ----------
+# NOTE: These are now FALLBACKS. The code tries to fetch live rates.
+DEFAULT_USD_AED = 3.6725
+DEFAULT_AED_INR = 24.50
+
 COLOR_PRIMARY = "#4aa3ff"
 COLOR_SUCCESS = "#6bcf8f"
 COLOR_DANGER = "#f27d72"
@@ -440,18 +444,38 @@ def compute_india_mf_aggregate() -> dict:
 
     return {"total_value_inr": total_value_inr, "daily_pl_inr": total_daily_pl_inr}
 
-# ---------- FX HELPERS ----------
+# ---------- FX HELPERS (API DRIVEN) ----------
 
 @st.cache_data(ttl=3600)
-def get_aed_inr_rate_from_yahoo() -> float:
+def get_fx_rates() -> dict:
+    """
+    Fetches live FX rates for USD->AED and AED->INR.
+    Includes fallbacks if API fails.
+    """
+    rates = {
+        "USD_AED": DEFAULT_USD_AED,
+        "AED_INR": DEFAULT_AED_INR
+    }
+    
+    # 1. USD -> AED
     try:
-        tkr = yf.Ticker("AEDINR=X")
-        hist = tkr.history(period="5d")
-        if hist is None or hist.empty or "Close" not in hist.columns:
-            return 24.50
-        return float(hist["Close"].iloc[-1])
+        # USDAED=X is the standard ticker for USD to AED
+        hist = yf.Ticker("USDAED=X").history(period="5d")
+        if not hist.empty:
+            rates["USD_AED"] = float(hist["Close"].iloc[-1])
     except Exception:
-        return 24.50
+        pass
+        
+    # 2. AED -> INR
+    try:
+        # AEDINR=X is the standard ticker for AED to INR
+        hist = yf.Ticker("AEDINR=X").history(period="5d")
+        if not hist.empty:
+            rates["AED_INR"] = float(hist["Close"].iloc[-1])
+    except Exception:
+        pass
+        
+    return rates
 
 
 def fmt_inr_lacs_from_aed(aed_value: float, aed_to_inr: float) -> str:
@@ -643,7 +667,7 @@ def get_market_indices_change(phase_str: str) -> str:
 
 # ---------- PORTFOLIO BUILDERS ----------
 
-def build_positions_from_prices(prices_close: pd.DataFrame, prices_intraday: pd.Series | None) -> pd.DataFrame:
+def build_positions_from_prices(prices_close: pd.DataFrame, prices_intraday: pd.Series | None, usd_to_aed_rate: float) -> pd.DataFrame:
     rows = []
     
     # We need a robust "Previous Close" to calculate change against.
@@ -692,7 +716,7 @@ def build_positions_from_prices(prices_close: pd.DataFrame, prices_intraday: pd.
             price_usd = 0.0
         else:
             price_usd = live_price
-            price_aed = price_usd * USD_TO_AED
+            price_aed = price_usd * usd_to_aed_rate
             value_aed = price_aed * units
 
             # Day P&L vs Previous Close
@@ -774,15 +798,17 @@ market_status_str, price_source = get_market_phase_and_prices()
 prices_close = load_prices_close()
 header_metrics_str = get_market_indices_change(market_status_str)
 
+# FETCH API FX RATES
+fx_rates = get_fx_rates()
+USD_TO_AED = fx_rates["USD_AED"]
+AED_TO_INR = fx_rates["AED_INR"]
+
 if isinstance(price_source, pd.DataFrame):
-    positions = build_positions_from_prices(price_source, None)
+    positions = build_positions_from_prices(price_source, None, USD_TO_AED)
 else:
-    positions = build_positions_from_prices(prices_close, price_source)
+    positions = build_positions_from_prices(prices_close, price_source, USD_TO_AED)
 
 agg_for_heatmap = aggregate_for_heatmap(positions) if not positions.empty else positions
-
-base_fx = get_aed_inr_rate_from_yahoo()
-AED_TO_INR = base_fx
 
 total_val_aed = positions["ValueAED"].sum()
 total_purchase_aed = positions["PurchaseAED"].sum()
