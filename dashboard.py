@@ -69,7 +69,7 @@ st.markdown(
         height: 96px; 
         
         /* INCREASED PADDING: Pushes top/bottom text away from border
-           This also forces the lines closer together internally. */
+            This also forces the lines closer together internally. */
         padding: 12px 16px !important; 
         
         box-sizing: border-box;
@@ -257,6 +257,7 @@ COLOR_DANGER = "#f27d72"
 COLOR_BG = "#0f1a2b"
 
 # ---------- PORTFOLIO CONFIG ----------
+# UPDATED with latest MSFT data (29 units)
 portfolio_config = [
     # --- MV PORTFOLIO ---
     {"Name": "Alphabet", "Ticker": "GOOGL", "Units": 51, "PurchaseValAED": 34152, "Owner": "MV", "Sector": "Tech"},
@@ -268,7 +269,7 @@ portfolio_config = [
     {"Name": "Amazon", "Ticker": "AMZN", "Units": 59, "PurchaseValAED": 47751, "Owner": "MV", "Sector": "Retail"},
     {"Name": "Nvidia", "Ticker": "NVDA", "Units": 80, "PurchaseValAED": 51051, "Owner": "MV", "Sector": "Semi"},
     {"Name": "Meta", "Ticker": "META", "Units": 24, "PurchaseValAED": 60991, "Owner": "MV", "Sector": "Tech"},
-    {"Name": "MSFT", "Ticker": "MSFT", "Units": 26, "PurchaseValAED": 49983, "Owner": "MV", "Sector": "Tech"},
+    {"Name": "MSFT", "Ticker": "MSFT", "Units": 29, "PurchaseValAED": 55272, "Owner": "MV", "Sector": "Tech"}, # UPDATED
     
     # --- SV PORTFOLIO ---
     {"Name": "Apple [SV]", "Ticker": "AAPL", "Units": 2, "PurchaseValAED": 1487, "Owner": "SV", "Sector": "Tech"},
@@ -418,20 +419,16 @@ def compute_india_mf_aggregate() -> dict:
             tkr = yf.Ticker(ticker)
             hist = tkr.history(period="5d")
             
-            # --- 1. CALCULATE VALUE (With Safety Check) ---
+            # --- 1. CALCULATE VALUE (Safety Check Removed) ---
             if not hist.empty:
                 latest_nav = float(hist["Close"].iloc[-1])
                 candidate_value = latest_nav * units
                 
-                # Trust Yahoo only if within 10% of File Value
-                if file_value_inr > 0:
-                    ratio = candidate_value / file_value_inr
-                    if 0.9 <= ratio <= 1.1:
-                        value_inr = candidate_value
-                    else:
-                        value_inr = file_value_inr
-                else:
+                # We simply trust the live value now, no safety restriction
+                if candidate_value > 0:
                     value_inr = candidate_value
+                else:
+                    value_inr = file_value_inr
             else:
                 value_inr = file_value_inr
 
@@ -1050,175 +1047,4 @@ with sv_tab:
             <div class="card mf-card">
                 <div class="kpi-label">TOTAL PROFIT</div>
                 <div class="kpi-mid-row">
-                    <div class="kpi-number">{sv_total_pl_aed_str}</div>
-                    <div class="kpi-number">{sv_total_pl_pct_str}</div>
-                </div>
-                <div class="kpi-label">US STOCKS</div>
-            </div>
-            """, unsafe_allow_html=True)
-
-        # Card 3: Total Holding Value
-        with c3:
-            st.markdown(f"""
-            <div class="card mf-card">
-                <div class="kpi-label">TOTAL HOLDING</div>
-                <div class="kpi-mid-row">
-                    <div class="kpi-number">{sv_total_val_aed_str}</div>
-                    <div class="kpi-number">{sv_total_val_inr_lacs_str}</div>
-                </div>
-                <div class="kpi-label">US STOCKS</div>
-            </div>
-            """, unsafe_allow_html=True)
-
-        st.markdown(
-            """<div style="font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#16233a; font-size:0.75rem; margin:4px 0;">Today's Gains – SV</div>""",
-            unsafe_allow_html=True,
-        )
-
-        hm_sv = sv_positions.copy()
-        hm_sv["Name"] = hm_sv["Name"].str.replace(r"\s*\[SV\]", "", regex=True)
-        hm_sv["SizeForHeatmap"] = hm_sv["DayPLAED"].abs() + 1e-6
-
-        def label_for_sv(v: float) -> str:
-            if v >= 0:
-                return f"AED {v:,.0f}"
-            else:
-                return f"[AED {abs(v):,.0f}]"
-
-        hm_sv["DayPLLabel"] = hm_sv["DayPLAED"].apply(label_for_sv)
-
-        fig_sv = px.treemap(
-            hm_sv,
-            path=["Name"],
-            values="SizeForHeatmap",
-            color="DayPLAED",
-            color_continuous_scale=[COLOR_DANGER, "#16233a", COLOR_SUCCESS],
-            color_continuous_midpoint=0,
-            custom_data=["DayPLAED", "Ticker", "DayPLLabel"],
-        )
-
-        fig_sv.update_traces(
-            hovertemplate="<b>%{label}</b><br>Ticker: %{customdata[1]}<br>Day P&L: AED %{customdata[0]:,.0f}<extra></extra>",
-            texttemplate="%{label}<br>%{customdata[2]}",
-            textfont=dict(family="Space Grotesk, sans-serif", color="#e6eaf0", size=11),
-            marker=dict(line=dict(width=0)),
-            root_color=COLOR_BG,
-        )
-
-        fig_sv.update_layout(
-            margin=dict(t=0, l=0, r=0, b=0),
-            paper_bgcolor=COLOR_BG,
-            plot_bgcolor=COLOR_BG,
-            coloraxis_showscale=False,
-            font=dict(family="Space Grotesk, sans-serif"),
-        )
-
-        st.plotly_chart(fig_sv, use_container_width=True, config={"displayModeBar": False})
-
-# ---------- US STOCKS TAB ----------
-
-with us_tab:
-    st.info("US Stocks tab coming next.")
-
-# ---------- INDIA MF TAB ----------
-
-
-with mf_tab:
-    if not MF_CONFIG:
-        st.info("No mutual fund data configured.")
-    else:
-        mf_navs = load_mf_navs_from_yahoo()
-        mf_rows = []
-        for mf_entry in MF_CONFIG:
-            scheme = mf_entry["Scheme"]
-            units = float(mf_entry["Units"] or 0.0)
-            cost_inr = float(mf_entry["CostINR"] or 0.0)
-            file_value_inr = float(mf_entry.get("InitialValueINR", 0.0))
-
-            live_nav = mf_navs.get(scheme)
-
-            # Safety check logic
-            value_inr = file_value_inr
-            if live_nav is not None and live_nav > 0 and units > 0:
-                candidate_value = live_nav * units
-                if file_value_inr > 0:
-                    ratio = candidate_value / file_value_inr
-                    if 0.9 <= ratio <= 1.1:
-                        value_inr = candidate_value
-                else:
-                    value_inr = candidate_value
-            
-            # Absolute return
-            if cost_inr > 0:
-                abs_return = (value_inr - cost_inr) / cost_inr * 100.0
-            else:
-                abs_return = 0.0
-
-            mf_rows.append(
-                {
-                    "scheme": scheme,
-                    "value_inr": value_inr,
-                    "return_pct": abs_return,
-                }
-            )
-
-        mf_rows.sort(key=lambda r: r["value_inr"], reverse=True)
-        total_value_inr = sum(r["value_inr"] for r in mf_rows)
-        mf_total_cost = sum(item["CostINR"] for item in MF_CONFIG)
-        
-        if mf_total_cost > 0:
-            total_abs_return_pct = (total_value_inr - mf_total_cost) / mf_total_cost * 100.0
-        else:
-            total_abs_return_pct = 0.0
-
-        total_value_str = fmt_inr_lacs(total_value_inr)
-        total_return_str = f"{total_abs_return_pct:.2f}%"
-
-        st.markdown(
-            f"""
-            <div class="card mf-card">
-                <div class="kpi-top-row">
-                    <div class="kpi-label">VALUE</div>
-                    <div class="kpi-label">RETURN</div>
-                </div>
-                <div class="kpi-mid-row">
-                    <div class="kpi-number">{total_value_str}</div>
-                    <div class="kpi-number">{total_return_str}</div>
-                </div>
-                <div class="kpi-label">PORTFOLIO AGGREGATE</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        for row in mf_rows:
-            scheme = row["scheme"]
-            value_inr = row["value_inr"]
-            ret_pct = row["return_pct"]
-
-            display_name = scheme
-            parts = display_name.split()
-            if parts and all(ch.isdigit() or ch in "/-" for ch in parts[-1]):
-                display_name = " ".join(parts[:-1])
-            if "Fund Growth" in display_name:
-                display_name = display_name.replace(" Fund Growth", "")
-
-            value_str = fmt_inr_lacs(value_inr)
-            ret_str = f"{ret_pct:.1f}%"
-
-            st.markdown(
-                f"""
-                <div class="card mf-card">
-                    <div class="kpi-top-row">
-                        <div class="kpi-label">VALUE</div>
-                        <div class="kpi-label">RETURN</div>
-                    </div>
-                    <div class="kpi-mid-row">
-                        <div class="kpi-number">{value_str}</div>
-                        <div class="kpi-number">{ret_str}</div>
-                    </div>
-                    <div class="kpi-label">{display_name}</div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+                    <div class="
