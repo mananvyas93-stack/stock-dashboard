@@ -388,8 +388,7 @@ def compute_india_mf_aggregate() -> dict:
         total_daily_pl_inr += daily_pl
 
     return {"total_value_inr": total_value_inr, "daily_pl_inr": total_daily_pl_inr}
-
-@st.cache_data(ttl=3600)
+    @st.cache_data(ttl=3600)
 def get_fx_rates() -> dict:
     rates = { "USD_AED": DEFAULT_USD_AED, "AED_INR": DEFAULT_AED_INR }
     try:
@@ -454,7 +453,8 @@ def load_prices_intraday() -> pd.Series:
     if not last_prices:
         return pd.Series(dtype=float)
     return pd.Series(last_prices)
-    def get_market_phase_and_prices():
+
+def get_market_phase_and_prices():
     us_tz = ZoneInfo("America/New_York")
     now_us = datetime.now(us_tz)
     weekday = now_us.weekday()
@@ -628,8 +628,7 @@ def aggregate_for_heatmap(df: pd.DataFrame) -> pd.DataFrame:
     mv["WeightPct"] = mv["ValueAED"] / total_val_all * 100.0 if total_val_all > 0 else 0.0
     combined = pd.concat([mv, sv_row], ignore_index=True)
     return combined
-
-market_status_str, price_source = get_market_phase_and_prices()
+    market_status_str, price_source = get_market_phase_and_prices()
 prices_close = load_prices_close()
 header_metrics_str = get_market_indices_change(market_status_str)
 fx_rates = get_fx_rates()
