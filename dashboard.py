@@ -1112,7 +1112,7 @@ with sv_tab:
 
         st.plotly_chart(fig_sv, use_container_width=True, config={"displayModeBar": False})
 
-# ---------- US STOCKS TAB (NEW) ----------
+# ---------- US STOCKS TAB (UPDATED LAYOUT) ----------
 
 with us_tab:
     if positions.empty:
@@ -1154,6 +1154,7 @@ with us_tab:
         
         for row in sorted_pos:
             name = row["Name"]
+            ticker = row["Ticker"]
             units = row["Units"]
             val_aed = row["ValueAED"]
             pl_aed = row["TotalPLAED"]
@@ -1173,13 +1174,18 @@ with us_tab:
                 <div class="card mf-card">
                     <div class="kpi-top-row">
                         <div class="kpi-label" style="font-weight:600;">{units_str}</div>
-                        <div class="kpi-label" style="font-weight:600; color:{COLOR_SUCCESS if pl_aed >=0 else COLOR_DANGER} !important;">{pl_aed_str}</div>
+                        <div class="kpi-label" style="font-weight:600; color:{COLOR_SUCCESS if pl_pct >=0 else COLOR_DANGER} !important;">{pl_pct_str}</div>
                     </div>
+                    
                     <div class="kpi-mid-row">
+                        <div class="kpi-value-main">{display_name}</div>
                         <div class="kpi-number">{val_aed_str}</div>
-                        <div class="kpi-number" style="color:{COLOR_SUCCESS if pl_pct >=0 else COLOR_DANGER} !important;">{pl_pct_str}</div>
                     </div>
-                    <div class="kpi-label">{display_name}</div>
+                    
+                    <div class="kpi-top-row">
+                        <div class="kpi-label">{ticker}</div>
+                        <div class="kpi-label" style="color:{COLOR_SUCCESS if pl_aed >=0 else COLOR_DANGER} !important;">{pl_aed_str}</div>
+                    </div>
                 </div>
                 """,
                 unsafe_allow_html=True,
