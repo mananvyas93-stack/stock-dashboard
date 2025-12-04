@@ -67,7 +67,7 @@ st.markdown(
         box-sizing: border-box;
     }
 
-    /* --- NEW ROW STYLE FOR US STOCKS (5 DATA POINTS) --- */
+    /* --- US STOCKS ROW STYLE --- */
     .us-card-row {
         background: #f4f6f8 !important;
         border: 1px solid #e0e4ea !important;
@@ -79,11 +79,10 @@ st.markdown(
         justify-content: space-between; 
         padding: 12px 16px !important;
         margin-bottom: 6px;
-        min-height: 76px; /* Slightly taller to accommodate units */
+        min-height: 76px; 
         gap: 12px;
     }
 
-    /* Left Group: Name + Units */
     .us-identity-group {
         display: flex;
         flex-direction: column;
@@ -104,15 +103,14 @@ st.markdown(
         font-family: 'Space Grotesk', sans-serif;
         font-size: 0.7rem;
         font-weight: 500;
-        color: #64748b !important; /* Grey for units */
+        color: #64748b !important;
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
 
-    /* Right Group: Holding + Profit */
     .us-metric-group {
         display: flex;
-        gap: 24px; /* Space between Holding Col and Profit Col */
+        gap: 24px;
         text-align: right;
         align-items: center;
         flex-shrink: 0; 
@@ -142,9 +140,8 @@ st.markdown(
         line-height: 1.1;
     }
 
-    /* Profit Colors */
-    .profit-pos { color: #16a34a !important; } /* Green */
-    .profit-neg { color: #dc2626 !important; } /* Red */
+    .profit-pos { color: #16a34a !important; } 
+    .profit-neg { color: #dc2626 !important; }
 
     /* --- MF ROW STYLE --- */
     .mf-card-row {
@@ -196,7 +193,6 @@ st.markdown(
     .mf-card .kpi-value-main { color: #0f1a2b !important; font-weight: 700; }
     .mf-card .kpi-number { color: #0f1a2b !important; }
 
-    /* UNIFIED LABEL STYLE: Top/Bottom Labels */
     .kpi-label {
         font-family: 'Space Grotesk', sans-serif;
         font-size: 0.6rem; 
@@ -208,7 +204,6 @@ st.markdown(
         margin: 0;
     }
 
-    /* UNIFIED NUMBER STYLE */
     .kpi-number {
         font-family: 'Space Grotesk', sans-serif;
         font-size: 1.1rem; 
@@ -1130,45 +1125,48 @@ with sv_tab:
 
         # Card 1: Today's Profit
         with c1:
-            st.markdown(f"""
-            <div class="card mf-card">
-                <div class="kpi-label">TODAY'S PROFIT</div>
-                <div class="kpi-mid-row">
-                    <div class="kpi-number">{sv_day_pl_aed_str}</div>
-                    <div class="kpi-number">{sv_day_pl_pct_str}</div>
-                </div>
-                <div class="kpi-label">US STOCKS</div>
-            </div>
-            """, unsafe_allow_html=True)
+            html_content = f"""
+<div class="card mf-card">
+<div class="kpi-label">TODAY'S PROFIT</div>
+<div class="kpi-mid-row">
+<div class="kpi-number">{sv_day_pl_aed_str}</div>
+<div class="kpi-number">{sv_day_pl_pct_str}</div>
+</div>
+<div class="kpi-label">US STOCKS</div>
+</div>
+"""
+            st.markdown(html_content, unsafe_allow_html=True)
 
         # Card 2: Total Profit
         with c2:
-            st.markdown(f"""
-            <div class="card mf-card">
-                <div class="kpi-label">TOTAL PROFIT</div>
-                <div class="kpi-mid-row">
-                    <div class="kpi-number">{sv_total_pl_aed_str}</div>
-                    <div class="kpi-number">{sv_total_pl_pct_str}</div>
-                </div>
-                <div class="kpi-label">US STOCKS</div>
-            </div>
-            """, unsafe_allow_html=True)
+            html_content = f"""
+<div class="card mf-card">
+<div class="kpi-label">TOTAL PROFIT</div>
+<div class="kpi-mid-row">
+<div class="kpi-number">{sv_total_pl_aed_str}</div>
+<div class="kpi-number">{sv_total_pl_pct_str}</div>
+</div>
+<div class="kpi-label">US STOCKS</div>
+</div>
+"""
+            st.markdown(html_content, unsafe_allow_html=True)
 
         # Card 3: Total Holding Value
         with c3:
-            st.markdown(f"""
-            <div class="card mf-card">
-                <div class="kpi-label">TOTAL HOLDING</div>
-                <div class="kpi-mid-row">
-                    <div class="kpi-number">{sv_total_val_aed_str}</div>
-                    <div class="kpi-number">{sv_total_val_inr_lacs_str}</div>
-                </div>
-                <div class="kpi-label">US STOCKS</div>
-            </div>
-            """, unsafe_allow_html=True)
+            html_content = f"""
+<div class="card mf-card">
+<div class="kpi-label">TOTAL HOLDING</div>
+<div class="kpi-mid-row">
+<div class="kpi-number">{sv_total_val_aed_str}</div>
+<div class="kpi-number">{sv_total_val_inr_lacs_str}</div>
+</div>
+<div class="kpi-label">US STOCKS</div>
+</div>
+"""
+            st.markdown(html_content, unsafe_allow_html=True)
 
         st.markdown(
-            """<div style="font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#16233a; font-size:0.75rem; margin:10px 0 4px 0;">Today's Gains – SV</div>""",
+            """<div style="font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#16233a; font-size:0.75rem; margin:4px 0;">Today's Gains – SV</div>""",
             unsafe_allow_html=True,
         )
 
@@ -1245,42 +1243,45 @@ with us_tab:
 
         # Card 1: Today's Profit
         with c1:
-            st.markdown(f"""
-            <div class="card mf-card">
-                <div class="kpi-label">TODAY'S PROFIT</div>
-                <div class="kpi-mid-row">
-                    <div class="kpi-number">{us_day_pl_aed_str}</div>
-                    <div class="kpi-number">{us_day_pl_pct_str}</div>
-                </div>
-                <div class="kpi-label">US STOCKS</div>
-            </div>
-            """, unsafe_allow_html=True)
+            html_content = f"""
+<div class="card mf-card">
+<div class="kpi-label">TODAY'S PROFIT</div>
+<div class="kpi-mid-row">
+<div class="kpi-number">{us_day_pl_aed_str}</div>
+<div class="kpi-number">{us_day_pl_pct_str}</div>
+</div>
+<div class="kpi-label">US STOCKS</div>
+</div>
+"""
+            st.markdown(html_content, unsafe_allow_html=True)
 
         # Card 2: Total Profit
         with c2:
-            st.markdown(f"""
-            <div class="card mf-card">
-                <div class="kpi-label">TOTAL PROFIT</div>
-                <div class="kpi-mid-row">
-                    <div class="kpi-number">{us_total_pl_aed_str}</div>
-                    <div class="kpi-number">{us_total_pl_pct_str}</div>
-                </div>
-                <div class="kpi-label">US STOCKS</div>
-            </div>
-            """, unsafe_allow_html=True)
+            html_content = f"""
+<div class="card mf-card">
+<div class="kpi-label">TOTAL PROFIT</div>
+<div class="kpi-mid-row">
+<div class="kpi-number">{us_total_pl_aed_str}</div>
+<div class="kpi-number">{us_total_pl_pct_str}</div>
+</div>
+<div class="kpi-label">US STOCKS</div>
+</div>
+"""
+            st.markdown(html_content, unsafe_allow_html=True)
 
         # Card 3: Total Holding Value
         with c3:
-            st.markdown(f"""
-            <div class="card mf-card">
-                <div class="kpi-label">TOTAL HOLDING</div>
-                <div class="kpi-mid-row">
-                    <div class="kpi-number">{us_total_val_aed_str}</div>
-                    <div class="kpi-number">{us_total_val_inr_lacs_str}</div>
-                </div>
-                <div class="kpi-label">US STOCKS</div>
-            </div>
-            """, unsafe_allow_html=True)
+            html_content = f"""
+<div class="card mf-card">
+<div class="kpi-label">TOTAL HOLDING</div>
+<div class="kpi-mid-row">
+<div class="kpi-number">{us_total_val_aed_str}</div>
+<div class="kpi-number">{us_total_val_inr_lacs_str}</div>
+</div>
+<div class="kpi-label">US STOCKS</div>
+</div>
+"""
+            st.markdown(html_content, unsafe_allow_html=True)
 
         # Render List of US Stock Cards
         st.markdown(
@@ -1302,28 +1303,25 @@ with us_tab:
             profit_color_class = "profit-pos" if profit_aed >= 0 else "profit-neg"
             profit_str = f"{profit_sign} AED {profit_aed:,.0f} ({profit_sign}{profit_pct:.1f}%)"
 
-            st.markdown(
-                f"""
-                <div class="card us-card-row">
-                    <div class="us-identity-group">
-                        <div class="us-name-text">{name}</div>
-                        <div class="us-units-text">{units:.0f} UNITS</div>
-                    </div>
-                    
-                    <div class="us-metric-group">
-                        <div class="us-metric-box">
-                            <div class="us-row-label">Value</div>
-                            <div class="us-row-value">{val_str}</div>
-                        </div>
-                        <div class="us-metric-box">
-                            <div class="us-row-label">Total Profit</div>
-                            <div class="us-row-value {profit_color_class}">{profit_str}</div>
-                        </div>
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+            html_content = f"""
+<div class="card us-card-row">
+<div class="us-identity-group">
+<div class="us-name-text">{name}</div>
+<div class="us-units-text">{units:.0f} UNITS</div>
+</div>
+<div class="us-metric-group">
+<div class="us-metric-box">
+<div class="us-row-label">Value</div>
+<div class="us-row-value">{val_str}</div>
+</div>
+<div class="us-metric-box">
+<div class="us-row-label">Total Profit</div>
+<div class="us-row-value {profit_color_class}">{profit_str}</div>
+</div>
+</div>
+</div>
+"""
+            st.markdown(html_content, unsafe_allow_html=True)
 
 # ---------- INDIA MF TAB ----------
 
@@ -1379,22 +1377,20 @@ with mf_tab:
         total_value_str = fmt_inr_lacs(total_value_inr)
         total_return_str = f"{total_abs_return_pct:.2f}%"
 
-        st.markdown(
-            f"""
-            <div class="card mf-card">
-                <div class="kpi-top-row">
-                    <div class="kpi-label">VALUE</div>
-                    <div class="kpi-label">RETURN</div>
-                </div>
-                <div class="kpi-mid-row">
-                    <div class="kpi-number">{total_value_str}</div>
-                    <div class="kpi-number">{total_return_str}</div>
-                </div>
-                <div class="kpi-label">PORTFOLIO AGGREGATE</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        html_content = f"""
+<div class="card mf-card">
+<div class="kpi-top-row">
+<div class="kpi-label">VALUE</div>
+<div class="kpi-label">RETURN</div>
+</div>
+<div class="kpi-mid-row">
+<div class="kpi-number">{total_value_str}</div>
+<div class="kpi-number">{total_return_str}</div>
+</div>
+<div class="kpi-label">PORTFOLIO AGGREGATE</div>
+</div>
+"""
+        st.markdown(html_content, unsafe_allow_html=True)
 
         for row in mf_rows:
             scheme = row["scheme"]
@@ -1411,15 +1407,13 @@ with mf_tab:
             value_str = fmt_inr_lacs(value_inr)
             ret_str = f"{ret_pct:.1f}%"
 
-            st.markdown(
-                f"""
-                <div class="card mf-card-row">
-                    <div class="mf-name-text">{display_name}</div>
-                    <div class="mf-metric-group">
-                        <div class="mf-row-value">{value_str}</div>
-                        <div class="mf-row-value">{ret_str}</div>
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+            html_content = f"""
+<div class="card mf-card-row">
+<div class="mf-name-text">{display_name}</div>
+<div class="mf-metric-group">
+<div class="mf-row-value">{value_str}</div>
+<div class="mf-row-value">{ret_str}</div>
+</div>
+</div>
+"""
+            st.markdown(html_content, unsafe_allow_html=True)
