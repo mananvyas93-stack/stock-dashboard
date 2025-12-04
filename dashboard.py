@@ -453,8 +453,7 @@ def load_prices_intraday() -> pd.Series:
     if not last_prices:
         return pd.Series(dtype=float)
     return pd.Series(last_prices)
-
-def get_market_phase_and_prices():
+    def get_market_phase_and_prices():
     us_tz = ZoneInfo("America/New_York")
     now_us = datetime.now(us_tz)
     weekday = now_us.weekday()
@@ -751,7 +750,8 @@ with sv_tab:
         fig_sv.update_traces(hovertemplate="<b>%{label}</b><br>Ticker: %{customdata[1]}<br>Day P&L: AED %{customdata[0]:,.0f}<extra></extra>", texttemplate="%{label}<br>%{customdata[2]}", textfont=dict(family="Space Grotesk, sans-serif", color="#e6eaf0", size=11), marker=dict(line=dict(width=0)), root_color=COLOR_BG)
         fig_sv.update_layout(margin=dict(t=0, l=0, r=0, b=0), paper_bgcolor=COLOR_BG, plot_bgcolor=COLOR_BG, coloraxis_showscale=False, font=dict(family="Space Grotesk, sans-serif"))
         st.plotly_chart(fig_sv, use_container_width=True, config={"displayModeBar": False})
-        with us_tab:
+
+with us_tab:
     if positions.empty:
         st.info("No US positions found.")
     else:
