@@ -1170,27 +1170,24 @@ with us_tab:
             # Clean Name
             display_name = name.upper().replace(" [SV]", "")
 
-            # NEW CARD LAYOUT
-            st.markdown(
-                f"""
-                <div class="card mf-card">
-                    <div class="kpi-top-row">
-                        <div class="kpi-label">{units_str}</div>
-                        <div class="kpi-label" style="color:{color_pl} !important; font-weight:600;">{pl_aed_str}</div>
-                    </div>
-                    
-                    <div class="kpi-mid-row">
-                        <div class="kpi-number">{display_name}</div>
-                        <div class="kpi-number">{val_aed_str}</div>
-                    </div>
-                    
-                    <div class="kpi-top-row"> <div class="kpi-label" style="color:{'#9ba7b8'} !important;">{ticker}</div>
-                        <div class="kpi-label" style="color:{color_pct} !important; font-weight:600;">{pl_pct_str}</div>
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+            # NEW CARD LAYOUT (FLATTENED TO PREVENT MD ERROR)
+            html_card = f"""
+<div class="card mf-card">
+<div class="kpi-top-row">
+<div class="kpi-label">{units_str}</div>
+<div class="kpi-label" style="color:{color_pl} !important; font-weight:600;">{pl_aed_str}</div>
+</div>
+<div class="kpi-mid-row">
+<div class="kpi-number">{display_name}</div>
+<div class="kpi-number">{val_aed_str}</div>
+</div>
+<div class="kpi-top-row">
+<div class="kpi-label" style="color:#9ba7b8 !important;">{ticker}</div>
+<div class="kpi-label" style="color:{color_pct} !important; font-weight:600;">{pl_pct_str}</div>
+</div>
+</div>
+"""
+            st.markdown(html_card, unsafe_allow_html=True)
 
 # ---------- INDIA MF TAB ----------
 
