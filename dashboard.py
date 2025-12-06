@@ -54,24 +54,16 @@ st.markdown(
         margin-bottom: 8px;
     }
 
-    /* --- KPI CARD STYLING (REFINED SPACING) --- */
+    /* --- KPI CARD STYLING --- */
     .mf-card {
         background: #f4f6f8 !important;
         border-color: #e0e4ea !important;
         color: #0f1a2b !important;
         display: flex;
         flex-direction: column;
-        
-        /* Pushes content to edges, but padding constrains it */
         justify-content: space-between; 
-        
-        /* Height adjusted for balance */
         height: 96px; 
-        
-        /* INCREASED PADDING: Pushes top/bottom text away from border
-            This also forces the lines closer together internally. */
         padding: 12px 16px !important; 
-        
         box-sizing: border-box;
     }
 
@@ -622,36 +614,41 @@ def get_market_indices_change(phase_str: str) -> str:
             
             if "Post" in phase_str:
                 # Post Market: Compare Current Price vs TODAY'S Regular Close
-                # The last row of 'daily' should be today's close if market is over.
                 prev_close = daily["Close"].iloc[-1]
                 
-                # Sanity check: If 1m price is identical to daily close, it might mean
-                # after hours volume is zero or data isn't fresh. 
-                # But mathematically, Change = (Now - TodayClose).
+                # FALLBACK CHECK:
+                # If calculations show exactly 0.0% change in Post Market (common on weekends/holidays),
+                # Fall back to showing the regular daily change instead.
+                pct_post = (curr / prev_close - 1) * 100
+                
+                if abs(pct_post) < 0.01:
+                    # Switch to Daily View
+                    if len(daily) >= 2:
+                        close_today = daily["Close"].iloc[-1]
+                        close_prev = daily["Close"].iloc[-2]
+                        pct = (close_today / close_prev - 1) * 100
+                        nasdaq_str = f"Nasdaq {pct:+.1f}%"
+                    else:
+                        nasdaq_str = f"Nasdaq {pct_post:+.1f}%"
+                else:
+                    nasdaq_str = f"Nasdaq {phase_str} {pct_post:+.1f}%"
                 
             else:
                 # Pre-Market OR Live Market: Compare vs YESTERDAY'S Close
-                # If 'daily' has today's row (live/partial), we want the one before it (-2).
-                # If 'daily' only has yesterday (because trading hasn't started fully?), use -1.
-                
-                # Check dates to be sure
                 last_daily_date = daily.index[-1].date()
                 now_date = datetime.now(ZoneInfo("America/New_York")).date()
                 
                 if last_daily_date == now_date:
-                    # Today's bar exists (partial or full) -> Use Yesterday (-2)
                     if len(daily) >= 2:
                         prev_close = daily["Close"].iloc[-2]
                     else:
-                        # Fallback if only 1 day of history exists
                         prev_close = daily["Close"].iloc[-1] 
                 else:
-                    # Today's bar doesn't exist yet -> Use Last Available (-1)
                     prev_close = daily["Close"].iloc[-1]
             
-            if prev_close > 0:
-                pct = (curr / prev_close - 1) * 100
-                nasdaq_str = f"Nasdaq {phase_str} {pct:+.1f}%"
+                if prev_close > 0 and "Nasdaq" not in nasdaq_str: # Only if not already set by fallback
+                    pct = (curr / prev_close - 1) * 100
+                    nasdaq_str = f"Nasdaq {phase_str} {pct:+.1f}%"
 
     except:
         pass
@@ -1128,7 +1125,7 @@ with us_tab:
                 </div>
                 <div class="kpi-mid-row">
                     <div class="kpi-number">{us_val_str}</div>
-                    <div class="kpi-number" style="color:{color_agg_pct} !important;">{us_pl_pct_str}</div>
+                    <div class="kpi-number"><span style="color:{color_agg_pct} !important;">{us_pl_pct_str}</span></div>
                 </div>
                 <div class="kpi-label">PORTFOLIO AGGREGATE</div>
             </div>
@@ -1150,9 +1147,12 @@ with us_tab:
             val_aed = row["ValueAED"]
             pl_aed = row["TotalPLAED"]
             pl_pct = row["TotalPct"]
+            owner = row["Owner"]
             
-            # Format strings
-            units_str = f"{units:,.0f} UNITS"
+            # Label Update for SV
+            suffix = " • SV" if owner == "SV" else ""
+            units_str = f"{units:,.0f} UNITS{suffix}"
+            
             val_aed_str = f"AED {val_aed:,.0f}"
             pl_aed_str = f"{'+ ' if pl_aed >= 0 else ''}AED {pl_aed:,.0f}"
             pl_pct_str = f"{pl_pct:+.2f}%"
@@ -1169,7 +1169,7 @@ with us_tab:
 <div class="card mf-card">
 <div class="kpi-top-row">
 <div class="kpi-label">{units_str}</div>
-<div style="{base_label_style} color:{color_pl} !important; font-weight:600;">{pl_aed_str}</div>
+<div style="{base_label_style}"><span style="color:{color_pl} !important; font-weight:600;">{pl_aed_str}</span></div>
 </div>
 <div class="kpi-mid-row">
 <div class="kpi-number">{display_name}</div>
@@ -1177,7 +1177,7 @@ with us_tab:
 </div>
 <div class="kpi-top-row">
 <div class="kpi-label" style="color:#9ba7b8 !important;">{ticker}</div>
-<div style="{base_label_style} color:{color_pct} !important; font-weight:600;">{pl_pct_str}</div>
+<div style="{base_label_style}"><span style="color:{color_pct} !important; font-weight:600;">{pl_pct_str}</span></div>
 </div>
 </div>
 """
