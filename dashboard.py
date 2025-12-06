@@ -89,15 +89,6 @@ st.markdown(
          color: #0f1a2b; 
     }
 
-    /* --- FORCE PROFIT/LOSS COLORS --- */
-    /* These specific classes will force the color on the white cards */
-    .profit-plus {
-        color: #15803d !important; /* Dark Green */
-    }
-    .profit-minus {
-        color: #b91c1c !important; /* Dark Red */
-    }
-
     /* --------------------------------------------------------- */
 
     /* UNIFIED LABEL STYLE: Top/Bottom Labels */
@@ -260,8 +251,11 @@ COLOR_SUCCESS = "#6bcf8f" # Vibrant Green for Heatmap
 COLOR_DANGER = "#f27d72"
 COLOR_BG = "#0f1a2b"
 
+# Specific Darker Colors for White Cards (Text visibility)
+TEXT_GREEN_DARK = "#15803d" 
+TEXT_RED_DARK = "#b91c1c"
+
 # ---------- PORTFOLIO CONFIG ----------
-# UPDATED with latest MSFT data (29 units)
 portfolio_config = [
     # --- MV PORTFOLIO ---
     {"Name": "Alphabet", "Ticker": "GOOGL", "Units": 51, "PurchaseValAED": 34152, "Owner": "MV", "Sector": "Tech"},
@@ -273,7 +267,7 @@ portfolio_config = [
     {"Name": "Amazon", "Ticker": "AMZN", "Units": 59, "PurchaseValAED": 47751, "Owner": "MV", "Sector": "Retail"},
     {"Name": "Nvidia", "Ticker": "NVDA", "Units": 80, "PurchaseValAED": 51051, "Owner": "MV", "Sector": "Semi"},
     {"Name": "Meta", "Ticker": "META", "Units": 24, "PurchaseValAED": 60991, "Owner": "MV", "Sector": "Tech"},
-    {"Name": "MSFT", "Ticker": "MSFT", "Units": 29, "PurchaseValAED": 55272, "Owner": "MV", "Sector": "Tech"}, # UPDATED
+    {"Name": "MSFT", "Ticker": "MSFT", "Units": 29, "PurchaseValAED": 55272, "Owner": "MV", "Sector": "Tech"},
     
     # --- SV PORTFOLIO ---
     {"Name": "Apple [SV]", "Ticker": "AAPL", "Units": 2, "PurchaseValAED": 1487, "Owner": "SV", "Sector": "Tech"},
@@ -1103,6 +1097,59 @@ with sv_tab:
         )
 
         st.plotly_chart(fig_sv, use_container_width=True, config={"displayModeBar": False})
+        
+        # --- NEW SECTION: SV HOLDINGS CARDS ---
+        st.markdown(
+            """<div style="font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#16233a; font-size:0.75rem; margin:14px 0 4px 0;">SV Holdings</div>""",
+            unsafe_allow_html=True,
+        )
+        
+        # Sort by Total Profit High to Low
+        sorted_sv = sv_positions.sort_values(by="TotalPLAED", ascending=False).to_dict('records')
+        
+        # Base Label Style
+        base_label_style = "font-family:'Space Grotesk',sans-serif; font-size:0.6rem; font-weight:400; text-transform:uppercase; margin:0;"
+        
+        for row in sorted_sv:
+            name = row["Name"]
+            ticker = row["Ticker"]
+            units = row["Units"]
+            val_aed = row["ValueAED"]
+            pl_aed = row["TotalPLAED"]
+            pl_pct = row["TotalPct"]
+            
+            # Explicit SV Label (since this whole tab is SV, we can just say "UNITS • SV")
+            units_str = f"{units:,.0f} UNITS • SV"
+            
+            val_aed_str = f"AED {val_aed:,.0f}"
+            pl_aed_str = f"{'+ ' if pl_aed >= 0 else ''}AED {pl_aed:,.0f}"
+            pl_pct_str = f"{pl_pct:+.2f}%"
+            
+            # Colors - using new variables TEXT_GREEN_DARK / TEXT_RED_DARK
+            color_pl = TEXT_GREEN_DARK if pl_aed >= 0 else TEXT_RED_DARK
+            color_pct = TEXT_GREEN_DARK if pl_pct >= 0 else TEXT_RED_DARK
+            
+            # Clean Name
+            display_name = name.upper().replace(" [SV]", "")
+
+            # Render HTML Card
+            html_card = f"""
+<div class="card mf-card">
+<div class="kpi-top-row">
+<div class="kpi-label">{units_str}</div>
+<div style="{base_label_style}"><span style="color:{color_pl} !important; font-weight:600;">{pl_aed_str}</span></div>
+</div>
+<div class="kpi-mid-row">
+<div class="kpi-number">{display_name}</div>
+<div class="kpi-number">{val_aed_str}</div>
+</div>
+<div class="kpi-top-row">
+<div class="kpi-label" style="color:#9ba7b8 !important;">{ticker}</div>
+<div style="{base_label_style}"><span style="color:{color_pct} !important; font-weight:600;">{pl_pct_str}</span></div>
+</div>
+</div>
+"""
+            st.markdown(html_card, unsafe_allow_html=True)
 
 # ---------- US STOCKS TAB (NEW) ----------
 
@@ -1134,9 +1181,10 @@ with us_tab:
             pl_aed_str = f"{'+ ' if pl_aed >= 0 else ''}AED {pl_aed:,.0f}"
             pl_pct_str = f"{pl_pct:+.2f}%"
             
-            # Colors - using new variables profit-plus / profit-minus
-            class_pl = "profit-plus" if pl_aed >= 0 else "profit-minus"
-            class_pct = "profit-plus" if pl_pct >= 0 else "profit-minus"
+            # Colors - using new variables TEXT_GREEN_DARK / TEXT_RED_DARK
+            # We are injecting hex codes directly to ensure !important works
+            color_pl = TEXT_GREEN_DARK if pl_aed >= 0 else TEXT_RED_DARK
+            color_pct = TEXT_GREEN_DARK if pl_pct >= 0 else TEXT_RED_DARK
             
             # Clean Name
             display_name = name.upper().replace(" [SV]", "")
@@ -1146,7 +1194,7 @@ with us_tab:
 <div class="card mf-card">
 <div class="kpi-top-row">
 <div class="kpi-label">{units_str}</div>
-<div style="{base_label_style}"><span class="{class_pl}" style="font-weight:600;">{pl_aed_str}</span></div>
+<div style="{base_label_style}"><span style="color:{color_pl} !important; font-weight:600;">{pl_aed_str}</span></div>
 </div>
 <div class="kpi-mid-row">
 <div class="kpi-number">{display_name}</div>
@@ -1154,7 +1202,7 @@ with us_tab:
 </div>
 <div class="kpi-top-row">
 <div class="kpi-label" style="color:#9ba7b8 !important;">{ticker}</div>
-<div style="{base_label_style}"><span class="{class_pct}" style="font-weight:600;">{pl_pct_str}</span></div>
+<div style="{base_label_style}"><span style="color:{color_pct} !important; font-weight:600;">{pl_pct_str}</span></div>
 </div>
 </div>
 """
