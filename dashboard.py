@@ -29,7 +29,7 @@ st.markdown(
         --accent: #4aa3ff;
         --accent-soft: #7fc3ff;
         --danger: #f27d72;
-        --success: #6bcf8f; /* Reverted to original vibrant green for Heatmap */
+        --success: #6bcf8f; /* Vibrant green for Heatmap */
     }
 
     html, body, [class*="css"] {
@@ -1128,6 +1128,7 @@ with us_tab:
             pl_pct_str = f"{pl_pct:+.2f}%"
             
             # Colors - using new variables TEXT_GREEN_DARK / TEXT_RED_DARK
+            # We are injecting hex codes directly to ensure !important works
             color_pl = TEXT_GREEN_DARK if pl_aed >= 0 else TEXT_RED_DARK
             color_pct = TEXT_GREEN_DARK if pl_pct >= 0 else TEXT_RED_DARK
             
