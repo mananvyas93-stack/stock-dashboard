@@ -29,7 +29,7 @@ st.markdown(
         --accent: #4aa3ff;
         --accent-soft: #7fc3ff;
         --danger: #f27d72;
-        --success: #6bcf8f; /* Vibrant Green for Heatmap */
+        --success: #6bcf8f; /* Vibrant Green for Heatmap only */
     }
 
     html, body, [class*="css"] {
@@ -58,7 +58,7 @@ st.markdown(
     .mf-card {
         background: #f4f6f8 !important;
         border-color: #e0e4ea !important;
-        color: #0f1a2b !important;
+        color: #0f1a2b; /* Default text color */
         display: flex;
         flex-direction: column;
         justify-content: space-between; 
@@ -67,7 +67,7 @@ st.markdown(
         box-sizing: border-box;
     }
 
-    /* --- COLOR CORRECTION FOR MUTUAL FUND TAB & WHITE CARDS --- */
+    /* --- TEXT STYLES FOR CARDS --- */
     .mf-card .page-title {
         color: #020617 !important; 
         font-weight: 600;
@@ -93,7 +93,7 @@ st.markdown(
     .kpi-label {
         font-family: 'Space Grotesk', sans-serif;
         font-size: 0.6rem; 
-        font-weight: 400; /* Normal weight */
+        font-weight: 400;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         line-height: 1.0;
@@ -131,7 +131,7 @@ st.markdown(
         display: flex;
         justify-content: space-between;
         width: 100%;
-        align-items: flex-end; /* Align bottom so text sits nicely */
+        align-items: flex-end; 
     }
 
     .page-title {
@@ -245,7 +245,7 @@ DEFAULT_USD_AED = 3.6725
 DEFAULT_AED_INR = 24.50
 
 COLOR_PRIMARY = "#4aa3ff"
-COLOR_SUCCESS = "#6bcf8f" # Vibrant Green for Heatmap
+COLOR_SUCCESS = "#6bcf8f"
 COLOR_DANGER = "#f27d72"
 COLOR_BG = "#0f1a2b"
 
@@ -1102,6 +1102,9 @@ with sv_tab:
         # Sort by Total Profit High to Low
         sorted_sv = sv_positions.sort_values(by="TotalPLAED", ascending=False).to_dict('records')
         
+        # Base Label Style
+        base_label_style = "font-family:'Space Grotesk',sans-serif; font-size:0.6rem; font-weight:400; text-transform:uppercase; margin:0;"
+        
         for row in sorted_sv:
             name = row["Name"]
             ticker = row["Ticker"]
@@ -1129,7 +1132,7 @@ with sv_tab:
 <div class="card mf-card">
 <div class="kpi-top-row">
 <div class="kpi-label">{units_str}</div>
-<div class="kpi-label" style="color:{color_pl} !important; font-weight:600;">{pl_aed_str}</div>
+<div style="{base_label_style}"><span style="color:{color_pl} !important; font-weight:600;">{pl_aed_str}</span></div>
 </div>
 <div class="kpi-mid-row">
 <div class="kpi-number">{display_name}</div>
@@ -1137,7 +1140,7 @@ with sv_tab:
 </div>
 <div class="kpi-top-row">
 <div class="kpi-label" style="color:#9ba7b8 !important;">{ticker}</div>
-<div class="kpi-label" style="color:{color_pct} !important; font-weight:600;">{pl_pct_str}</div>
+<div style="{base_label_style}"><span style="color:{color_pct} !important; font-weight:600;">{pl_pct_str}</span></div>
 </div>
 </div>
 """
@@ -1152,6 +1155,9 @@ with us_tab:
         # 3. INDIVIDUAL STOCK CARDS (REDESIGNED)
         # Sorted by Total Profit AED Descending
         sorted_pos = positions.sort_values(by="TotalPLAED", ascending=False).to_dict('records')
+        
+        # Base Label Style to allow color override (avoids the class .kpi-label color conflict)
+        base_label_style = "font-family:'Space Grotesk',sans-serif; font-size:0.6rem; font-weight:400; text-transform:uppercase; margin:0;"
         
         for row in sorted_pos:
             name = row["Name"]
@@ -1177,12 +1183,12 @@ with us_tab:
             # Clean Name
             display_name = name.upper().replace(" [SV]", "")
 
-            # NEW CARD LAYOUT
+            # NEW CARD LAYOUT (FLATTENED TO PREVENT MD ERROR)
             html_card = f"""
 <div class="card mf-card">
 <div class="kpi-top-row">
 <div class="kpi-label">{units_str}</div>
-<div class="kpi-label" style="color:{color_pl} !important; font-weight:600;">{pl_aed_str}</div>
+<div style="{base_label_style}"><span style="color:{color_pl} !important; font-weight:600;">{pl_aed_str}</span></div>
 </div>
 <div class="kpi-mid-row">
 <div class="kpi-number">{display_name}</div>
@@ -1190,7 +1196,7 @@ with us_tab:
 </div>
 <div class="kpi-top-row">
 <div class="kpi-label" style="color:#9ba7b8 !important;">{ticker}</div>
-<div class="kpi-label" style="color:{color_pct} !important; font-weight:600;">{pl_pct_str}</div>
+<div style="{base_label_style}"><span style="color:{color_pct} !important; font-weight:600;">{pl_pct_str}</span></div>
 </div>
 </div>
 """
