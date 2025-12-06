@@ -249,10 +249,6 @@ COLOR_SUCCESS = "#6bcf8f" # Vibrant Green for Heatmap
 COLOR_DANGER = "#f27d72"
 COLOR_BG = "#0f1a2b"
 
-# Specific Darker Colors for White Cards (Text visibility)
-TEXT_GREEN_DARK = "#15803d" 
-TEXT_RED_DARK = "#b91c1c"
-
 # ---------- PORTFOLIO CONFIG ----------
 # UPDATED with latest MSFT data (29 units)
 portfolio_config = [
@@ -1124,20 +1120,19 @@ with sv_tab:
             pl_aed_str = f"{'+ ' if pl_aed >= 0 else ''}AED {pl_aed:,.0f}"
             pl_pct_str = f"{pl_pct:+.2f}%"
             
-            # Colors - using new variables TEXT_GREEN_DARK / TEXT_RED_DARK
-            # We are injecting hex codes directly to ensure !important works
-            color_pl = TEXT_GREEN_DARK if pl_aed >= 0 else TEXT_RED_DARK
-            color_pct = TEXT_GREEN_DARK if pl_pct >= 0 else TEXT_RED_DARK
+            # Define colors locally to ensure no missing variables
+            color_pl = "#15803d" if pl_aed >= 0 else "#b91c1c"
+            color_pct = "#15803d" if pl_pct >= 0 else "#b91c1c"
             
             # Clean Name
             display_name = name.upper().replace(" [SV]", "")
 
-            # Render HTML Card (Flattened to prevent MD errors)
+            # Render HTML Card
             html_card = f"""
 <div class="card mf-card">
 <div class="kpi-top-row">
 <div class="kpi-label">{units_str}</div>
-<div style="{base_label_style}"><span style="color:{color_pl} !important; font-weight:600;">{pl_aed_str}</span></div>
+<div style="{base_label_style} color:{color_pl} !important; font-weight:600;">{pl_aed_str}</div>
 </div>
 <div class="kpi-mid-row">
 <div class="kpi-number">{display_name}</div>
@@ -1145,7 +1140,7 @@ with sv_tab:
 </div>
 <div class="kpi-top-row">
 <div class="kpi-label" style="color:#9ba7b8 !important;">{ticker}</div>
-<div style="{base_label_style}"><span style="color:{color_pct} !important; font-weight:600;">{pl_pct_str}</span></div>
+<div style="{base_label_style} color:{color_pct} !important; font-weight:600;">{pl_pct_str}</div>
 </div>
 </div>
 """
@@ -1181,10 +1176,9 @@ with us_tab:
             pl_aed_str = f"{'+ ' if pl_aed >= 0 else ''}AED {pl_aed:,.0f}"
             pl_pct_str = f"{pl_pct:+.2f}%"
             
-            # Colors - using new variables TEXT_GREEN_DARK / TEXT_RED_DARK
-            # We are injecting hex codes directly to ensure !important works
-            color_pl = TEXT_GREEN_DARK if pl_aed >= 0 else TEXT_RED_DARK
-            color_pct = TEXT_GREEN_DARK if pl_pct >= 0 else TEXT_RED_DARK
+            # Define colors locally
+            color_pl = "#15803d" if pl_aed >= 0 else "#b91c1c"
+            color_pct = "#15803d" if pl_pct >= 0 else "#b91c1c"
             
             # Clean Name
             display_name = name.upper().replace(" [SV]", "")
@@ -1194,7 +1188,7 @@ with us_tab:
 <div class="card mf-card">
 <div class="kpi-top-row">
 <div class="kpi-label">{units_str}</div>
-<div style="{base_label_style}"><span style="color:{color_pl} !important; font-weight:600;">{pl_aed_str}</span></div>
+<div style="{base_label_style} color:{color_pl} !important; font-weight:600;">{pl_aed_str}</div>
 </div>
 <div class="kpi-mid-row">
 <div class="kpi-number">{display_name}</div>
@@ -1202,7 +1196,7 @@ with us_tab:
 </div>
 <div class="kpi-top-row">
 <div class="kpi-label" style="color:#9ba7b8 !important;">{ticker}</div>
-<div style="{base_label_style}"><span style="color:{color_pct} !important; font-weight:600;">{pl_pct_str}</span></div>
+<div style="{base_label_style} color:{color_pct} !important; font-weight:600;">{pl_pct_str}</div>
 </div>
 </div>
 """
