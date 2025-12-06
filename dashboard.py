@@ -139,6 +139,7 @@ st.markdown(
         display: flex;
         justify-content: space-between;
         width: 100%;
+        align-items: flex-end; /* Align bottom so text sits nicely */
     }
 
     .page-title {
@@ -585,7 +586,7 @@ def get_market_phase_and_prices():
 def get_market_indices_change(phase_str: str) -> str:
     """
     Fetches Nifty 50 and Nasdaq 100 changes.
-    Uses 'QMI' (Pre) and 'QIV' (Post) if available, falling back to QQQ.
+    Replaced unreliable ^QMI/^QIV with QQQ + Logic Fix.
     """
     
     # 1. NIFTY 50
@@ -594,72 +595,63 @@ def get_market_indices_change(phase_str: str) -> str:
         nifty = yf.Ticker("^NSEI")
         hist = nifty.history(period="2d")
         if len(hist) >= 1:
-            # Nifty is mostly closed when US is active, so we just take last close diff
             close_now = hist["Close"].iloc[-1]
             if len(hist) >= 2:
                 prev_close = hist["Close"].iloc[-2]
                 pct = (close_now / prev_close - 1) * 100
-                # STRICT FORMAT: +5% or -5% (using Python + specifier)
                 nifty_str = f"Nifty {pct:+.1f}%"
     except:
         pass
 
-    # 2. NASDAQ 100
+    # 2. NASDAQ 100 (Using QQQ)
     nasdaq_str = "Nasdaq 0.0%"
-    
-    # Determine which ticker to TRY first based on phase
-    target_ticker = "QQQ" # Default
-    status_label = ""
-    
-    if "Pre" in phase_str:
-        target_ticker = "^QMI" # Try the specific indicator
-        status_label = "Pre Market" # Removed brackets
-    elif "Post" in phase_str:
-        target_ticker = "^QIV" # Try the specific indicator
-        status_label = "Post Market" # Removed brackets
+    target_ticker = "QQQ"
     
     try:
-        # Try fetching the target (QMI/QIV or QQQ)
         tkr = yf.Ticker(target_ticker)
-        # We need prepost=True to see QMI/QIV data if it exists, or QQQ ext hours
-        hist = tkr.history(period="1d", interval="1m", prepost=True)
+        # 1m history for current status (Pre/Live/Post)
+        hist_1m = tkr.history(period="1d", interval="1m", prepost=True)
+        # Daily history for baseline (Yesterday Close vs Today Close)
+        daily = tkr.history(period="5d")
         
-        # If QMI/QIV fails (empty), FALLBACK to QQQ
-        if hist.empty and target_ticker in ["^QMI", "^QIV"]:
-             tkr = yf.Ticker("QQQ")
-             hist = tkr.history(period="1d", interval="1m", prepost=True)
-        
-        if not hist.empty:
-            curr = hist["Close"].iloc[-1]
-            # We need a reference price. 
-            # Ideally previous day close.
+        if not hist_1m.empty and not daily.empty:
+            curr = hist_1m["Close"].iloc[-1]
+            
+            # --- LOGIC FIX: Determine Baseline based on Phase ---
             prev_close = 0.0
             
-            # Fetch daily history for close
-            daily = tkr.history(period="5d")
-            if len(daily) >= 1:
-                # If we are in pre-market today, compare vs Yesterday Close
-                # If we are in post-market today, compare vs Today Close (usually)
-                # Simpler: Just compare vs the last available 'regular' close
+            if "Post" in phase_str:
+                # Post Market: Compare Current Price vs TODAY'S Regular Close
+                # The last row of 'daily' should be today's close if market is over.
                 prev_close = daily["Close"].iloc[-1]
-                # If the 1m data is 'newer' than the daily close, use daily close as ref
-                # If 1m data timestamp is same day as daily close, we might need T-1 close
                 
-                # Robust fallback: use T-1 close if available
-                if len(daily) >= 2:
-                      # Check dates
-                      last_day_date = daily.index[-1].date()
-                      now_date = datetime.now(ZoneInfo("America/New_York")).date()
-                      if last_day_date == now_date:
-                          # Today's daily bar exists (maybe live or closed)
-                          prev_close = daily["Close"].iloc[-2]
-                      else:
-                          prev_close = daily["Close"].iloc[-1]
+                # Sanity check: If 1m price is identical to daily close, it might mean
+                # after hours volume is zero or data isn't fresh. 
+                # But mathematically, Change = (Now - TodayClose).
+                
+            else:
+                # Pre-Market OR Live Market: Compare vs YESTERDAY'S Close
+                # If 'daily' has today's row (live/partial), we want the one before it (-2).
+                # If 'daily' only has yesterday (because trading hasn't started fully?), use -1.
+                
+                # Check dates to be sure
+                last_daily_date = daily.index[-1].date()
+                now_date = datetime.now(ZoneInfo("America/New_York")).date()
+                
+                if last_daily_date == now_date:
+                    # Today's bar exists (partial or full) -> Use Yesterday (-2)
+                    if len(daily) >= 2:
+                        prev_close = daily["Close"].iloc[-2]
+                    else:
+                        # Fallback if only 1 day of history exists
+                        prev_close = daily["Close"].iloc[-1] 
+                else:
+                    # Today's bar doesn't exist yet -> Use Last Available (-1)
+                    prev_close = daily["Close"].iloc[-1]
             
             if prev_close > 0:
                 pct = (curr / prev_close - 1) * 100
-                # STRICT FORMAT: +5% or -5%
-                nasdaq_str = f"Nasdaq {status_label} {pct:+.1f}%"
+                nasdaq_str = f"Nasdaq {phase_str} {pct:+.1f}%"
 
     except:
         pass
@@ -673,9 +665,6 @@ def build_positions_from_prices(prices_close: pd.DataFrame, prices_intraday: pd.
     rows = []
     
     # We need a robust "Previous Close" to calculate change against.
-    # prices_close has daily candles. 
-    # If today is trading, prices_close.iloc[-1] might be *today's* partial bar.
-    # We need Yesterday's close.
     
     for item in portfolio_config:
         t = item["Ticker"]
@@ -694,8 +683,6 @@ def build_positions_from_prices(prices_close: pd.DataFrame, prices_intraday: pd.
         # 2. Get Previous Close (Reference for P&L)
         prev_close_price = 0.0
         if not prices_close.empty:
-            # Logic: If the last date in prices_close is TODAY, take the row before it.
-            # If the last date is YESTERDAY, take the last row.
             last_date = prices_close.index[-1].date()
             us_tz = ZoneInfo("America/New_York")
             today_date = datetime.now(us_tz).date()
@@ -707,7 +694,7 @@ def build_positions_from_prices(prices_close: pd.DataFrame, prices_intraday: pd.
                 else:
                     prev_close_price = float(col_data.iloc[-1])
             elif len(col_data) == 1:
-                prev_close_price = float(col_data.iloc[-1]) # Best guess if no history
+                prev_close_price = float(col_data.iloc[-1])
 
         if live_price <= 0:
             value_aed = purchase
@@ -1165,7 +1152,7 @@ with us_tab:
             pl_pct = row["TotalPct"]
             
             # Format strings
-            units_str = f"{units:,.0f} Units"
+            units_str = f"{units:,.0f} UNITS"
             val_aed_str = f"AED {val_aed:,.0f}"
             pl_aed_str = f"{'+ ' if pl_aed >= 0 else ''}AED {pl_aed:,.0f}"
             pl_pct_str = f"{pl_pct:+.2f}%"
