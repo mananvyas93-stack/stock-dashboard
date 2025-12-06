@@ -29,8 +29,7 @@ st.markdown(
         --accent: #4aa3ff;
         --accent-soft: #7fc3ff;
         --danger: #f27d72;
-        /* UPDATED: Darker Green for better visibility on light backgrounds */
-        --success: #2e7d32; 
+        --success: #6bcf8f; /* Reverted to original vibrant green for Heatmap */
     }
 
     html, body, [class*="css"] {
@@ -86,15 +85,6 @@ st.markdown(
     
     .mf-card .kpi-number {
          color: #0f1a2b; 
-    }
-
-    /* --- UTILITY CLASSES FOR PROFIT/LOSS COLORS --- */
-    /* Using the new darker green variable */
-    .text-green {
-        color: var(--success) !important;
-    }
-    .text-red {
-        color: var(--danger) !important;
     }
 
     /* --------------------------------------------------------- */
@@ -254,14 +244,17 @@ st.markdown(
 DEFAULT_USD_AED = 3.6725
 DEFAULT_AED_INR = 24.50
 
+# Global colors (Heatmap uses COLOR_SUCCESS)
 COLOR_PRIMARY = "#4aa3ff"
-# UPDATED: Darker green for better contrast
-COLOR_SUCCESS = "#2e7d32" 
+COLOR_SUCCESS = "#6bcf8f" 
 COLOR_DANGER = "#f27d72"
 COLOR_BG = "#0f1a2b"
 
+# Specific Darker Colors for White Cards (Text visibility)
+TEXT_GREEN_DARK = "#15803d" 
+TEXT_RED_DARK = "#b91c1c"
+
 # ---------- PORTFOLIO CONFIG ----------
-# UPDATED with latest MSFT data (29 units)
 portfolio_config = [
     # --- MV PORTFOLIO ---
     {"Name": "Alphabet", "Ticker": "GOOGL", "Units": 51, "PurchaseValAED": 34152, "Owner": "MV", "Sector": "Tech"},
@@ -273,7 +266,7 @@ portfolio_config = [
     {"Name": "Amazon", "Ticker": "AMZN", "Units": 59, "PurchaseValAED": 47751, "Owner": "MV", "Sector": "Retail"},
     {"Name": "Nvidia", "Ticker": "NVDA", "Units": 80, "PurchaseValAED": 51051, "Owner": "MV", "Sector": "Semi"},
     {"Name": "Meta", "Ticker": "META", "Units": 24, "PurchaseValAED": 60991, "Owner": "MV", "Sector": "Tech"},
-    {"Name": "MSFT", "Ticker": "MSFT", "Units": 29, "PurchaseValAED": 55272, "Owner": "MV", "Sector": "Tech"}, # UPDATED
+    {"Name": "MSFT", "Ticker": "MSFT", "Units": 29, "PurchaseValAED": 55272, "Owner": "MV", "Sector": "Tech"},
     
     # --- SV PORTFOLIO ---
     {"Name": "Apple [SV]", "Ticker": "AAPL", "Units": 2, "PurchaseValAED": 1487, "Owner": "SV", "Sector": "Tech"},
@@ -1110,40 +1103,6 @@ with us_tab:
     if positions.empty:
         st.info("No US positions found.")
     else:
-        # 1. AGGREGATE STATS
-        us_total_val_aed = positions["ValueAED"].sum()
-        us_total_purchase_aed = positions["PurchaseAED"].sum()
-        us_total_pl_aed = positions["TotalPLAED"].sum()
-        
-        us_total_pl_pct = (us_total_pl_aed / us_total_purchase_aed * 100.0) if us_total_purchase_aed > 0 else 0.0
-        
-        us_val_str = f"AED {us_total_val_aed:,.0f}"
-        us_pl_str = f"AED {us_total_pl_aed:,.0f}"
-        us_pl_pct_str = f"{us_total_pl_pct:+.2f}%"
-        us_cost_str = f"AED {us_total_purchase_aed:,.0f}"
-        
-        # Determine aggregate colors
-        color_agg_pl = COLOR_SUCCESS if us_total_pl_aed >= 0 else COLOR_DANGER
-        color_agg_pct = COLOR_SUCCESS if us_total_pl_pct >= 0 else COLOR_DANGER
-
-        # 2. SUMMARY CARD (Top)
-        st.markdown(
-            f"""
-            <div class="card mf-card">
-                <div class="kpi-top-row">
-                    <div class="kpi-label">COST: {us_cost_str}</div>
-                    <div class="kpi-label">PROFIT: <span style="color:{color_agg_pl} !important; font-weight:600;">{us_pl_str}</span></div>
-                </div>
-                <div class="kpi-mid-row">
-                    <div class="kpi-number">{us_val_str}</div>
-                    <div class="kpi-number"><span style="color:{color_agg_pct} !important;">{us_pl_pct_str}</span></div>
-                </div>
-                <div class="kpi-label">PORTFOLIO AGGREGATE</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-        
         # 3. INDIVIDUAL STOCK CARDS (REDESIGNED)
         # Sorted by Total Profit AED Descending
         sorted_pos = positions.sort_values(by="TotalPLAED", ascending=False).to_dict('records')
@@ -1168,9 +1127,9 @@ with us_tab:
             pl_aed_str = f"{'+ ' if pl_aed >= 0 else ''}AED {pl_aed:,.0f}"
             pl_pct_str = f"{pl_pct:+.2f}%"
             
-            # Colors
-            color_pl = COLOR_SUCCESS if pl_aed >= 0 else COLOR_DANGER
-            color_pct = COLOR_SUCCESS if pl_pct >= 0 else COLOR_DANGER
+            # Colors - using new variables TEXT_GREEN_DARK / TEXT_RED_DARK
+            color_pl = TEXT_GREEN_DARK if pl_aed >= 0 else TEXT_RED_DARK
+            color_pct = TEXT_GREEN_DARK if pl_pct >= 0 else TEXT_RED_DARK
             
             # Clean Name
             display_name = name.upper().replace(" [SV]", "")
