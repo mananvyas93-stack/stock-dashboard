@@ -58,8 +58,7 @@ st.markdown(
     .mf-card {
         background: #f4f6f8 !important;
         border-color: #e0e4ea !important;
-        /* FIXED: Removed !important to allow text color overrides */
-        color: #0f1a2b; 
+        color: #0f1a2b !important;
         display: flex;
         flex-direction: column;
         justify-content: space-between; 
@@ -85,7 +84,6 @@ st.markdown(
     }
     
     .mf-card .kpi-number {
-         /* FIXED: Removed !important so profit colors can override this */
          color: #0f1a2b; 
     }
 
@@ -256,6 +254,7 @@ TEXT_GREEN_DARK = "#15803d"
 TEXT_RED_DARK = "#b91c1c"
 
 # ---------- PORTFOLIO CONFIG ----------
+# UPDATED with latest MSFT data (29 units)
 portfolio_config = [
     # --- MV PORTFOLIO ---
     {"Name": "Alphabet", "Ticker": "GOOGL", "Units": 51, "PurchaseValAED": 34152, "Owner": "MV", "Sector": "Tech"},
@@ -267,7 +266,7 @@ portfolio_config = [
     {"Name": "Amazon", "Ticker": "AMZN", "Units": 59, "PurchaseValAED": 47751, "Owner": "MV", "Sector": "Retail"},
     {"Name": "Nvidia", "Ticker": "NVDA", "Units": 80, "PurchaseValAED": 51051, "Owner": "MV", "Sector": "Semi"},
     {"Name": "Meta", "Ticker": "META", "Units": 24, "PurchaseValAED": 60991, "Owner": "MV", "Sector": "Tech"},
-    {"Name": "MSFT", "Ticker": "MSFT", "Units": 29, "PurchaseValAED": 55272, "Owner": "MV", "Sector": "Tech"},
+    {"Name": "MSFT", "Ticker": "MSFT", "Units": 29, "PurchaseValAED": 55272, "Owner": "MV", "Sector": "Tech"}, # UPDATED
     
     # --- SV PORTFOLIO ---
     {"Name": "Apple [SV]", "Ticker": "AAPL", "Units": 2, "PurchaseValAED": 1487, "Owner": "SV", "Sector": "Tech"},
@@ -1098,7 +1097,7 @@ with sv_tab:
 
         st.plotly_chart(fig_sv, use_container_width=True, config={"displayModeBar": False})
         
-        # --- NEW SECTION: SV HOLDINGS CARDS ---
+        # --- NEW SECTION: SV HOLDINGS CARDS (FIXED LOOP) ---
         st.markdown(
             """<div style="font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#16233a; font-size:0.75rem; margin:14px 0 4px 0;">SV Holdings</div>""",
             unsafe_allow_html=True,
@@ -1118,7 +1117,7 @@ with sv_tab:
             pl_aed = row["TotalPLAED"]
             pl_pct = row["TotalPct"]
             
-            # Explicit SV Label (since this whole tab is SV, we can just say "UNITS • SV")
+            # Explicit SV Label
             units_str = f"{units:,.0f} UNITS • SV"
             
             val_aed_str = f"AED {val_aed:,.0f}"
@@ -1126,13 +1125,14 @@ with sv_tab:
             pl_pct_str = f"{pl_pct:+.2f}%"
             
             # Colors - using new variables TEXT_GREEN_DARK / TEXT_RED_DARK
+            # We are injecting hex codes directly to ensure !important works
             color_pl = TEXT_GREEN_DARK if pl_aed >= 0 else TEXT_RED_DARK
             color_pct = TEXT_GREEN_DARK if pl_pct >= 0 else TEXT_RED_DARK
             
             # Clean Name
             display_name = name.upper().replace(" [SV]", "")
 
-            # Render HTML Card
+            # Render HTML Card (Flattened to prevent MD errors)
             html_card = f"""
 <div class="card mf-card">
 <div class="kpi-top-row">
