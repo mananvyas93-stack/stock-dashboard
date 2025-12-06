@@ -1102,9 +1102,6 @@ with sv_tab:
         # Sort by Total Profit High to Low
         sorted_sv = sv_positions.sort_values(by="TotalPLAED", ascending=False).to_dict('records')
         
-        # Base Label Style
-        base_label_style = "font-family:'Space Grotesk',sans-serif; font-size:0.6rem; font-weight:400; text-transform:uppercase; margin:0;"
-        
         for row in sorted_sv:
             name = row["Name"]
             ticker = row["Ticker"]
@@ -1132,7 +1129,7 @@ with sv_tab:
 <div class="card mf-card">
 <div class="kpi-top-row">
 <div class="kpi-label">{units_str}</div>
-<div style="{base_label_style} color:{color_pl} !important; font-weight:600;">{pl_aed_str}</div>
+<div class="kpi-label" style="color:{color_pl} !important; font-weight:600;">{pl_aed_str}</div>
 </div>
 <div class="kpi-mid-row">
 <div class="kpi-number">{display_name}</div>
@@ -1140,7 +1137,7 @@ with sv_tab:
 </div>
 <div class="kpi-top-row">
 <div class="kpi-label" style="color:#9ba7b8 !important;">{ticker}</div>
-<div style="{base_label_style} color:{color_pct} !important; font-weight:600;">{pl_pct_str}</div>
+<div class="kpi-label" style="color:{color_pct} !important; font-weight:600;">{pl_pct_str}</div>
 </div>
 </div>
 """
@@ -1155,9 +1152,6 @@ with us_tab:
         # 3. INDIVIDUAL STOCK CARDS (REDESIGNED)
         # Sorted by Total Profit AED Descending
         sorted_pos = positions.sort_values(by="TotalPLAED", ascending=False).to_dict('records')
-        
-        # Base Label Style to allow color override (avoids the class .kpi-label color conflict)
-        base_label_style = "font-family:'Space Grotesk',sans-serif; font-size:0.6rem; font-weight:400; text-transform:uppercase; margin:0;"
         
         for row in sorted_pos:
             name = row["Name"]
@@ -1183,12 +1177,12 @@ with us_tab:
             # Clean Name
             display_name = name.upper().replace(" [SV]", "")
 
-            # NEW CARD LAYOUT (FLATTENED TO PREVENT MD ERROR)
+            # NEW CARD LAYOUT
             html_card = f"""
 <div class="card mf-card">
 <div class="kpi-top-row">
 <div class="kpi-label">{units_str}</div>
-<div style="{base_label_style} color:{color_pl} !important; font-weight:600;">{pl_aed_str}</div>
+<div class="kpi-label" style="color:{color_pl} !important; font-weight:600;">{pl_aed_str}</div>
 </div>
 <div class="kpi-mid-row">
 <div class="kpi-number">{display_name}</div>
@@ -1196,7 +1190,7 @@ with us_tab:
 </div>
 <div class="kpi-top-row">
 <div class="kpi-label" style="color:#9ba7b8 !important;">{ticker}</div>
-<div style="{base_label_style} color:{color_pct} !important; font-weight:600;">{pl_pct_str}</div>
+<div class="kpi-label" style="color:{color_pct} !important; font-weight:600;">{pl_pct_str}</div>
 </div>
 </div>
 """
