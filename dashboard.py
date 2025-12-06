@@ -29,7 +29,8 @@ st.markdown(
         --accent: #4aa3ff;
         --accent-soft: #7fc3ff;
         --danger: #f27d72;
-        --success: #6bcf8f;
+        /* UPDATED: Darker Green for better visibility on light backgrounds */
+        --success: #2e7d32; 
     }
 
     html, body, [class*="css"] {
@@ -73,7 +74,6 @@ st.markdown(
         font-weight: 600;
     }
 
-    /* REMOVED !important TO ALLOW OVERRIDES */
     .mf-card .kpi-label {
         color: #475569; 
         font-weight: 500;
@@ -89,11 +89,12 @@ st.markdown(
     }
 
     /* --- UTILITY CLASSES FOR PROFIT/LOSS COLORS --- */
+    /* Using the new darker green variable */
     .text-green {
-        color: #6bcf8f !important;
+        color: var(--success) !important;
     }
     .text-red {
-        color: #f27d72 !important;
+        color: var(--danger) !important;
     }
 
     /* --------------------------------------------------------- */
@@ -254,7 +255,8 @@ DEFAULT_USD_AED = 3.6725
 DEFAULT_AED_INR = 24.50
 
 COLOR_PRIMARY = "#4aa3ff"
-COLOR_SUCCESS = "#6bcf8f"
+# UPDATED: Darker green for better contrast
+COLOR_SUCCESS = "#2e7d32" 
 COLOR_DANGER = "#f27d72"
 COLOR_BG = "#0f1a2b"
 
@@ -1120,21 +1122,21 @@ with us_tab:
         us_pl_pct_str = f"{us_total_pl_pct:+.2f}%"
         us_cost_str = f"AED {us_total_purchase_aed:,.0f}"
         
-        # Determine aggregate colors using UTILITY CLASSES
-        class_agg_pl = "text-green" if us_total_pl_aed >= 0 else "text-red"
-        class_agg_pct = "text-green" if us_total_pl_pct >= 0 else "text-red"
+        # Determine aggregate colors
+        color_agg_pl = COLOR_SUCCESS if us_total_pl_aed >= 0 else COLOR_DANGER
+        color_agg_pct = COLOR_SUCCESS if us_total_pl_pct >= 0 else COLOR_DANGER
 
-        # 2. SUMMARY CARD (Top) - USING DIVs instead of label class
+        # 2. SUMMARY CARD (Top)
         st.markdown(
             f"""
             <div class="card mf-card">
                 <div class="kpi-top-row">
                     <div class="kpi-label">COST: {us_cost_str}</div>
-                    <div class="kpi-label">PROFIT: <span class="{class_agg_pl}" style="font-weight:600;">{us_pl_str}</span></div>
+                    <div class="kpi-label">PROFIT: <span style="color:{color_agg_pl} !important; font-weight:600;">{us_pl_str}</span></div>
                 </div>
                 <div class="kpi-mid-row">
                     <div class="kpi-number">{us_val_str}</div>
-                    <div class="kpi-number"><span class="{class_agg_pct}">{us_pl_pct_str}</span></div>
+                    <div class="kpi-number"><span style="color:{color_agg_pct} !important;">{us_pl_pct_str}</span></div>
                 </div>
                 <div class="kpi-label">PORTFOLIO AGGREGATE</div>
             </div>
@@ -1166,27 +1168,27 @@ with us_tab:
             pl_aed_str = f"{'+ ' if pl_aed >= 0 else ''}AED {pl_aed:,.0f}"
             pl_pct_str = f"{pl_pct:+.2f}%"
             
-            # Colors - Use Utility Classes
-            class_pl = "text-green" if pl_aed >= 0 else "text-red"
-            class_pct = "text-green" if pl_pct >= 0 else "text-red"
+            # Colors
+            color_pl = COLOR_SUCCESS if pl_aed >= 0 else COLOR_DANGER
+            color_pct = COLOR_SUCCESS if pl_pct >= 0 else COLOR_DANGER
             
             # Clean Name
             display_name = name.upper().replace(" [SV]", "")
 
-            # NEW CARD LAYOUT (Using CSS Classes for Color)
+            # NEW CARD LAYOUT (FLATTENED TO PREVENT MD ERROR)
             html_card = f"""
 <div class="card mf-card">
 <div class="kpi-top-row">
 <div class="kpi-label">{units_str}</div>
-<div style="{base_label_style}"><span class="{class_pl}" style="font-weight:600;">{pl_aed_str}</span></div>
+<div style="{base_label_style}"><span style="color:{color_pl} !important; font-weight:600;">{pl_aed_str}</span></div>
 </div>
 <div class="kpi-mid-row">
 <div class="kpi-number">{display_name}</div>
 <div class="kpi-number">{val_aed_str}</div>
 </div>
 <div class="kpi-top-row">
-<div class="kpi-label" style="color:#9ba7b8;">{ticker}</div>
-<div style="{base_label_style}"><span class="{class_pct}" style="font-weight:600;">{pl_pct_str}</span></div>
+<div class="kpi-label" style="color:#9ba7b8 !important;">{ticker}</div>
+<div style="{base_label_style}"><span style="color:{color_pct} !important; font-weight:600;">{pl_pct_str}</span></div>
 </div>
 </div>
 """
