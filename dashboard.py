@@ -29,7 +29,7 @@ st.markdown(
         --accent: #4aa3ff;
         --accent-soft: #7fc3ff;
         --danger: #f27d72;
-        --success: #6bcf8f; /* Vibrant green for Heatmap */
+        --success: #6bcf8f; /* Vibrant Green for Heatmap */
     }
 
     html, body, [class*="css"] {
@@ -58,7 +58,8 @@ st.markdown(
     .mf-card {
         background: #f4f6f8 !important;
         border-color: #e0e4ea !important;
-        color: #0f1a2b !important;
+        /* FIXED: Removed !important to allow text color overrides */
+        color: #0f1a2b; 
         display: flex;
         flex-direction: column;
         justify-content: space-between; 
@@ -84,7 +85,17 @@ st.markdown(
     }
     
     .mf-card .kpi-number {
+         /* FIXED: Removed !important so profit colors can override this */
          color: #0f1a2b; 
+    }
+
+    /* --- FORCE PROFIT/LOSS COLORS --- */
+    /* These specific classes will force the color on the white cards */
+    .profit-plus {
+        color: #15803d !important; /* Dark Green */
+    }
+    .profit-minus {
+        color: #b91c1c !important; /* Dark Red */
     }
 
     /* --------------------------------------------------------- */
@@ -244,17 +255,13 @@ st.markdown(
 DEFAULT_USD_AED = 3.6725
 DEFAULT_AED_INR = 24.50
 
-# Global colors (Heatmap uses COLOR_SUCCESS)
 COLOR_PRIMARY = "#4aa3ff"
-COLOR_SUCCESS = "#6bcf8f" 
+COLOR_SUCCESS = "#6bcf8f" # Vibrant Green for Heatmap
 COLOR_DANGER = "#f27d72"
 COLOR_BG = "#0f1a2b"
 
-# Specific Darker Colors for White Cards (Text visibility)
-TEXT_GREEN_DARK = "#15803d" 
-TEXT_RED_DARK = "#b91c1c"
-
 # ---------- PORTFOLIO CONFIG ----------
+# UPDATED with latest MSFT data (29 units)
 portfolio_config = [
     # --- MV PORTFOLIO ---
     {"Name": "Alphabet", "Ticker": "GOOGL", "Units": 51, "PurchaseValAED": 34152, "Owner": "MV", "Sector": "Tech"},
@@ -266,7 +273,7 @@ portfolio_config = [
     {"Name": "Amazon", "Ticker": "AMZN", "Units": 59, "PurchaseValAED": 47751, "Owner": "MV", "Sector": "Retail"},
     {"Name": "Nvidia", "Ticker": "NVDA", "Units": 80, "PurchaseValAED": 51051, "Owner": "MV", "Sector": "Semi"},
     {"Name": "Meta", "Ticker": "META", "Units": 24, "PurchaseValAED": 60991, "Owner": "MV", "Sector": "Tech"},
-    {"Name": "MSFT", "Ticker": "MSFT", "Units": 29, "PurchaseValAED": 55272, "Owner": "MV", "Sector": "Tech"},
+    {"Name": "MSFT", "Ticker": "MSFT", "Units": 29, "PurchaseValAED": 55272, "Owner": "MV", "Sector": "Tech"}, # UPDATED
     
     # --- SV PORTFOLIO ---
     {"Name": "Apple [SV]", "Ticker": "AAPL", "Units": 2, "PurchaseValAED": 1487, "Owner": "SV", "Sector": "Tech"},
@@ -1127,10 +1134,9 @@ with us_tab:
             pl_aed_str = f"{'+ ' if pl_aed >= 0 else ''}AED {pl_aed:,.0f}"
             pl_pct_str = f"{pl_pct:+.2f}%"
             
-            # Colors - using new variables TEXT_GREEN_DARK / TEXT_RED_DARK
-            # We are injecting hex codes directly to ensure !important works
-            color_pl = TEXT_GREEN_DARK if pl_aed >= 0 else TEXT_RED_DARK
-            color_pct = TEXT_GREEN_DARK if pl_pct >= 0 else TEXT_RED_DARK
+            # Colors - using new variables profit-plus / profit-minus
+            class_pl = "profit-plus" if pl_aed >= 0 else "profit-minus"
+            class_pct = "profit-plus" if pl_pct >= 0 else "profit-minus"
             
             # Clean Name
             display_name = name.upper().replace(" [SV]", "")
@@ -1140,7 +1146,7 @@ with us_tab:
 <div class="card mf-card">
 <div class="kpi-top-row">
 <div class="kpi-label">{units_str}</div>
-<div style="{base_label_style}"><span style="color:{color_pl} !important; font-weight:600;">{pl_aed_str}</span></div>
+<div style="{base_label_style}"><span class="{class_pl}" style="font-weight:600;">{pl_aed_str}</span></div>
 </div>
 <div class="kpi-mid-row">
 <div class="kpi-number">{display_name}</div>
@@ -1148,7 +1154,7 @@ with us_tab:
 </div>
 <div class="kpi-top-row">
 <div class="kpi-label" style="color:#9ba7b8 !important;">{ticker}</div>
-<div style="{base_label_style}"><span style="color:{color_pct} !important; font-weight:600;">{pl_pct_str}</span></div>
+<div style="{base_label_style}"><span class="{class_pct}" style="font-weight:600;">{pl_pct_str}</span></div>
 </div>
 </div>
 """
