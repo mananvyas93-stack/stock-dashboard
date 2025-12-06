@@ -29,7 +29,7 @@ st.markdown(
         --accent: #4aa3ff;
         --accent-soft: #7fc3ff;
         --danger: #f27d72;
-        --success: #6bcf8f; /* Vibrant Green for Heatmap only */
+        --success: #6bcf8f; /* Vibrant Green for Heatmap */
     }
 
     html, body, [class*="css"] {
@@ -58,7 +58,8 @@ st.markdown(
     .mf-card {
         background: #f4f6f8 !important;
         border-color: #e0e4ea !important;
-        color: #0f1a2b; /* Default text color */
+        /* FIXED: Removed !important to allow text color overrides */
+        color: #0f1a2b; 
         display: flex;
         flex-direction: column;
         justify-content: space-between; 
@@ -67,7 +68,7 @@ st.markdown(
         box-sizing: border-box;
     }
 
-    /* --- TEXT STYLES FOR CARDS --- */
+    /* --- COLOR CORRECTION FOR MUTUAL FUND TAB & WHITE CARDS --- */
     .mf-card .page-title {
         color: #020617 !important; 
         font-weight: 600;
@@ -84,7 +85,17 @@ st.markdown(
     }
     
     .mf-card .kpi-number {
+         /* FIXED: Removed !important so profit colors can override this */
          color: #0f1a2b; 
+    }
+
+    /* --- FORCE PROFIT/LOSS COLORS --- */
+    /* These specific classes will force the color on the white cards */
+    .profit-plus {
+        color: #15803d !important; /* Dark Green */
+    }
+    .profit-minus {
+        color: #b91c1c !important; /* Dark Red */
     }
 
     /* --------------------------------------------------------- */
@@ -93,7 +104,7 @@ st.markdown(
     .kpi-label {
         font-family: 'Space Grotesk', sans-serif;
         font-size: 0.6rem; 
-        font-weight: 400;
+        font-weight: 400; /* Normal weight */
         text-transform: uppercase;
         letter-spacing: 0.05em;
         line-height: 1.0;
@@ -131,7 +142,7 @@ st.markdown(
         display: flex;
         justify-content: space-between;
         width: 100%;
-        align-items: flex-end; 
+        align-items: flex-end; /* Align bottom so text sits nicely */
     }
 
     .page-title {
@@ -245,7 +256,7 @@ DEFAULT_USD_AED = 3.6725
 DEFAULT_AED_INR = 24.50
 
 COLOR_PRIMARY = "#4aa3ff"
-COLOR_SUCCESS = "#6bcf8f"
+COLOR_SUCCESS = "#6bcf8f" # Vibrant Green for Heatmap
 COLOR_DANGER = "#f27d72"
 COLOR_BG = "#0f1a2b"
 
@@ -1092,59 +1103,6 @@ with sv_tab:
         )
 
         st.plotly_chart(fig_sv, use_container_width=True, config={"displayModeBar": False})
-        
-        # --- NEW SECTION: SV HOLDINGS CARDS (FIXED LOOP) ---
-        st.markdown(
-            """<div style="font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#16233a; font-size:0.75rem; margin:14px 0 4px 0;">SV Holdings</div>""",
-            unsafe_allow_html=True,
-        )
-        
-        # Sort by Total Profit High to Low
-        sorted_sv = sv_positions.sort_values(by="TotalPLAED", ascending=False).to_dict('records')
-        
-        # Base Label Style
-        base_label_style = "font-family:'Space Grotesk',sans-serif; font-size:0.6rem; font-weight:400; text-transform:uppercase; margin:0;"
-        
-        for row in sorted_sv:
-            name = row["Name"]
-            ticker = row["Ticker"]
-            units = row["Units"]
-            val_aed = row["ValueAED"]
-            pl_aed = row["TotalPLAED"]
-            pl_pct = row["TotalPct"]
-            
-            # Explicit SV Label
-            units_str = f"{units:,.0f} UNITS • SV"
-            
-            val_aed_str = f"AED {val_aed:,.0f}"
-            pl_aed_str = f"{'+ ' if pl_aed >= 0 else ''}AED {pl_aed:,.0f}"
-            pl_pct_str = f"{pl_pct:+.2f}%"
-            
-            # Define colors locally to ensure no missing variables
-            color_pl = "#15803d" if pl_aed >= 0 else "#b91c1c"
-            color_pct = "#15803d" if pl_pct >= 0 else "#b91c1c"
-            
-            # Clean Name
-            display_name = name.upper().replace(" [SV]", "")
-
-            # Render HTML Card
-            html_card = f"""
-<div class="card mf-card">
-<div class="kpi-top-row">
-<div class="kpi-label">{units_str}</div>
-<div style="{base_label_style}"><span style="color:{color_pl} !important; font-weight:600;">{pl_aed_str}</span></div>
-</div>
-<div class="kpi-mid-row">
-<div class="kpi-number">{display_name}</div>
-<div class="kpi-number">{val_aed_str}</div>
-</div>
-<div class="kpi-top-row">
-<div class="kpi-label" style="color:#9ba7b8 !important;">{ticker}</div>
-<div style="{base_label_style}"><span style="color:{color_pct} !important; font-weight:600;">{pl_pct_str}</span></div>
-</div>
-</div>
-"""
-            st.markdown(html_card, unsafe_allow_html=True)
 
 # ---------- US STOCKS TAB (NEW) ----------
 
@@ -1176,9 +1134,9 @@ with us_tab:
             pl_aed_str = f"{'+ ' if pl_aed >= 0 else ''}AED {pl_aed:,.0f}"
             pl_pct_str = f"{pl_pct:+.2f}%"
             
-            # Define colors locally
-            color_pl = "#15803d" if pl_aed >= 0 else "#b91c1c"
-            color_pct = "#15803d" if pl_pct >= 0 else "#b91c1c"
+            # Colors - using new variables profit-plus / profit-minus
+            class_pl = "profit-plus" if pl_aed >= 0 else "profit-minus"
+            class_pct = "profit-plus" if pl_pct >= 0 else "profit-minus"
             
             # Clean Name
             display_name = name.upper().replace(" [SV]", "")
@@ -1188,7 +1146,7 @@ with us_tab:
 <div class="card mf-card">
 <div class="kpi-top-row">
 <div class="kpi-label">{units_str}</div>
-<div style="{base_label_style}"><span style="color:{color_pl} !important; font-weight:600;">{pl_aed_str}</span></div>
+<div style="{base_label_style}"><span class="{class_pl}" style="font-weight:600;">{pl_aed_str}</span></div>
 </div>
 <div class="kpi-mid-row">
 <div class="kpi-number">{display_name}</div>
@@ -1196,7 +1154,7 @@ with us_tab:
 </div>
 <div class="kpi-top-row">
 <div class="kpi-label" style="color:#9ba7b8 !important;">{ticker}</div>
-<div style="{base_label_style}"><span style="color:{color_pct} !important; font-weight:600;">{pl_pct_str}</span></div>
+<div style="{base_label_style}"><span class="{class_pct}" style="font-weight:600;">{pl_pct_str}</span></div>
 </div>
 </div>
 """
