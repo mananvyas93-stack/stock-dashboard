@@ -2,7 +2,8 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 import plotly.express as px
-from datetime import datetime, timedelta, date
+# FIXED: Added 'time' back to imports to prevent NameError crash
+from datetime import datetime, time, timedelta, date
 from zoneinfo import ZoneInfo
 import json
 from pathlib import Path
@@ -67,7 +68,7 @@ st.markdown(
         box-sizing: border-box;
     }
 
-    /* --- COLOR CORRECTION FOR CARDS --- */
+    /* --- TEXT STYLES FOR CARDS --- */
     .mf-card .page-title {
         color: #020617 !important; 
         font-weight: 600;
@@ -108,13 +109,6 @@ st.markdown(
         line-height: 1.0;
     }
     
-    .kpi-value-main {
-        font-family: 'Space Grotesk', sans-serif;
-        font-size: 1.0rem;
-        font-weight: 700;
-        line-height: 1.1;
-    }
-
     .kpi-mid-row {
         display: flex;
         justify-content: space-between;
@@ -167,7 +161,7 @@ st.markdown(
 
     .stTabs [data-baseweb="tab"] {
         position: relative;
-        flex: 1 1 20% !important; /* Adjusted for 5 tabs */
+        flex: 1 1 20% !important; /* Adjusted width for 5 tabs */
         display: flex;
         align-items: center;
         justify-content: center;
@@ -246,11 +240,8 @@ COLOR_SUCCESS = "#6bcf8f"
 COLOR_DANGER = "#f27d72"
 COLOR_BG = "#0f1a2b"
 
-# Card Text Colors (Darker for White Backgrounds)
-TEXT_GREEN_DARK = "#15803d" 
-TEXT_RED_DARK = "#b91c1c"
-
 # ---------- PORTFOLIO CONFIG ----------
+# UPDATED with latest MSFT data (29 units)
 portfolio_config = [
     # --- MV PORTFOLIO ---
     {"Name": "Alphabet", "Ticker": "GOOGL", "Units": 51, "PurchaseValAED": 34152, "Owner": "MV", "Sector": "Tech"},
@@ -324,7 +315,7 @@ MF_CONFIG = [
         "Units": 9054.85,
         "CostINR": 1327433.63,
         "InitialValueINR": 1429353.35,
-        "Ticker": "0P0000ON3O.BO"
+        "Ticker": "0P00005ON3O.BO"
     },
     {
         "Scheme": "Nippon India Multi Cap Fund Growth",
@@ -441,21 +432,16 @@ def get_fx_rates() -> dict:
         "USD_AED": DEFAULT_USD_AED,
         "AED_INR": DEFAULT_AED_INR
     }
-    
     try:
         hist = yf.Ticker("USDAED=X").history(period="5d")
         if not hist.empty:
             rates["USD_AED"] = float(hist["Close"].iloc[-1])
-    except Exception:
-        pass
-        
+    except: pass
     try:
         hist = yf.Ticker("AEDINR=X").history(period="5d")
         if not hist.empty:
             rates["AED_INR"] = float(hist["Close"].iloc[-1])
-    except Exception:
-        pass
-        
+    except: pass
     return rates
 
 
@@ -469,33 +455,18 @@ def fmt_inr_lacs_from_aed(aed_value: float, aed_to_inr: float) -> str:
 @st.cache_data(ttl=300)
 def load_prices_close() -> pd.DataFrame:
     tickers = sorted({item["Ticker"] for item in portfolio_config})
-    data = yf.download(
-        tickers=tickers,
-        period="5d",
-        interval="1d",
-        auto_adjust=True,
-        group_by="ticker",
-        progress=False,
-        threads=False,
-    )
-    if data is None or data.empty:
-        return pd.DataFrame()
+    data = yf.download(tickers, period="5d", interval="1d", auto_adjust=True, group_by="ticker", progress=False, threads=False)
+    if data is None or data.empty: return pd.DataFrame()
     if isinstance(data.columns, pd.MultiIndex):
         lvl1 = data.columns.get_level_values(1)
-        if "Adj Close" in lvl1:
-            close = data.xs("Adj Close", level=1, axis=1)
-        elif "Close" in lvl1:
-            close = data.xs("Close", level=1, axis=1)
-        else:
-            close = data.xs(lvl1[0], level=1, axis=1)
+        if "Adj Close" in lvl1: close = data.xs("Adj Close", level=1, axis=1)
+        elif "Close" in lvl1: close = data.xs("Close", level=1, axis=1)
+        else: close = data.xs(lvl1[0], level=1, axis=1)
         close.columns = close.columns.get_level_values(0)
     else:
-        if "Adj Close" in data.columns:
-            close = data[["Adj Close"]]
-        elif "Close" in data.columns:
-            close = data[["Close"]]
-        else:
-            return pd.DataFrame()
+        if "Adj Close" in data.columns: close = data[["Adj Close"]]
+        elif "Close" in data.columns: close = data[["Close"]]
+        else: return pd.DataFrame()
         close.columns = [tickers[0]]
     close = close.dropna(how="all")
     return close
@@ -504,21 +475,15 @@ def load_prices_close() -> pd.DataFrame:
 def load_prices_intraday() -> pd.Series:
     tickers = sorted({item["Ticker"] for item in portfolio_config})
     last_prices: dict[str, float] = {}
-
     us_tz = ZoneInfo("America/New_York")
-    
     for t in tickers:
         try:
             tkr = yf.Ticker(t)
             hist = tkr.history(period="5d", interval="1m", prepost=True)
-            if hist is None or hist.empty:
-                continue
+            if hist is None or hist.empty: continue
             last_prices[t] = float(hist["Close"].iloc[-1])
-        except Exception:
-            continue
-
-    if not last_prices:
-        return pd.Series(dtype=float)
+        except: continue
+    if not last_prices: return pd.Series(dtype=float)
     return pd.Series(last_prices)
 
 def get_market_phase_and_prices():
@@ -527,22 +492,15 @@ def get_market_phase_and_prices():
     weekday = now_us.weekday()
     t = now_us.time()
     
-    if weekday >= 5:
-        phase_str = "Post Market"
+    if weekday >= 5: phase_str = "Post Market"
     else:
-        if time(4,0) <= t < time(9,30):
-            phase_str = "Pre-Market"
-        elif time(9,30) <= t < time(16,0):
-            phase_str = "Live Market"
-        else:
-            phase_str = "Post Market"
+        if time(4,0) <= t < time(9,30): phase_str = "Pre-Market"
+        elif time(9,30) <= t < time(16,0): phase_str = "Live Market"
+        else: phase_str = "Post Market"
 
     base_close = load_prices_close()
     intraday = load_prices_intraday()
-
-    if intraday is None or intraday.empty:
-        return phase_str, base_close
-
+    if intraday is None or intraday.empty: return phase_str, base_close
     return phase_str, intraday
 
 @st.cache_data(ttl=60)
@@ -557,21 +515,17 @@ def get_market_indices_change(phase_str: str) -> str:
                 prev_close = hist["Close"].iloc[-2]
                 pct = (close_now / prev_close - 1) * 100
                 nifty_str = f"Nifty {pct:+.1f}%"
-    except:
-        pass
+    except: pass
 
     nasdaq_str = "Nasdaq 0.0%"
     target_ticker = "QQQ"
-    
     try:
         tkr = yf.Ticker(target_ticker)
         hist_1m = tkr.history(period="1d", interval="1m", prepost=True)
         daily = tkr.history(period="5d")
-        
         if not hist_1m.empty and not daily.empty:
             curr = hist_1m["Close"].iloc[-1]
             prev_close = 0.0
-            
             if "Post" in phase_str:
                 prev_close = daily["Close"].iloc[-1]
                 pct_post = (curr / prev_close - 1) * 100
@@ -581,58 +535,41 @@ def get_market_indices_change(phase_str: str) -> str:
                         close_prev = daily["Close"].iloc[-2]
                         pct = (close_today / close_prev - 1) * 100
                         nasdaq_str = f"Nasdaq {pct:+.1f}%"
-                    else:
-                        nasdaq_str = f"Nasdaq {pct_post:+.1f}%"
-                else:
-                    nasdaq_str = f"Nasdaq {phase_str} {pct_post:+.1f}%"
+                    else: nasdaq_str = f"Nasdaq {pct_post:+.1f}%"
+                else: nasdaq_str = f"Nasdaq {phase_str} {pct_post:+.1f}%"
             else:
                 last_daily_date = daily.index[-1].date()
                 now_date = datetime.now(ZoneInfo("America/New_York")).date()
                 if last_daily_date == now_date:
-                    if len(daily) >= 2:
-                        prev_close = daily["Close"].iloc[-2]
-                    else:
-                        prev_close = daily["Close"].iloc[-1] 
-                else:
-                    prev_close = daily["Close"].iloc[-1]
-            
+                    if len(daily) >= 2: prev_close = daily["Close"].iloc[-2]
+                    else: prev_close = daily["Close"].iloc[-1] 
+                else: prev_close = daily["Close"].iloc[-1]
                 if prev_close > 0 and "Nasdaq" not in nasdaq_str: 
                     pct = (curr / prev_close - 1) * 100
                     nasdaq_str = f"Nasdaq {phase_str} {pct:+.1f}%"
-    except:
-        pass
-
+    except: pass
     return f"{nifty_str} <span style='opacity:0.4; margin:0 6px;'>|</span> {nasdaq_str}"
 
 def build_positions_from_prices(prices_close: pd.DataFrame, prices_intraday: pd.Series | None, usd_to_aed_rate: float) -> pd.DataFrame:
     rows = []
-    
     for item in portfolio_config:
         t = item["Ticker"]
         units = float(item["Units"])
         purchase = float(item["PurchaseValAED"])
-
         live_price = 0.0
-        if prices_intraday is not None:
-            live_price = float(prices_intraday.get(t, 0.0))
+        if prices_intraday is not None: live_price = float(prices_intraday.get(t, 0.0))
+        if live_price == 0 and not prices_close.empty: live_price = float(prices_close.iloc[-1].get(t, 0.0))
         
-        if live_price == 0 and not prices_close.empty:
-             live_price = float(prices_close.iloc[-1].get(t, 0.0))
-
         prev_close_price = 0.0
         if not prices_close.empty:
             last_date = prices_close.index[-1].date()
             us_tz = ZoneInfo("America/New_York")
             today_date = datetime.now(us_tz).date()
-            
             col_data = prices_close[t]
             if len(col_data) >= 2:
-                if last_date == today_date:
-                    prev_close_price = float(col_data.iloc[-2])
-                else:
-                    prev_close_price = float(col_data.iloc[-1])
-            elif len(col_data) == 1:
-                prev_close_price = float(col_data.iloc[-1])
+                if last_date == today_date: prev_close_price = float(col_data.iloc[-2])
+                else: prev_close_price = float(col_data.iloc[-1])
+            elif len(col_data) == 1: prev_close_price = float(col_data.iloc[-1])
 
         if live_price <= 0:
             value_aed = purchase
@@ -645,75 +582,41 @@ def build_positions_from_prices(prices_close: pd.DataFrame, prices_intraday: pd.
             price_usd = live_price
             price_aed = price_usd * usd_to_aed_rate
             value_aed = price_aed * units
-
-            if prev_close_price > 0:
-                day_pct = (price_usd / prev_close_price - 1.0) * 100.0
-            else:
-                day_pct = 0.0
-                
+            if prev_close_price > 0: day_pct = (price_usd / prev_close_price - 1.0) * 100.0
+            else: day_pct = 0.0
             day_pl_aed = value_aed * (day_pct / 100.0)
             total_pl_aed = value_aed - purchase
             total_pct = (total_pl_aed / purchase) * 100.0 if purchase > 0 else 0.0
 
-        rows.append(
-            {
-                "Name": item["Name"],
-                "Ticker": t,
-                "Owner": item["Owner"],
-                "Sector": item["Sector"],
-                "Units": units,
-                "PriceUSD": price_usd,
-                "ValueAED": value_aed,
-                "PurchaseAED": purchase,
-                "DayPct": day_pct,
-                "DayPLAED": day_pl_aed,
-                "TotalPct": total_pct,
-                "TotalPLAED": total_pl_aed,
-            }
-        )
-
+        rows.append({
+            "Name": item["Name"], "Ticker": t, "Owner": item["Owner"], "Sector": item["Sector"],
+            "Units": units, "PriceUSD": price_usd, "ValueAED": value_aed, "PurchaseAED": purchase,
+            "DayPct": day_pct, "DayPLAED": day_pl_aed, "TotalPct": total_pct, "TotalPLAED": total_pl_aed,
+        })
     df = pd.DataFrame(rows)
     total_val = df["ValueAED"].sum()
     df["WeightPct"] = df["ValueAED"] / total_val * 100.0 if total_val > 0 else 0.0
     return df
 
 def aggregate_for_heatmap(df: pd.DataFrame) -> pd.DataFrame:
-    if df.empty:
-        return df
+    if df.empty: return df
     mv = df[df["Owner"] == "MV"].copy()
     sv = df[df["Owner"] == "SV"].copy()
-    if sv.empty:
-        return mv.reset_index(drop=True)
-
+    if sv.empty: return mv.reset_index(drop=True)
     total_val_all = df["ValueAED"].sum()
     sv_val = sv["ValueAED"].sum()
     sv_purchase = sv["PurchaseAED"].sum()
     sv_day_pl = sv["DayPLAED"].sum()
     sv_total_pl = sv["TotalPLAED"].sum()
-
-    sv_row = pd.DataFrame(
-        [
-            {
-                "Name": "SV Portfolio",
-                "Ticker": "SVPF",
-                "Owner": "SV",
-                "Sector": "Mixed",
-                "Units": sv["Units"].sum(),
-                "PriceUSD": 0.0,
-                "ValueAED": sv_val,
-                "PurchaseAED": sv_purchase,
-                "DayPct": (sv_day_pl / sv_val * 100.0) if sv_val > 0 else 0.0,
-                "DayPLAED": sv_day_pl,
-                "TotalPct": (sv_total_pl / sv_purchase * 100.0) if sv_purchase > 0 else 0.0,
-                "TotalPLAED": sv_total_pl,
-                "WeightPct": (sv_val / total_val_all * 100.0) if total_val_all > 0 else 0.0,
-            }
-        ]
-    )
-
+    sv_row = pd.DataFrame([{
+        "Name": "SV Portfolio", "Ticker": "SVPF", "Owner": "SV", "Sector": "Mixed",
+        "Units": sv["Units"].sum(), "PriceUSD": 0.0, "ValueAED": sv_val, "PurchaseAED": sv_purchase,
+        "DayPct": (sv_day_pl / sv_val * 100.0) if sv_val > 0 else 0.0, "DayPLAED": sv_day_pl,
+        "TotalPct": (sv_total_pl / sv_purchase * 100.0) if sv_purchase > 0 else 0.0,
+        "TotalPLAED": sv_total_pl, "WeightPct": (sv_val / total_val_all * 100.0) if total_val_all > 0 else 0.0,
+    }])
     mv = mv.copy()
     mv["WeightPct"] = mv["ValueAED"] / total_val_all * 100.0 if total_val_all > 0 else 0.0
-
     combined = pd.concat([mv, sv_row], ignore_index=True)
     return combined
     # ---------- DATA PIPELINE ----------
@@ -935,6 +838,8 @@ with sv_tab:
         st.markdown("""<div style="font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#16233a; font-size:0.75rem; margin:14px 0 4px 0;">SV Holdings</div>""", unsafe_allow_html=True)
         
         sorted_sv = sv_positions.sort_values(by="TotalPLAED", ascending=False).to_dict('records')
+        
+        # Base Label Style - without color
         base_label_style = "font-family:'Space Grotesk',sans-serif; font-size:0.6rem; font-weight:400; text-transform:uppercase; margin:0;"
         
         for row in sorted_sv:
@@ -950,10 +855,12 @@ with sv_tab:
             pl_aed_str = f"{'+ ' if pl_aed >= 0 else ''}AED {pl_aed:,.0f}"
             pl_pct_str = f"{pl_pct:+.2f}%"
             
+            # Use darker hex codes directly
             color_pl = "#15803d" if pl_aed >= 0 else "#b91c1c"
             color_pct = "#15803d" if pl_pct >= 0 else "#b91c1c"
             display_name = name.upper().replace(" [SV]", "")
 
+            # Inject STYLE directly
             html_card = f"""
 <div class="card mf-card">
 <div class="kpi-top-row">
@@ -1064,12 +971,10 @@ with trend_tab:
     
     # 1. PILLS SELECTOR (Modern)
     # Using 'pills' if available in your version, else standard radio
-    # Default selection is '3M'
     
     if hasattr(st, "pills"):
         range_selection = st.pills("Time Range", ["1W", "1M", "3M", "Max"], default="3M", selection_mode="single")
     else:
-        # Fallback for older streamlit versions
         range_selection = st.radio("Time Range", ["1W", "1M", "3M", "Max"], index=2, horizontal=True)
 
     # 2. FETCH HISTORY (Cached - Load MAX by default)
@@ -1077,7 +982,9 @@ with trend_tab:
     def fetch_consolidated_history():
         # A. US STOCKS
         us_tickers = sorted({item["Ticker"] for item in portfolio_config})
-        # Start from Aug 1st, 2025 as requested
+        # Start from Aug 1st, 2025 as requested (assuming 2025 based on previous context, 
+        # but if current date is 2025, user meant 2025. If user meant 2024, please adjust year)
+        # Using 2025-08-01 as requested.
         us_data = yf.download(us_tickers, start="2025-08-01", progress=False, threads=True)
         
         if isinstance(us_data.columns, pd.MultiIndex):
