@@ -2,7 +2,7 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 import plotly.express as px
-# FIXED: Added 'time' back to imports to prevent NameError crash
+# FIXED: Added 'time' back to imports to prevent the crash
 from datetime import datetime, time, timedelta, date
 from zoneinfo import ZoneInfo
 import json
@@ -68,7 +68,7 @@ st.markdown(
         box-sizing: border-box;
     }
 
-    /* --- TEXT STYLES FOR CARDS --- */
+    /* --- COLOR CORRECTION FOR MUTUAL FUND TAB & WHITE CARDS --- */
     .mf-card .page-title {
         color: #020617 !important; 
         font-weight: 600;
@@ -90,6 +90,7 @@ st.markdown(
 
     /* --------------------------------------------------------- */
 
+    /* UNIFIED LABEL STYLE */
     .kpi-label {
         font-family: 'Space Grotesk', sans-serif;
         font-size: 0.6rem; 
@@ -101,6 +102,7 @@ st.markdown(
         margin: 0;
     }
 
+    /* UNIFIED NUMBER STYLE */
     .kpi-number {
         font-family: 'Space Grotesk', sans-serif;
         font-size: 1.1rem; 
@@ -109,6 +111,14 @@ st.markdown(
         line-height: 1.0;
     }
     
+    .kpi-value-main {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.0rem;
+        font-weight: 700;
+        line-height: 1.1;
+    }
+
+    /* Layout Helpers */
     .kpi-mid-row {
         display: flex;
         justify-content: space-between;
@@ -145,7 +155,6 @@ st.markdown(
         background: transparent !important;
     }
 
-    /* --- TABS STYLING --- */
     .stTabs {
         margin-top: 0.75rem;
     }
@@ -161,7 +170,7 @@ st.markdown(
 
     .stTabs [data-baseweb="tab"] {
         position: relative;
-        flex: 1 1 20% !important; /* Adjusted width for 5 tabs */
+        flex: 1 1 20% !important;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -175,35 +184,6 @@ st.markdown(
         cursor: pointer;
         white-space: nowrap;
         box-sizing: border-box;
-    }
-
-    @media (max-width: 768px) {
-        .stTabs [data-baseweb="tab-list"] {
-            gap: 0;
-        }
-        .stTabs [data-baseweb="tab"] {
-            font-size: 0.6rem !important;
-            padding: 4px 0 3px 0 !important;
-        }
-    }
-
-    .stTabs [role="tab"] {
-        min-width: 0 !important;
-    }
-
-    .stTabs [data-baseweb="tab"]::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        border-radius: 0;
-        background: transparent;
-        border: none;
-        opacity: 0;
-    }
-
-    .stTabs [aria-selected="true"] {
-        color: #0f172a !important;
-        font-weight: 500 !important;
     }
 
     .stTabs [data-baseweb="tab"]::after {
@@ -221,11 +201,6 @@ st.markdown(
     .stTabs [aria-selected="true"]::after {
         background: #0b1530; 
     }
-
-    .stTabs [data-baseweb="tab-highlight"] {
-        background-color: transparent !important;
-    }
-
 </style>
 """,
     unsafe_allow_html=True,
@@ -239,6 +214,10 @@ COLOR_PRIMARY = "#4aa3ff"
 COLOR_SUCCESS = "#6bcf8f"
 COLOR_DANGER = "#f27d72"
 COLOR_BG = "#0f1a2b"
+
+# Card Text Colors (Darker for White Backgrounds)
+TEXT_GREEN_DARK = "#15803d" 
+TEXT_RED_DARK = "#b91c1c"
 
 # ---------- PORTFOLIO CONFIG ----------
 # UPDATED with latest MSFT data (29 units)
@@ -315,7 +294,7 @@ MF_CONFIG = [
         "Units": 9054.85,
         "CostINR": 1327433.63,
         "InitialValueINR": 1429353.35,
-        "Ticker": "0P00005ON3O.BO"
+        "Ticker": "0P0000ON3O.BO"
     },
     {
         "Scheme": "Nippon India Multi Cap Fund Growth",
@@ -835,11 +814,12 @@ with sv_tab:
         fig_sv.update_layout(margin=dict(t=0, l=0, r=0, b=0), paper_bgcolor=COLOR_BG, plot_bgcolor=COLOR_BG, coloraxis_showscale=False, font=dict(family="Space Grotesk, sans-serif"))
         st.plotly_chart(fig_sv, use_container_width=True, config={"displayModeBar": False})
         
+        # --- FIXED SECTION: SV HOLDINGS CARDS ---
         st.markdown("""<div style="font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#16233a; font-size:0.75rem; margin:14px 0 4px 0;">SV Holdings</div>""", unsafe_allow_html=True)
         
         sorted_sv = sv_positions.sort_values(by="TotalPLAED", ascending=False).to_dict('records')
         
-        # Base Label Style - without color
+        # Base style WITHOUT color
         base_label_style = "font-family:'Space Grotesk',sans-serif; font-size:0.6rem; font-weight:400; text-transform:uppercase; margin:0;"
         
         for row in sorted_sv:
@@ -855,12 +835,11 @@ with sv_tab:
             pl_aed_str = f"{'+ ' if pl_aed >= 0 else ''}AED {pl_aed:,.0f}"
             pl_pct_str = f"{pl_pct:+.2f}%"
             
-            # Use darker hex codes directly
+            # INLINE COLOR LOGIC (Nuclear Option)
             color_pl = "#15803d" if pl_aed >= 0 else "#b91c1c"
             color_pct = "#15803d" if pl_pct >= 0 else "#b91c1c"
             display_name = name.upper().replace(" [SV]", "")
 
-            # Inject STYLE directly
             html_card = f"""
 <div class="card mf-card">
 <div class="kpi-top-row">
@@ -903,6 +882,7 @@ with us_tab:
             pl_aed_str = f"{'+ ' if pl_aed >= 0 else ''}AED {pl_aed:,.0f}"
             pl_pct_str = f"{pl_pct:+.2f}%"
             
+            # INLINE COLOR LOGIC (Nuclear Option)
             color_pl = "#15803d" if pl_aed >= 0 else "#b91c1c"
             color_pct = "#15803d" if pl_pct >= 0 else "#b91c1c"
             display_name = name.upper().replace(" [SV]", "")
@@ -970,8 +950,6 @@ with trend_tab:
     st.markdown("### Total Wealth Trend (₹)")
     
     # 1. PILLS SELECTOR (Modern)
-    # Using 'pills' if available in your version, else standard radio
-    
     if hasattr(st, "pills"):
         range_selection = st.pills("Time Range", ["1W", "1M", "3M", "Max"], default="3M", selection_mode="single")
     else:
@@ -980,42 +958,28 @@ with trend_tab:
     # 2. FETCH HISTORY (Cached - Load MAX by default)
     @st.cache_data(ttl=3600) 
     def fetch_consolidated_history():
-        # A. US STOCKS
         us_tickers = sorted({item["Ticker"] for item in portfolio_config})
-        # Start from Aug 1st, 2025 as requested (assuming 2025 based on previous context, 
-        # but if current date is 2025, user meant 2025. If user meant 2024, please adjust year)
-        # Using 2025-08-01 as requested.
+        # Start from Aug 1st, 2025 as requested
         us_data = yf.download(us_tickers, start="2025-08-01", progress=False, threads=True)
         
         if isinstance(us_data.columns, pd.MultiIndex):
-            if "Close" in us_data.columns.get_level_values(0):
-                us_close = us_data["Close"]
-            else:
-                us_close = us_data.xs("Close", level=1, axis=1) if "Close" in us_data.columns.get_level_values(1) else us_data
-        else:
-            us_close = us_data["Close"] if "Close" in us_data.columns else us_data
+            if "Close" in us_data.columns.get_level_values(0): us_close = us_data["Close"]
+            else: us_close = us_data.xs("Close", level=1, axis=1) if "Close" in us_data.columns.get_level_values(1) else us_data
+        else: us_close = us_data["Close"] if "Close" in us_data.columns else us_data
 
-        # B. INDIA MUTUAL FUNDS
         mf_tickers = [item["Ticker"] for item in MF_CONFIG if item.get("Ticker")]
         mf_data = yf.download(mf_tickers, start="2025-08-01", progress=False, threads=True)
         
         if isinstance(mf_data.columns, pd.MultiIndex):
-            if "Close" in mf_data.columns.get_level_values(0):
-                mf_close = mf_data["Close"]
-            else:
-                mf_close = mf_data.xs("Close", level=1, axis=1) if "Close" in mf_data.columns.get_level_values(1) else mf_data
-        else:
-            mf_close = mf_data["Close"] if "Close" in mf_data.columns else mf_data
+            if "Close" in mf_data.columns.get_level_values(0): mf_close = mf_data["Close"]
+            else: mf_close = mf_data.xs("Close", level=1, axis=1) if "Close" in mf_data.columns.get_level_values(1) else mf_data
+        else: mf_close = mf_data["Close"] if "Close" in mf_data.columns else mf_data
 
-        # 3. ALIGN DATES
         all_dates = us_close.index.union(mf_close.index).sort_values()
         us_close = us_close.reindex(all_dates).ffill()
         mf_close = mf_close.reindex(all_dates).ffill()
         
-        # 4. CALCULATE DAILY VALUE IN INR
         total_wealth = pd.Series(0.0, index=all_dates)
-        
-        # Ensure AED_TO_INR is available
         rate_inr = AED_TO_INR if 'AED_TO_INR' in locals() else 24.5
         us_conversion_factor = 3.6725 * rate_inr 
         
@@ -1039,63 +1003,42 @@ with trend_tab:
         full_trend = fetch_consolidated_history()
         
         if not full_trend.empty:
-            # 3. FILTER DATA BASED ON SELECTION
             end_date = full_trend.index.max()
             start_date = full_trend.index.min()
             
-            if range_selection == "1W":
-                cutoff = end_date - timedelta(days=7)
-            elif range_selection == "1M":
-                cutoff = end_date - timedelta(days=30)
-            elif range_selection == "3M":
-                cutoff = end_date - timedelta(days=90)
-            else: # Max
-                cutoff = start_date
+            if range_selection == "1W": cutoff = end_date - timedelta(days=7)
+            elif range_selection == "1M": cutoff = end_date - timedelta(days=30)
+            elif range_selection == "3M": cutoff = end_date - timedelta(days=90)
+            else: cutoff = start_date
             
-            # Slice the series
             filtered_trend = full_trend[full_trend.index >= cutoff]
             
-            # 4. RENDER CHART
             df_chart = pd.DataFrame({
                 "Date": filtered_trend.index,
                 "Total Wealth (₹)": filtered_trend.values
             })
             
+            # FIXED CHART: Simplified arguments to prevent 'fill_color' error
             fig = px.area(
                 df_chart, 
                 x="Date", 
                 y="Total Wealth (₹)",
                 template="plotly_dark",
-                height=350
+                height=350,
+                color_discrete_sequence=["#2e7d32"] # Green line
             )
             
             fig.update_layout(
                 paper_bgcolor="#0f1a2b",
                 plot_bgcolor="#0f1a2b",
                 margin=dict(l=0, r=0, t=20, b=0),
-                xaxis=dict(
-                    showgrid=False, 
-                    title=None,
-                    tickfont=dict(family="Space Grotesk", color="#9ba7b8")
-                ),
-                yaxis=dict(
-                    showgrid=True, 
-                    gridcolor="#1f2d44", 
-                    title=None,
-                    tickfont=dict(family="Space Grotesk", color="#9ba7b8")
-                ),
+                xaxis=dict(showgrid=False, title=None, tickfont=dict(family="Space Grotesk", color="#9ba7b8")),
+                yaxis=dict(showgrid=True, gridcolor="#1f2d44", title=None, tickfont=dict(family="Space Grotesk", color="#9ba7b8")),
                 hovermode="x unified"
-            )
-            
-            # Green line for Money
-            fig.update_traces(
-                line_color="#2e7d32", 
-                fill_color="rgba(46, 125, 50, 0.2)"
             )
             
             st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
             
-            # Footer stats
             curr_val = filtered_trend.iloc[-1]
             start_val_period = filtered_trend.iloc[0]
             abs_diff = curr_val - start_val_period
