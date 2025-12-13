@@ -1121,8 +1121,9 @@ with sv_tab:
             pl_pct_str = f"{pl_pct:+.2f}%"
             
             # Define colors locally to ensure no missing variables
-            color_pl = "#15803d" if pl_aed >= 0 else "#b91c1c"
-            color_pct = "#15803d" if pl_pct >= 0 else "#b91c1c"
+            # Using Vibrant Green #22c55e and Red #ef4444 for visibility on dark background
+            color_pl = "#22c55e" if pl_aed >= 0 else "#ef4444"
+            color_pct = "#22c55e" if pl_pct >= 0 else "#ef4444"
             
             # Clean Name
             display_name = name.upper().replace(" [SV]", "")
@@ -1177,8 +1178,9 @@ with us_tab:
             pl_pct_str = f"{pl_pct:+.2f}%"
             
             # Define colors locally
-            color_pl = "#15803d" if pl_aed >= 0 else "#b91c1c"
-            color_pct = "#15803d" if pl_pct >= 0 else "#b91c1c"
+            # Using Vibrant Green #22c55e and Red #ef4444 for visibility on dark background
+            color_pl = "#22c55e" if pl_aed >= 0 else "#ef4444"
+            color_pct = "#22c55e" if pl_pct >= 0 else "#ef4444"
             
             # Clean Name
             display_name = name.upper().replace(" [SV]", "")
