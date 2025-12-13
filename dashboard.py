@@ -58,13 +58,22 @@ st.markdown(
     .mf-card {
         background: #f4f6f8 !important;
         border-color: #e0e4ea !important;
-        color: #0f1a2b !important;
+        color: #0f1a2b !important; /* Default Text Color */
         display: flex;
         flex-direction: column;
         justify-content: space-between; 
         height: 96px; 
         padding: 12px 16px !important; 
         box-sizing: border-box;
+    }
+
+    /* --- COLOR CLASSES FOR PROFIT/LOSS (Must override parent !important) --- */
+    .kpi-green {
+        color: #15803d !important; /* Dark Green for readability on light bg */
+    }
+    
+    .kpi-red {
+        color: #b91c1c !important; /* Dark Red */
     }
 
     /* --- COLOR CORRECTION FOR MUTUAL FUND TAB & WHITE CARDS --- */
@@ -1120,20 +1129,18 @@ with sv_tab:
             pl_aed_str = f"{'+ ' if pl_aed >= 0 else ''}AED {pl_aed:,.0f}"
             pl_pct_str = f"{pl_pct:+.2f}%"
             
-            # Define colors locally to ensure no missing variables
-            # Using Vibrant Green #22c55e and Red #ef4444 for visibility on dark background
-            color_pl = "#22c55e" if pl_aed >= 0 else "#ef4444"
-            color_pct = "#22c55e" if pl_pct >= 0 else "#ef4444"
+            # Determine Color Class
+            color_class = "kpi-green" if pl_aed >= 0 else "kpi-red"
             
             # Clean Name
             display_name = name.upper().replace(" [SV]", "")
 
-            # Render HTML Card
+            # Render HTML Card with Explicit Class Logic
             html_card = f"""
 <div class="card mf-card">
 <div class="kpi-top-row">
 <div class="kpi-label">{units_str}</div>
-<div style="{base_label_style} color:{color_pl} !important; font-weight:600;">{pl_aed_str}</div>
+<div class="{color_class}" style="{base_label_style} font-weight:600;">{pl_aed_str}</div>
 </div>
 <div class="kpi-mid-row">
 <div class="kpi-number">{display_name}</div>
@@ -1141,7 +1148,7 @@ with sv_tab:
 </div>
 <div class="kpi-top-row">
 <div class="kpi-label" style="color:#9ba7b8 !important;">{ticker}</div>
-<div style="{base_label_style} color:{color_pct} !important; font-weight:600;">{pl_pct_str}</div>
+<div class="{color_class}" style="{base_label_style} font-weight:600;">{pl_pct_str}</div>
 </div>
 </div>
 """
@@ -1177,20 +1184,18 @@ with us_tab:
             pl_aed_str = f"{'+ ' if pl_aed >= 0 else ''}AED {pl_aed:,.0f}"
             pl_pct_str = f"{pl_pct:+.2f}%"
             
-            # Define colors locally
-            # Using Vibrant Green #22c55e and Red #ef4444 for visibility on dark background
-            color_pl = "#22c55e" if pl_aed >= 0 else "#ef4444"
-            color_pct = "#22c55e" if pl_pct >= 0 else "#ef4444"
+            # Determine Color Class
+            color_class = "kpi-green" if pl_aed >= 0 else "kpi-red"
             
             # Clean Name
             display_name = name.upper().replace(" [SV]", "")
 
-            # NEW CARD LAYOUT (FLATTENED TO PREVENT MD ERROR)
+            # NEW CARD LAYOUT with Explicit Class Logic
             html_card = f"""
 <div class="card mf-card">
 <div class="kpi-top-row">
 <div class="kpi-label">{units_str}</div>
-<div style="{base_label_style} color:{color_pl} !important; font-weight:600;">{pl_aed_str}</div>
+<div class="{color_class}" style="{base_label_style} font-weight:600;">{pl_aed_str}</div>
 </div>
 <div class="kpi-mid-row">
 <div class="kpi-number">{display_name}</div>
@@ -1198,7 +1203,7 @@ with us_tab:
 </div>
 <div class="kpi-top-row">
 <div class="kpi-label" style="color:#9ba7b8 !important;">{ticker}</div>
-<div style="{base_label_style} color:{color_pct} !important; font-weight:600;">{pl_pct_str}</div>
+<div class="{color_class}" style="{base_label_style} font-weight:600;">{pl_pct_str}</div>
 </div>
 </div>
 """
