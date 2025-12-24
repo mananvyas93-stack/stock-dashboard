@@ -285,7 +285,7 @@ portfolio_config = [
     {"Name": "MSFT [SV]", "Ticker": "MSFT", "Units": 6, "PurchaseValAED": 11128, "Owner": "SV", "Sector": "Tech"},
 ]
 
-# ---------- INDIA MF CONFIG (UPDATED DEC 2025) ----------
+# ---------- INDIA MF CONFIG (UPDATED - CORRECT REGULAR PLAN CODES) ----------
 # Replaced all codes with AMFI Codes for "Regular Plan Growth" (lower NAVs)
 # Data verified against user file (e.g. PPFAS NAV ~87.23, not 95)
 
@@ -328,7 +328,7 @@ MF_CONFIG = [
         "Units": 43574.66,
         "CostINR": 654967.25,
         "InitialValueINR": 854577.46,
-        "AMFICode": "147816"  # ICICI Pru NASDAQ 100 Regular Growth
+        "AMFICode": "149218"  # ICICI Pru NASDAQ 100 Regular Growth
     },
     {
         "Scheme": "Mirae Asset Large and Mid Cap Fund Growth",
