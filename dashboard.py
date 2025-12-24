@@ -259,7 +259,7 @@ COLOR_DANGER = "#f27d72"
 COLOR_BG = "#0f1a2b"
 
 # ---------- PORTFOLIO CONFIG (UPDATED DEC 2025) ----------
-# Values calculated based on 'Fully Loaded Purchase Price' from screenshot * 3.6725
+# Values calculated based on 'Fully Loaded Purchase Price' from your screenshot * 3.6725
 portfolio_config = [
     # --- MV PORTFOLIO ---
     {"Name": "Alphabet", "Ticker": "GOOGL", "Units": 51, "PurchaseValAED": 34152, "Owner": "MV", "Sector": "Tech"},
@@ -552,7 +552,8 @@ def load_prices_intraday() -> pd.Series:
     if not last_prices:
         return pd.Series(dtype=float)
     return pd.Series(last_prices)
-    # ---------- MARKET STATUS & DATA SOURCE ----------
+
+# ---------- MARKET STATUS & DATA SOURCE ----------
 
 def get_market_phase_and_prices():
     us_tz = ZoneInfo("America/New_York")
@@ -582,7 +583,8 @@ def get_market_phase_and_prices():
         return phase_str, base_close
 
     return phase_str, intraday
-    @st.cache_data(ttl=60)
+
+@st.cache_data(ttl=60)
 def get_market_indices_change(phase_str: str) -> str:
     """
     Fetches Nifty 50 and Nasdaq 100 changes.
