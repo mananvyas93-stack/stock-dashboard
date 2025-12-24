@@ -285,7 +285,7 @@ portfolio_config = [
     {"Name": "MSFT [SV]", "Ticker": "MSFT", "Units": 6, "PurchaseValAED": 11128, "Owner": "SV", "Sector": "Tech"},
 ]
 
-# ---------- INDIA MF CONFIG (UPDATED - CORRECT REGULAR PLAN CODES) ----------
+# ---------- INDIA MF CONFIG (UPDATED DEC 2025) ----------
 # Replaced all codes with AMFI Codes for "Regular Plan Growth" (lower NAVs)
 # Data verified against user file (e.g. PPFAS NAV ~87.23, not 95)
 
@@ -296,7 +296,7 @@ MF_CONFIG = [
         "Units": 55026.38,
         "CostINR": 1754912.25,
         "InitialValueINR": 1843383.56,
-        "AMFICode": "145110"  # Axis Large & Mid Cap Regular Growth
+        "AMFICode": "120465"  # Axis Large & Mid Cap Regular Growth
     },
     {
         "Scheme": "Franklin India ELSS Tax Saver Fund Growth 19360019",
