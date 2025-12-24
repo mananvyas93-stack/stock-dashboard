@@ -328,7 +328,7 @@ MF_CONFIG = [
         "Units": 43574.66,
         "CostINR": 654967.25,
         "InitialValueINR": 854577.46,
-        "AMFICode": "147816"  # Regular Growth
+        "AMFICode": "149218"  # Regular Growth (Verified vs File NAV)
     },
     {
         "Scheme": "Mirae Asset Large and Mid Cap Fund Growth",
