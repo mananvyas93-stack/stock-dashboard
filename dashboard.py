@@ -286,8 +286,8 @@ portfolio_config = [
 ]
 
 # ---------- INDIA MF CONFIG (UPDATED - CORRECT REGULAR PLAN CODES) ----------
-# Replaced all codes with AMFI Codes for "Regular Plan Growth" (lower NAVs)
-# Data verified against user file (e.g. PPFAS NAV ~87.23, not 95)
+# Replaced Direct Plan codes with Regular Plan codes (AMFI) to match portfolio
+# Data verified against user file (e.g. PPFAS NAV ~87.23)
 
 MF_CONFIG = [
     {
@@ -296,7 +296,7 @@ MF_CONFIG = [
         "Units": 55026.38,
         "CostINR": 1754912.25,
         "InitialValueINR": 1843383.56,
-        "AMFICode": "120465"  # Axis Large & Mid Cap Regular Growth
+        "AMFICode": "120465"  # Regular Growth (was 145110 Direct)
     },
     {
         "Scheme": "Franklin India ELSS Tax Saver Fund Growth 19360019",
@@ -304,7 +304,7 @@ MF_CONFIG = [
         "Units": 286.62,
         "CostINR": 160000.00,
         "InitialValueINR": 429627.50,
-        "AMFICode": "100356"  # Franklin India ELSS Tax Saver Regular Growth
+        "AMFICode": "100356"  # Regular Growth
     },
     {
         "Scheme": "Franklin India ELSS Tax Saver Fund Growth 30097040",
@@ -312,7 +312,7 @@ MF_CONFIG = [
         "Units": 190.43,
         "CostINR": 95000.00,
         "InitialValueINR": 285444.01,
-        "AMFICode": "100356"  # Same Scheme
+        "AMFICode": "100356"  # Regular Growth
     },
     {
         "Scheme": "ICICI Prudential ELSS Tax Saver Fund Growth",
@@ -320,7 +320,7 @@ MF_CONFIG = [
         "Units": 267.83,
         "CostINR": 98000.00,
         "InitialValueINR": 257648.07,
-        "AMFICode": "100354"  # ICICI Pru ELSS Tax Saver Regular Growth
+        "AMFICode": "100354"  # Regular Growth (was 120592 Direct)
     },
     {
         "Scheme": "ICICI Prudential NASDAQ 100 Index Fund Growth",
@@ -328,7 +328,7 @@ MF_CONFIG = [
         "Units": 43574.66,
         "CostINR": 654967.25,
         "InitialValueINR": 854577.46,
-        "AMFICode": "149218"  # ICICI Pru NASDAQ 100 Regular Growth
+        "AMFICode": "149218"  # Regular Growth (was 147816 Direct)
     },
     {
         "Scheme": "Mirae Asset Large and Mid Cap Fund Growth",
@@ -336,7 +336,7 @@ MF_CONFIG = [
         "Units": 9054.85,
         "CostINR": 1327433.63,
         "InitialValueINR": 1424255.47,
-        "AMFICode": "112933"  # Mirae Asset Large & Midcap Regular Growth
+        "AMFICode": "112933"  # Regular Growth (was 118825 Direct)
     },
     {
         "Scheme": "Nippon India Multi Cap Fund Growth",
@@ -344,7 +344,7 @@ MF_CONFIG = [
         "Units": 4813.52,
         "CostINR": 1404929.75,
         "InitialValueINR": 1448773.01,
-        "AMFICode": "100469"  # Nippon India Multi Cap Regular Growth
+        "AMFICode": "100469"  # Regular Growth (was 118778 Direct)
     },
     {
         "Scheme": "Parag Parikh Flexi Cap Fund Growth 15530560",
@@ -352,7 +352,7 @@ MF_CONFIG = [
         "Units": 25345.69,
         "CostINR": 2082395.88,
         "InitialValueINR": 2210977.69,
-        "AMFICode": "119598"  # PPFAS Flexi Cap Regular Growth (Correct Code)
+        "AMFICode": "119598"  # Regular Growth (was 122639 Direct)
     },
     {
         "Scheme": "Parag Parikh Flexi Cap Fund Growth 15722429",
@@ -360,7 +360,7 @@ MF_CONFIG = [
         "Units": 6095.12,
         "CostINR": 499975.00,
         "InitialValueINR": 531695.26,
-        "AMFICode": "119598"  # Same Scheme
+        "AMFICode": "119598"  # Regular Growth
     },
     {
         "Scheme": "SBI Multicap Fund Growth",
@@ -368,7 +368,7 @@ MF_CONFIG = [
         "Units": 83983.45,
         "CostINR": 1404929.75,
         "InitialValueINR": 1424997.65,
-        "AMFICode": "148856"  # SBI Multicap Regular Growth
+        "AMFICode": "148856"  # Regular Growth (was 153629 Direct)
     }
 ]
 
@@ -383,7 +383,7 @@ def fmt_inr_lacs(inr_value: float) -> str:
 def load_mf_navs_from_amfi() -> dict:
     """
     Fetch latest NAV for each MF using the Official AMFI API (mfapi.in).
-    This replaces the unreliable Yahoo Finance BSE tickers.
+    Now using Regular Plan codes to ensure valuation matches portfolio.
     """
     navs: dict[str, float] = {}
     
